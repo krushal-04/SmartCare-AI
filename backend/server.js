@@ -11,12 +11,12 @@ const startServer = async () => {
 
         app.listen(PORT, () => {
             console.log("==================================");
-            console.log(`🚀 Server Running on Port ${PORT}`);
-            console.log(`🌐 http://localhost:${PORT}`);
+            console.log(` Server Running on Port ${PORT}`);
+            console.log(` http://localhost:${PORT}`);
             console.log("==================================");
         });
     } catch (error) {
-        console.error("❌ Server failed to start");
+        console.error(" Server failed to start");
     }
 };
 
