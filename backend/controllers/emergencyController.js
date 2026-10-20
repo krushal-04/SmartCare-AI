@@ -321,6 +321,30 @@ exports.updateHospitalEmergencyStatus = async (req, res) => {
         }
 
         const oldStatus = emergency.status;
+        const allowedTransitions = {
+            Requested: ["Assigned", "Cancelled"],
+            Assigned: ["On The Way", "Cancelled"],
+            "On The Way": ["Arrived"],
+            Arrived: ["Completed"],
+            Completed: [],
+            Cancelled: [],
+        };
+
+        if (status && status !== oldStatus && !allowedTransitions[oldStatus]?.includes(status)) {
+            return res.status(400).json({
+                success: false,
+                message: `Invalid emergency status change from ${oldStatus} to ${status}.`,
+            });
+        }
+
+        const effectiveAmbulanceId = ambulanceId || emergency.ambulanceId;
+        if (["Assigned", "On The Way", "Arrived"].includes(status) && !effectiveAmbulanceId) {
+            return res.status(400).json({
+                success: false,
+                message: "Assign an available ambulance before updating this dispatch status.",
+            });
+        }
+
         if (status) emergency.status = status;
         if (hospitalNotes !== undefined) emergency.hospitalNotes = hospitalNotes.trim();
 
@@ -336,12 +360,31 @@ exports.updateHospitalEmergencyStatus = async (req, res) => {
                 });
             }
 
+            if (ambulance.assignedEmergencyId && String(ambulance.assignedEmergencyId) !== String(emergency._id)) {
+                return res.status(409).json({
+                    success: false,
+                    message: "This ambulance is already assigned to another active emergency.",
+                });
+            }
+            if (!ambulance.availability && String(ambulance.assignedEmergencyId) !== String(emergency._id)) {
+                return res.status(409).json({
+                    success: false,
+                    message: "This ambulance is not currently available for dispatch.",
+                });
+            }
+            if (emergency.hospitalId && ambulance.hospitalId && String(ambulance.hospitalId) !== String(emergency.hospitalId._id || emergency.hospitalId)) {
+                return res.status(403).json({
+                    success: false,
+                    message: "Only an ambulance from the assigned hospital can be dispatched.",
+                });
+            }
+
             emergency.ambulanceId = ambulance._id;
-            if (status === "Requested" || !status) {
+            if (!status) {
                 emergency.status = "Assigned";
             }
 
-            ambulance.status = emergency.status === "On The Way" ? "Busy" : "Assigned";
+            ambulance.status = ["On The Way", "Arrived"].includes(emergency.status) ? "Busy" : "Assigned";
             ambulance.availability = false;
             ambulance.assignedEmergencyId = emergency._id;
             await ambulance.save();

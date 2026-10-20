@@ -41,12 +41,12 @@ const theme = createTheme({
 
     typography: {
         fontFamily: fonts.body,
-        h1: { fontFamily: fonts.display, fontWeight: 800 },
-        h2: { fontFamily: fonts.display, fontWeight: 800 },
-        h3: { fontFamily: fonts.display, fontWeight: 700 },
-        h4: { fontFamily: fonts.display, fontWeight: 700 },
-        h5: { fontFamily: fonts.display, fontWeight: 700 },
-        h6: { fontFamily: fonts.display, fontWeight: 600 },
+        h1: { fontFamily: fonts.display, fontWeight: 800, fontSize: "clamp(1.9rem, 3vw, 2.5rem)", lineHeight: 1.16 },
+        h2: { fontFamily: fonts.display, fontWeight: 800, fontSize: "clamp(1.6rem, 2.5vw, 2.1rem)", lineHeight: 1.2 },
+        h3: { fontFamily: fonts.display, fontWeight: 700, fontSize: "clamp(1.35rem, 2vw, 1.75rem)" },
+        h4: { fontFamily: fonts.display, fontWeight: 700, fontSize: "1.35rem" },
+        h5: { fontFamily: fonts.display, fontWeight: 700, fontSize: "1.16rem" },
+        h6: { fontFamily: fonts.display, fontWeight: 600, fontSize: "1rem" },
         subtitle1: { fontFamily: fonts.body, fontWeight: 500 },
         button: { textTransform: "none", fontWeight: 700 },
     },
@@ -99,6 +99,16 @@ const theme = createTheme({
                     borderRadius: 16,
                     transition: "box-shadow 0.2s ease-in-out, transform 0.2s ease-in-out",
                 },
+            },
+        },
+        MuiCardContent: {
+            styleOverrides: {
+                root: { padding: 20, "&:last-child": { paddingBottom: 20 } },
+            },
+        },
+        MuiDialog: {
+            styleOverrides: {
+                paper: { margin: 16, borderRadius: 16 },
             },
         },
         MuiChip: {

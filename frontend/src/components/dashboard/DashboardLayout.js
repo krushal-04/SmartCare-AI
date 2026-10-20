@@ -719,8 +719,8 @@ export default function DashboardLayout({ role, children, title, subtitle }) {
                     component="main"
                     sx={{
                         flexGrow: 1,
-                        p: { xs: 2, sm: 3, md: 4 },
-                        maxWidth: 1400,
+                        p: { xs: 2, sm: 2.5, md: 3 },
+                        maxWidth: 1360,
                         width: "100%",
                         mx: "auto",
                     }}

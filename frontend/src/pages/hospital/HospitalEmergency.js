@@ -39,6 +39,15 @@ const STATUS_COLOR_MAP = {
     Cancelled: "default",
 };
 
+const NEXT_STATUS_OPTIONS = {
+    Requested: ["Assigned", "Cancelled"],
+    Assigned: ["On The Way", "Cancelled"],
+    "On The Way": ["Arrived"],
+    Arrived: ["Completed"],
+    Completed: [],
+    Cancelled: [],
+};
+
 export default function HospitalEmergency() {
     const [emergencies, setEmergencies] = useState([]);
     const [ambulances, setAmbulances] = useState([]);
@@ -86,7 +95,7 @@ export default function HospitalEmergency() {
 
     const handleOpenAction = (em) => {
         setSelectedEmergency(em);
-        setNewStatus(em.status || "Assigned");
+        setNewStatus(NEXT_STATUS_OPTIONS[em.status]?.[0] || em.status || "Requested");
         setSelectedAmbulanceId(em.ambulanceId?._id || em.ambulanceId || "");
         setHospitalNotes(em.hospitalNotes || "");
     };
@@ -133,6 +142,10 @@ export default function HospitalEmergency() {
     const activeCount = emergencies.filter((e) =>
         ["Requested", "Assigned", "On The Way", "Arrived"].includes(e.status)
     ).length;
+
+    const selectableAmbulances = ambulances.filter((ambulance) =>
+        ambulance.availability || String(ambulance._id) === String(selectedAmbulanceId)
+    );
 
     return (
         <DashboardLayout
@@ -362,19 +375,16 @@ export default function HospitalEmergency() {
                                     </Typography>
                                 </Box>
 
-                                <FormControl fullWidth required>
+                                <FormControl fullWidth required disabled={!NEXT_STATUS_OPTIONS[selectedEmergency?.status]?.length}>
                                     <InputLabel>Update Transit Status</InputLabel>
                                     <Select
                                         value={newStatus}
                                         label="Update Transit Status"
                                         onChange={(e) => setNewStatus(e.target.value)}
                                     >
-                                        <MenuItem value="Requested">Requested (Unassigned)</MenuItem>
-                                        <MenuItem value="Assigned">Assigned (Preparing Ambulance)</MenuItem>
-                                        <MenuItem value="On The Way">On The Way (En Route to Patient)</MenuItem>
-                                        <MenuItem value="Arrived">Arrived (On Scene)</MenuItem>
-                                        <MenuItem value="Completed">Completed (Patient Transported)</MenuItem>
-                                        <MenuItem value="Cancelled">Cancelled</MenuItem>
+                                        {(NEXT_STATUS_OPTIONS[selectedEmergency?.status] || []).map((status) => (
+                                            <MenuItem key={status} value={status}>{status}</MenuItem>
+                                        ))}
                                     </Select>
                                 </FormControl>
 
@@ -388,7 +398,7 @@ export default function HospitalEmergency() {
                                         <MenuItem value="">
                                             <em>None / Retain Existing</em>
                                         </MenuItem>
-                                        {ambulances.map((amb) => (
+                                        {selectableAmbulances.map((amb) => (
                                             <MenuItem key={amb._id} value={amb._id}>
                                                 {amb.ambulanceNumber} — {amb.vehicleType} ({amb.driverName}, {amb.status})
                                             </MenuItem>
