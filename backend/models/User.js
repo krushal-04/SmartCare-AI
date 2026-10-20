@@ -47,6 +47,28 @@ const userSchema = new mongoose.Schema(
         enum: ["Pending", "Approved", "Rejected"],
         default: "Pending",
     },
+    rejectionReason: {
+        type: String,
+        default: "",
+    },
+    approvedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+    },
+    rejectedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+    },
+    approvalDate: {
+        type: Date,
+    },
+    rejectionDate: {
+        type: Date,
+    },
+    isActive: {
+        type: Boolean,
+        default: true,
+    },
   },
   {
     timestamps: true,

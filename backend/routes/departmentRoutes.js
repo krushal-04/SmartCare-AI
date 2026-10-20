@@ -8,27 +8,31 @@ const {
     getHospitalDepartments,
     getDepartmentById,
     updateDepartment,
-    deleteDepartment
+    deleteDepartment,
 } = require("../controllers/departmentController");
 
 const {
     protect,
-    hospitalOnly
+    hospitalOrAdmin,
 } = require("../middleware/authMiddleware");
+
+const { uploadDepartmentImage } = require("../middleware/cloudinaryUpload");
 
 router.post(
     "/add",
     protect,
-    hospitalOnly,
+    hospitalOrAdmin,
+    uploadDepartmentImage.single("departmentImage"),
     addDepartment
 );
 
+router.get("/", getDepartments);
 router.get("/all", getDepartments);
 
 router.get(
     "/hospital",
     protect,
-    hospitalOnly,
+    hospitalOrAdmin,
     getHospitalDepartments
 );
 
@@ -37,14 +41,15 @@ router.get("/:id", getDepartmentById);
 router.put(
     "/:id",
     protect,
-    hospitalOnly,
+    hospitalOrAdmin,
+    uploadDepartmentImage.single("departmentImage"),
     updateDepartment
 );
 
 router.delete(
     "/:id",
     protect,
-    hospitalOnly,
+    hospitalOrAdmin,
     deleteDepartment
 );
 
