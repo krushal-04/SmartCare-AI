@@ -265,3 +265,63 @@ routing only. It is not a medical diagnosis.
             });
         }
     };
+
+// Reports are read in memory for this request only. They are not added to the
+// patient's medical-records store by this endpoint.
+exports.analyzeMedicalReport = async (req, res) => {
+    try {
+        if (!req.file?.buffer) {
+            return res.status(400).json({ success: false, message: "Choose a PDF, JPG, or PNG medical report to analyse." });
+        }
+
+        const allowedTypes = ["application/pdf", "image/jpeg", "image/png", "image/jpg"];
+        if (!allowedTypes.includes(req.file.mimetype)) {
+            return res.status(400).json({ success: false, message: "Only PDF, JPG, and PNG reports are supported." });
+        }
+
+        const prompt = `${buildMedicalSystemPrompt()}
+
+You are reviewing a patient-provided medical report. Extract only information visibly present in the report. Do not invent values, do not diagnose, and do not say that a report is normal or abnormal without qualifying that a clinician must interpret it in context.
+
+Provide exactly these patient-friendly sections:
+Report overview:
+[document type and key findings or "Unable to read"]
+
+Items to discuss with a clinician:
+[short bullets; say "None identified from the visible report" if appropriate]
+
+Urgency:
+[Routine review / Prompt clinical review / Emergency attention]
+
+Next step:
+[safe, practical next step]
+
+Important:
+This AI summary is for education only. It cannot confirm that results are normal or diagnose a condition. A qualified clinician must interpret the full report with the patient's history.`;
+
+        const answer = await generateGeminiResponse(prompt, {
+            mime_type: req.file.mimetype === "image/jpg" ? "image/jpeg" : req.file.mimetype,
+            data: req.file.buffer.toString("base64"),
+        });
+
+        const lower = answer.toLowerCase();
+        const urgency = lower.includes("emergency attention")
+            ? "Emergency attention"
+            : lower.includes("prompt clinical review") || lower.includes("urgent")
+            ? "Prompt clinical review"
+            : "Routine review";
+
+        return res.status(200).json({
+            success: true,
+            answer,
+            urgency,
+            fileName: req.file.originalname,
+        });
+    } catch (error) {
+        console.error("Medical report analysis error:", error);
+        return res.status(500).json({
+            success: false,
+            message: error.message || "Unable to analyse this report right now.",
+        });
+    }
+};

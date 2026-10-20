@@ -40,6 +40,8 @@ import {
     DirectionsWalkOutlined,
     HealingOutlined,
     AssessmentOutlined,
+    UploadFileOutlined,
+    DescriptionOutlined,
 } from "@mui/icons-material";
 
 import DashboardLayout from "../../components/dashboard/DashboardLayout";
@@ -266,6 +268,13 @@ export default function PatientAI() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
+    // Medical report review state. The selected file is sent only when the
+    // patient explicitly starts analysis and is not saved by this feature.
+    const [reportFile, setReportFile] = useState(null);
+    const [reportLoading, setReportLoading] = useState(false);
+    const [reportError, setReportError] = useState("");
+    const [reportResult, setReportResult] = useState(null);
+
     // Chat State
     const [chatMessages, setChatMessages] = useState([
         {
@@ -337,6 +346,28 @@ export default function PatientAI() {
             );
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleReportAnalysis = async () => {
+        if (!reportFile) {
+            setReportError("Choose a PDF, JPG, or PNG medical report first.");
+            return;
+        }
+        try {
+            setReportLoading(true);
+            setReportError("");
+            setReportResult(null);
+            const formData = new FormData();
+            formData.append("report", reportFile);
+            const response = await api.post("/ai/report-analysis", formData, {
+                headers: { "Content-Type": "multipart/form-data" },
+            });
+            setReportResult(response.data);
+        } catch (err) {
+            setReportError(err.response?.data?.message || "We could not analyse this report. Please try again.");
+        } finally {
+            setReportLoading(false);
         }
     };
 
@@ -528,45 +559,21 @@ export default function PatientAI() {
                         </Typography>
                     </Box>
 
-                    {/* KPI Badges */}
-                    <Stack
-                        direction="row"
-                        spacing={2}
+                    <Box
                         sx={{
                             bgcolor: "rgba(0,0,0,0.22)",
-                            p: 1.8,
-                            borderRadius: 3.5,
+                            px: 2,
+                            py: 1.5,
+                            borderRadius: 2.5,
                             border: "1px solid rgba(255,255,255,0.1)",
-                            backdropFilter: "blur(12px)",
+                            maxWidth: 245,
                         }}
                     >
-                        <Box sx={{ textAlign: "center", px: 1.5 }}>
-                            <Typography fontSize={18} fontWeight={900} color="#5EEAD4">
-                                14+
-                            </Typography>
-                            <Typography fontSize={11} sx={{ color: "rgba(255,255,255,0.7)", fontWeight: 600 }}>
-                                Clinical Specialties
-                            </Typography>
-                        </Box>
-                        <Divider orientation="vertical" flexItem sx={{ borderColor: "rgba(255,255,255,0.15)" }} />
-                        <Box sx={{ textAlign: "center", px: 1.5 }}>
-                            <Typography fontSize={18} fontWeight={900} color="#5EEAD4">
-                                3-Tier
-                            </Typography>
-                            <Typography fontSize={11} sx={{ color: "rgba(255,255,255,0.7)", fontWeight: 600 }}>
-                                Severity Triage
-                            </Typography>
-                        </Box>
-                        <Divider orientation="vertical" flexItem sx={{ borderColor: "rgba(255,255,255,0.15)" }} />
-                        <Box sx={{ textAlign: "center", px: 1.5 }}>
-                            <Typography fontSize={18} fontWeight={900} color="#FDE047">
-                                24/7
-                            </Typography>
-                            <Typography fontSize={11} sx={{ color: "rgba(255,255,255,0.7)", fontWeight: 600 }}>
-                                Health Inquiry
-                            </Typography>
-                        </Box>
-                    </Stack>
+                        <Typography fontSize={12} fontWeight={800} color="#CCFBF1">Safe care guidance</Typography>
+                        <Typography fontSize={11.5} sx={{ color: "rgba(255,255,255,0.72)", mt: 0.4, lineHeight: 1.5 }}>
+                            Review symptoms, understand reports, and choose an appropriate next step.
+                        </Typography>
+                    </Box>
                 </Stack>
             </Paper>
 
@@ -583,7 +590,7 @@ export default function PatientAI() {
                 }}
             >
                 <Grid container spacing={1}>
-                    <Grid item xs={12} sm={6}>
+                    <Grid item xs={12} sm={4}>
                         <Button
                             fullWidth
                             onClick={() => setActiveTab(0)}
@@ -612,7 +619,7 @@ export default function PatientAI() {
                         </Button>
                     </Grid>
 
-                    <Grid item xs={12} sm={6}>
+                    <Grid item xs={12} sm={4}>
                         <Button
                             fullWidth
                             onClick={() => setActiveTab(1)}
@@ -638,6 +645,22 @@ export default function PatientAI() {
                             }}
                         >
                             Interactive Health Consult Chat
+                        </Button>
+                    </Grid>
+                    <Grid item xs={12} sm={4}>
+                        <Button
+                            fullWidth
+                            onClick={() => setActiveTab(2)}
+                            startIcon={<DescriptionOutlined sx={{ fontSize: 21 }} />}
+                            sx={{
+                                py: 1.4, px: 2.5, borderRadius: 3.5, fontWeight: 800, fontSize: 14.5,
+                                bgcolor: activeTab === 2 ? colors.white : "transparent",
+                                color: activeTab === 2 ? colors.pineDeep : colors.slate,
+                                boxShadow: activeTab === 2 ? "0 4px 14px rgba(15,82,75,0.08)" : "none",
+                                border: activeTab === 2 ? `1px solid ${colors.hairline}` : "1px solid transparent",
+                            }}
+                        >
+                            Report review
                         </Button>
                     </Grid>
                 </Grid>
@@ -1378,7 +1401,61 @@ export default function PatientAI() {
                 </Grid>
             )}
 
-            {/* TAB 1: INTERACTIVE AI HEALTH CONSULT CHAT (Pure Conversational Care Assistant) */}
+            {/* TAB 2: MEDICAL REPORT REVIEW */}
+            {activeTab === 2 && (
+                <Card elevation={0} sx={{ border: `1px solid ${colors.hairline}`, borderRadius: 4, maxWidth: 920 }}>
+                    <CardContent sx={{ p: { xs: 2.5, sm: 4 } }}>
+                        <Stack direction={{ xs: "column", sm: "row" }} justifyContent="space-between" spacing={2} mb={3}>
+                            <Box>
+                                <Typography variant="h5" color={colors.ink}>Medical report review</Typography>
+                                <Typography color="text.secondary" mt={0.5}>
+                                    Upload a report to receive a plain-language summary and questions to discuss with your clinician.
+                                </Typography>
+                            </Box>
+                            <Chip label="Private session analysis" color="primary" variant="outlined" />
+                        </Stack>
+
+                        <Alert severity="info" icon={<InfoOutlined />} sx={{ mb: 3, borderRadius: 2 }}>
+                            Files are analysed for this request only and are not saved to your medical-records page. AI cannot diagnose or confirm that a result is normal.
+                        </Alert>
+
+                        <Box sx={{ p: { xs: 2, sm: 3 }, border: `1px dashed ${colors.slateSoft}`, borderRadius: 3, bgcolor: colors.canvas }}>
+                            <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ sm: "center" }}>
+                                <Button component="label" variant="outlined" startIcon={<UploadFileOutlined />} sx={{ minHeight: 48 }}>
+                                    Choose report
+                                    <input hidden type="file" accept="application/pdf,image/jpeg,image/png" onChange={(event) => {
+                                        setReportFile(event.target.files?.[0] || null);
+                                        setReportError("");
+                                        setReportResult(null);
+                                    }} />
+                                </Button>
+                                <Box sx={{ flex: 1, minWidth: 0 }}>
+                                    <Typography fontWeight={700} noWrap>{reportFile?.name || "No file selected"}</Typography>
+                                    <Typography variant="body2" color="text.secondary">PDF, JPG, or PNG · maximum 10 MB</Typography>
+                                </Box>
+                                <Button variant="contained" onClick={handleReportAnalysis} disabled={!reportFile || reportLoading} startIcon={reportLoading ? <CircularProgress size={18} color="inherit" /> : <AssessmentOutlined />}>
+                                    {reportLoading ? "Reviewing…" : "Review report"}
+                                </Button>
+                            </Stack>
+                        </Box>
+
+                        {reportError && <Alert severity="error" sx={{ mt: 2 }}>{reportError}</Alert>}
+
+                        {reportResult && (
+                            <Box sx={{ mt: 3, p: { xs: 2, sm: 3 }, borderRadius: 3, border: `1px solid ${colors.hairline}`, bgcolor: "#FCFEFD" }}>
+                                <Stack direction={{ xs: "column", sm: "row" }} justifyContent="space-between" spacing={1} mb={2}>
+                                    <Typography fontWeight={800}>Review for {reportResult.fileName}</Typography>
+                                    <Chip size="small" label={reportResult.urgency} color={reportResult.urgency === "Emergency attention" ? "error" : reportResult.urgency === "Prompt clinical review" ? "warning" : "success"} />
+                                </Stack>
+                                <FormattedMessageText text={reportResult.answer} />
+                                <Alert severity="warning" sx={{ mt: 2 }}>Do not delay urgent care based on this summary. Share the original report with a qualified clinician.</Alert>
+                            </Box>
+                        )}
+                    </CardContent>
+                </Card>
+            )}
+
+            {/* TAB 1: INTERACTIVE AI HEALTH CONSULT CHAT */}
             {activeTab === 1 && (
                 <Card
                     elevation={0}

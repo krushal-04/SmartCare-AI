@@ -1,11 +1,14 @@
 const https = require("https");
 
-const callGeminiEndpoint = (model, apiKey, prompt) => {
+const callGeminiEndpoint = (model, apiKey, prompt, inlineFile) => {
     return new Promise((resolve, reject) => {
         const payload = JSON.stringify({
             contents: [
                 {
-                    parts: [{ text: prompt }],
+                    parts: [
+                        { text: prompt },
+                        ...(inlineFile ? [{ inline_data: inlineFile }] : []),
+                    ],
                 },
             ],
             generationConfig: {
@@ -201,11 +204,14 @@ Important:
 SmartCare AI provides clinical guidance and routing assistance only.`;
 };
 
-const generateGeminiResponse = async (prompt) => {
+const generateGeminiResponse = async (prompt, inlineFile = null) => {
     const apiKey = process.env.GEMINI_API_KEY;
 
     if (!apiKey || apiKey === "YOUR_GEMINI_API_KEY" || apiKey.trim() === "") {
         console.warn("[GeminiService] No GEMINI_API_KEY provided. Using clinical knowledge engine.");
+        if (inlineFile) {
+            throw new Error("Report analysis is unavailable until the hospital AI service is configured.");
+        }
         return getClinicalFallbackResponse(prompt);
     }
 
@@ -221,7 +227,7 @@ const generateGeminiResponse = async (prompt) => {
 
     for (const model of modelsToTry) {
         try {
-            const answer = await callGeminiEndpoint(model, apiKey, prompt);
+            const answer = await callGeminiEndpoint(model, apiKey, prompt, inlineFile);
             if (answer && answer.trim()) {
                 return answer.trim();
             }
