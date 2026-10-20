@@ -120,11 +120,11 @@ function DoctorDetails() {
     };
 
     const mainContent = (
-        <Container maxWidth="md" sx={{ py: isAuthenticated ? 2 : 5, flex: 1 }}>
+        <Container maxWidth="md" sx={{ py: isAuthenticated ? 1.5 : 4, flex: 1 }}>
                 <Button
                     startIcon={<ArrowBack />}
                     onClick={() => navigate("/doctors")}
-                    sx={{ mb: 3, color: colors.slate, fontWeight: 700 }}
+                    sx={{ mb: 2, color: colors.slate, fontWeight: 700 }}
                 >
                     Back to doctors directory
                 </Button>
@@ -141,16 +141,16 @@ function DoctorDetails() {
                 >
                     <Box
                         sx={{
-                            height: 12,
+                            height: 7,
                             background: `linear-gradient(90deg, ${colors.pine} 0%, ${colors.amber} 100%)`,
                         }}
                     />
 
-                    <CardContent sx={{ p: { xs: 3, sm: 4, md: 5 } }}>
+                    <CardContent sx={{ p: { xs: 2.5, sm: 3.5 } }}>
                         {/* HEADER PROFILE */}
                         <Stack
                             direction={{ xs: "column", sm: "row" }}
-                            spacing={3}
+                            spacing={2.5}
                             alignItems={{ xs: "flex-start", sm: "center" }}
                         >
                             {doctor.doctorImage ? (
@@ -163,8 +163,8 @@ function DoctorDetails() {
                                         e.currentTarget.src = "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=400&q=80";
                                     }}
                                     sx={{
-                                        width: { xs: 90, sm: 110 },
-                                        height: { xs: 90, sm: 110 },
+                                        width: { xs: 76, sm: 96 },
+                                        height: { xs: 76, sm: 96 },
                                         borderRadius: 3.5,
                                         objectFit: "cover",
                                         objectPosition: "top",
@@ -176,8 +176,8 @@ function DoctorDetails() {
                             ) : (
                                 <Box
                                     sx={{
-                                        width: { xs: 90, sm: 110 },
-                                        height: { xs: 90, sm: 110 },
+                                        width: { xs: 76, sm: 96 },
+                                        height: { xs: 76, sm: 96 },
                                         borderRadius: 3.5,
                                         bgcolor: colors.pineSoft,
                                         display: "grid",
@@ -185,14 +185,14 @@ function DoctorDetails() {
                                         flexShrink: 0,
                                     }}
                                 >
-                                    <MedicalServicesOutlined sx={{ fontSize: 54, color: colors.pine }} />
+                                    <MedicalServicesOutlined sx={{ fontSize: 42, color: colors.pine }} />
                                 </Box>
                             )}
 
                             <Box sx={{ flex: 1 }}>
                                 <Stack direction="row" alignItems="center" spacing={1.5} flexWrap="wrap">
                                     <Typography
-                                        fontSize={{ xs: 26, md: 34 }}
+                                        fontSize={{ xs: 23, md: 28 }}
                                         fontWeight={800}
                                         color={colors.ink}
                                         sx={{ fontFamily: "'Newsreader', serif" }}
@@ -212,7 +212,7 @@ function DoctorDetails() {
                                     />
                                 </Stack>
 
-                                <Typography color={colors.pine} fontWeight={700} fontSize={16} mt={0.5}>
+                                <Typography color={colors.pine} fontWeight={700} fontSize={15} mt={0.35}>
                                     {doctor.specialization}
                                 </Typography>
 
@@ -222,13 +222,13 @@ function DoctorDetails() {
                             </Box>
                         </Stack>
 
-                        <Divider sx={{ my: 4, borderColor: colors.hairline }} />
+                        <Divider sx={{ my: 3, borderColor: colors.hairline }} />
 
                         {/* DETAILS GRID */}
-                        <Grid container spacing={2.5}>
+                        <Grid container spacing={1.5}>
                             {doctor.hospitalId?.hospitalName && (
                                 <Grid item xs={12} sm={6}>
-                                    <Box sx={{ p: 2, borderRadius: 2.5, bgcolor: colors.canvas, border: `1px solid ${colors.hairline}` }}>
+                                    <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: colors.canvas, border: `1px solid ${colors.hairline}` }}>
                                         <Stack direction="row" spacing={1.2} alignItems="center">
                                             <LocalHospital sx={{ color: colors.pine, fontSize: 22 }} />
                                             <Box>
@@ -246,7 +246,7 @@ function DoctorDetails() {
 
                             {doctor.departmentId?.departmentName && (
                                 <Grid item xs={12} sm={6}>
-                                    <Box sx={{ p: 2, borderRadius: 2.5, bgcolor: colors.canvas, border: `1px solid ${colors.hairline}` }}>
+                                    <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: colors.canvas, border: `1px solid ${colors.hairline}` }}>
                                         <Stack direction="row" spacing={1.2} alignItems="center">
                                             <SchoolOutlined sx={{ color: colors.amber, fontSize: 22 }} />
                                             <Box>
@@ -263,7 +263,7 @@ function DoctorDetails() {
                             )}
 
                             <Grid item xs={12} sm={4}>
-                                <Box sx={{ p: 2, borderRadius: 2.5, bgcolor: colors.canvas, border: `1px solid ${colors.hairline}` }}>
+                                <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: colors.canvas, border: `1px solid ${colors.hairline}` }}>
                                     <Stack direction="row" spacing={1.2} alignItems="center">
                                         <WorkHistoryOutlined sx={{ color: colors.pine, fontSize: 22 }} />
                                         <Box>
@@ -279,7 +279,7 @@ function DoctorDetails() {
                             </Grid>
 
                             <Grid item xs={12} sm={4}>
-                                <Box sx={{ p: 2, borderRadius: 2.5, bgcolor: colors.canvas, border: `1px solid ${colors.hairline}` }}>
+                                <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: colors.canvas, border: `1px solid ${colors.hairline}` }}>
                                     <Stack direction="row" spacing={1.2} alignItems="center">
                                         <PaymentsOutlined sx={{ color: colors.pine, fontSize: 22 }} />
                                         <Box>
@@ -295,7 +295,7 @@ function DoctorDetails() {
                             </Grid>
 
                             <Grid item xs={12} sm={4}>
-                                <Box sx={{ p: 2, borderRadius: 2.5, bgcolor: colors.canvas, border: `1px solid ${colors.hairline}` }}>
+                                <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: colors.canvas, border: `1px solid ${colors.hairline}` }}>
                                     <Stack direction="row" spacing={1.2} alignItems="center">
                                         <TranslateOutlined sx={{ color: colors.amber, fontSize: 22 }} />
                                         <Box>
@@ -312,7 +312,7 @@ function DoctorDetails() {
                         </Grid>
 
                         {/* CTA SECTION */}
-                        <Box sx={{ mt: 5 }}>
+                        <Box sx={{ mt: 3.5 }}>
                             {isAuthenticated && role !== "patient" ? (
                                 <Alert severity="info" sx={{ borderRadius: 2.5 }}>
                                     You are currently logged in as a <strong>{role === "hospital" ? "Hospital Staff" : "Administrator"}</strong>.

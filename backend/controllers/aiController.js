@@ -266,6 +266,41 @@ routing only. It is not a medical diagnosis.
         }
     };
 
+const parseReportJson = (answer) => {
+    const candidate = String(answer || "")
+        .replace(/^\s*```(?:json)?\s*/i, "")
+        .replace(/\s*```\s*$/i, "")
+        .trim();
+    const parsed = JSON.parse(candidate);
+    const statuses = ["Normal", "High", "Low", "Unable to Determine"];
+    const list = (value) => Array.isArray(value)
+        ? value.filter((item) => typeof item === "string" && item.trim()).map((item) => item.trim()).slice(0, 8)
+        : [];
+    const tests = Array.isArray(parsed.tests) ? parsed.tests.map((test) => ({
+        testName: typeof test?.testName === "string" ? test.testName.trim() : "",
+        result: typeof test?.result === "string" ? test.result.trim() : "Not stated",
+        unit: typeof test?.unit === "string" ? test.unit.trim() : "",
+        referenceRange: typeof test?.referenceRange === "string" ? test.referenceRange.trim() : "Not stated",
+        status: statuses.includes(test?.status) ? test.status : "Unable to Determine",
+        interpretation: typeof test?.interpretation === "string" ? test.interpretation.trim() : "The report does not provide enough information for an AI comparison.",
+    })).filter((test) => test.testName) : [];
+
+    return {
+        reportDate: typeof parsed.reportDate === "string" && parsed.reportDate.trim() ? parsed.reportDate.trim() : "Not stated",
+        reportType: typeof parsed.reportType === "string" && parsed.reportType.trim() ? parsed.reportType.trim() : "Medical report",
+        overview: typeof parsed.overview === "string" && parsed.overview.trim() ? parsed.overview.trim() : "No reliable overview could be extracted.",
+        tests,
+        keyFindings: list(parsed.keyFindings),
+        clinicianDiscussion: list(parsed.clinicianDiscussion),
+        reviewPriority: ["Routine review", "Prompt clinical review", "Emergency attention", "Unable to determine"].includes(parsed.reviewPriority)
+            ? parsed.reviewPriority : "Unable to determine",
+        priorityExplanation: typeof parsed.priorityExplanation === "string" && parsed.priorityExplanation.trim()
+            ? parsed.priorityExplanation.trim() : "The available report information does not establish a review priority.",
+        nextSteps: list(parsed.nextSteps),
+        extractionStatus: parsed.extractionStatus === "complete" ? "complete" : "unclear",
+    };
+};
+
 // Reports are read in memory for this request only. They are not added to the
 // patient's medical-records store by this endpoint.
 exports.analyzeMedicalReport = async (req, res) => {
@@ -281,44 +316,51 @@ exports.analyzeMedicalReport = async (req, res) => {
 
         const prompt = `${buildMedicalSystemPrompt()}
 
-You are reviewing a patient-provided medical report. Extract only information visibly present in the report. Do not invent values, do not diagnose, and do not say that a report is normal or abnormal without qualifying that a clinician must interpret it in context.
+Review the attached patient-provided laboratory or medical report. Return ONLY valid JSON, with no markdown or explanatory text, matching this schema:
+{
+  "reportDate": "date shown in report, or Not stated",
+  "reportType": "type of document",
+  "overview": "one concise evidence-based overview",
+  "tests": [{"testName":"", "result":"", "unit":"", "referenceRange":"", "status":"Normal|High|Low|Unable to Determine", "interpretation":"plain-language, non-diagnostic explanation"}],
+  "keyFindings": ["only findings visible in the report"],
+  "clinicianDiscussion": ["questions or flagged items to discuss"],
+  "reviewPriority": "Routine review|Prompt clinical review|Emergency attention|Unable to determine",
+  "priorityExplanation": "brief explanation based only on the visible report",
+  "nextSteps": ["safe next steps"],
+  "extractionStatus": "complete|unclear"
+}
 
-Provide exactly these patient-friendly sections:
-Report overview:
-[document type and key findings or "Unable to read"]
-
-Items to discuss with a clinician:
-[short bullets; say "None identified from the visible report" if appropriate]
-
-Urgency:
-[Routine review / Prompt clinical review / Emergency attention]
-
-Next step:
-[safe, practical next step]
-
-Important:
-This AI summary is for education only. It cannot confirm that results are normal or diagnose a condition. A qualified clinician must interpret the full report with the patient's history.`;
+Rules: extract only values, units, ranges, date, and patient-independent findings visible in the file. Never invent missing values or reference ranges. Compare a result only against the reference range stated beside it. If a range, result, unit, or comparison is unclear, use "Not stated" and status "Unable to Determine". Do not diagnose, prescribe medicine, or call the patient healthy. If the document is unreadable or has no reliably readable test entries, use extractionStatus "unclear" and empty tests.`;
 
         const answer = await generateGeminiResponse(prompt, {
             mime_type: req.file.mimetype === "image/jpg" ? "image/jpeg" : req.file.mimetype,
             data: req.file.buffer.toString("base64"),
         });
 
-        const lower = answer.toLowerCase();
-        const urgency = lower.includes("emergency attention")
-            ? "Emergency attention"
-            : lower.includes("prompt clinical review") || lower.includes("urgent")
-            ? "Prompt clinical review"
-            : "Routine review";
+        let analysis;
+        try {
+            analysis = parseReportJson(answer);
+        } catch {
+            return res.status(422).json({
+                success: false,
+                message: "We could not reliably read the report. Please upload a clearer PDF or image with visible test values and reference ranges.",
+            });
+        }
+
+        if (analysis.extractionStatus === "unclear" || analysis.tests.length === 0) {
+            return res.status(422).json({
+                success: false,
+                message: "We could not reliably extract test results from this report. Please upload a clearer report that includes values and reference ranges.",
+            });
+        }
 
         return res.status(200).json({
             success: true,
-            answer,
-            urgency,
+            analysis,
             fileName: req.file.originalname,
         });
     } catch (error) {
-        console.error("Medical report analysis error:", error);
+        console.error("Medical report analysis failed:", error.message);
         return res.status(500).json({
             success: false,
             message: error.message || "Unable to analyse this report right now.",

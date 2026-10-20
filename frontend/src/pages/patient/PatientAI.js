@@ -14,6 +14,12 @@ import {
     IconButton,
     Paper,
     Stack,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
     TextField,
     Tooltip,
     Typography,
@@ -354,6 +360,15 @@ export default function PatientAI() {
             setReportError("Choose a PDF, JPG, or PNG medical report first.");
             return;
         }
+        const supportedTypes = ["application/pdf", "image/jpeg", "image/png"];
+        if (!supportedTypes.includes(reportFile.type)) {
+            setReportError("Only PDF, JPG, and PNG files are supported.");
+            return;
+        }
+        if (reportFile.size > 10 * 1024 * 1024) {
+            setReportError("This file is larger than 10 MB. Please choose a smaller report.");
+            return;
+        }
         try {
             setReportLoading(true);
             setReportError("");
@@ -363,7 +378,7 @@ export default function PatientAI() {
             const response = await api.post("/ai/report-analysis", formData, {
                 headers: { "Content-Type": "multipart/form-data" },
             });
-            setReportResult(response.data);
+            setReportResult({ ...response.data.analysis, fileName: response.data.fileName });
         } catch (err) {
             setReportError(err.response?.data?.message || "We could not analyse this report. Please try again.");
         } finally {
@@ -1424,7 +1439,8 @@ export default function PatientAI() {
                                 <Button component="label" variant="outlined" startIcon={<UploadFileOutlined />} sx={{ minHeight: 48 }}>
                                     Choose report
                                     <input hidden type="file" accept="application/pdf,image/jpeg,image/png" onChange={(event) => {
-                                        setReportFile(event.target.files?.[0] || null);
+                                        const selected = event.target.files?.[0] || null;
+                                        setReportFile(selected);
                                         setReportError("");
                                         setReportResult(null);
                                     }} />
@@ -1444,11 +1460,59 @@ export default function PatientAI() {
                         {reportResult && (
                             <Box sx={{ mt: 3, p: { xs: 2, sm: 3 }, borderRadius: 3, border: `1px solid ${colors.hairline}`, bgcolor: "#FCFEFD" }}>
                                 <Stack direction={{ xs: "column", sm: "row" }} justifyContent="space-between" spacing={1} mb={2}>
-                                    <Typography fontWeight={800}>Review for {reportResult.fileName}</Typography>
-                                    <Chip size="small" label={reportResult.urgency} color={reportResult.urgency === "Emergency attention" ? "error" : reportResult.urgency === "Prompt clinical review" ? "warning" : "success"} />
+                                    <Box>
+                                        <Typography fontWeight={800}>{reportResult.reportType}</Typography>
+                                        <Typography variant="body2" color="text.secondary">{reportResult.fileName} · Report date: {reportResult.reportDate}</Typography>
+                                    </Box>
+                                    <Chip size="small" label={reportResult.reviewPriority} color={reportResult.reviewPriority === "Emergency attention" ? "error" : reportResult.reviewPriority === "Prompt clinical review" ? "warning" : "default"} />
                                 </Stack>
-                                <FormattedMessageText text={reportResult.answer} />
-                                <Alert severity="warning" sx={{ mt: 2 }}>Do not delay urgent care based on this summary. Share the original report with a qualified clinician.</Alert>
+                                <Typography color="text.secondary" mb={2}>{reportResult.overview}</Typography>
+
+                                <TableContainer sx={{ border: `1px solid ${colors.hairline}`, borderRadius: 2, overflowX: "auto" }}>
+                                    <Table size="small" sx={{ minWidth: 680 }} aria-label="Extracted report results">
+                                        <TableHead sx={{ bgcolor: colors.canvas }}>
+                                            <TableRow>
+                                                <TableCell sx={{ fontWeight: 800 }}>Test</TableCell>
+                                                <TableCell sx={{ fontWeight: 800 }}>Result</TableCell>
+                                                <TableCell sx={{ fontWeight: 800 }}>Reference range</TableCell>
+                                                <TableCell sx={{ fontWeight: 800 }}>Status</TableCell>
+                                                <TableCell sx={{ fontWeight: 800 }}>Note</TableCell>
+                                            </TableRow>
+                                        </TableHead>
+                                        <TableBody>
+                                            {reportResult.tests.map((test, index) => (
+                                                <TableRow key={`${test.testName}-${index}`}>
+                                                    <TableCell sx={{ fontWeight: 700 }}>{test.testName}</TableCell>
+                                                    <TableCell>{test.result}{test.unit ? ` ${test.unit}` : ""}</TableCell>
+                                                    <TableCell>{test.referenceRange}</TableCell>
+                                                    <TableCell><Chip size="small" label={test.status} color={test.status === "High" || test.status === "Low" ? "warning" : test.status === "Normal" ? "success" : "default"} /></TableCell>
+                                                    <TableCell sx={{ maxWidth: 260, color: "text.secondary" }}>{test.interpretation}</TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </TableContainer>
+
+                                <Grid container spacing={2} sx={{ mt: 0.5 }}>
+                                    <Grid item xs={12} md={6}>
+                                        <Box sx={{ p: 2, borderRadius: 2, bgcolor: colors.canvas }}>
+                                            <Typography fontWeight={800} mb={0.8}>Key findings</Typography>
+                                            {reportResult.keyFindings.length ? reportResult.keyFindings.map((item, index) => <Typography key={index} variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>• {item}</Typography>) : <Typography variant="body2" color="text.secondary">No additional findings were extracted.</Typography>}
+                                        </Box>
+                                    </Grid>
+                                    <Grid item xs={12} md={6}>
+                                        <Box sx={{ p: 2, borderRadius: 2, bgcolor: colors.canvas }}>
+                                            <Typography fontWeight={800} mb={0.8}>Discuss with a clinician</Typography>
+                                            {reportResult.clinicianDiscussion.length ? reportResult.clinicianDiscussion.map((item, index) => <Typography key={index} variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>• {item}</Typography>) : <Typography variant="body2" color="text.secondary">Share the original report for a complete clinical interpretation.</Typography>}
+                                        </Box>
+                                    </Grid>
+                                </Grid>
+                                <Box sx={{ mt: 2, p: 2, borderLeft: `3px solid ${colors.pine}`, bgcolor: colors.pineSoft }}>
+                                    <Typography fontWeight={800}>Review priority: {reportResult.reviewPriority}</Typography>
+                                    <Typography variant="body2" color="text.secondary">{reportResult.priorityExplanation}</Typography>
+                                    {reportResult.nextSteps.length > 0 && <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}><strong>Next steps:</strong> {reportResult.nextSteps.join(" ")}</Typography>}
+                                </Box>
+                                <Alert severity="warning" sx={{ mt: 2 }}>This AI analysis is for informational purposes only. It does not diagnose a condition or confirm that a person is healthy. A qualified clinician must interpret the original report with the patient’s history.</Alert>
                             </Box>
                         )}
                     </CardContent>
