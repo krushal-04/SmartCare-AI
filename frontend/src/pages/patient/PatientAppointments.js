@@ -23,7 +23,21 @@ import {
 } from "@mui/icons-material";
 
 import DashboardLayout from "../../components/dashboard/DashboardLayout";
+import ConfirmDialog from "../../components/common/ConfirmDialog";
 import api from "../../services/api";
+
+const formatAppointmentDate = (value) => value
+    ? new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(value))
+    : "—";
+
+const isPastDate = (value) => {
+    if (!value) return false;
+    const appointmentDate = new Date(value);
+    appointmentDate.setHours(0, 0, 0, 0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return appointmentDate < today;
+};
 
 export default function PatientAppointments() {
     const navigate =
@@ -42,6 +56,9 @@ export default function PatientAppointments() {
 
     const [error, setError] =
         useState("");
+
+    const [appointmentToCancel, setAppointmentToCancel] = useState(null);
+    const [cancelling, setCancelling] = useState(false);
 
     const loadAppointments =
         async () => {
@@ -92,26 +109,18 @@ export default function PatientAppointments() {
             statusFilter,
         ]);
 
-    const cancelAppointment =
-        async (id) => {
-            const confirmed =
-                window.confirm(
-                    "Cancel this appointment?"
-                );
-
-            if (!confirmed) {
-                return;
-            }
-
+    const cancelAppointment = async () => {
+            if (!appointmentToCancel) return;
             try {
+                setCancelling(true);
                 await api.put(
-                    `/appointment/${id}/status`,
+                    `/appointment/${appointmentToCancel._id}/status`,
                     {
                         status:
                             "Cancelled",
                     }
                 );
-
+                setAppointmentToCancel(null);
                 loadAppointments();
             } catch (err) {
                 setError(
@@ -119,7 +128,7 @@ export default function PatientAppointments() {
                         ?.message ||
                         "Unable to cancel appointment."
                 );
-            }
+            } finally { setCancelling(false); }
         };
 
     return (
@@ -288,7 +297,7 @@ export default function PatientAppointments() {
                 filtered.map(
                     (appointment) => {
                         const canCancel =
-                            [
+                            !isPastDate(appointment.appointmentDate) && [
                                 "Pending",
                                 "Confirmed",
                             ].includes(
@@ -409,11 +418,7 @@ export default function PatientAppointments() {
                                                 }
                                             >
                                                 Date:{" "}
-                                                {appointment.appointmentDate
-                                                    ? new Date(
-                                                          appointment.appointmentDate
-                                                      ).toLocaleDateString()
-                                                    : "—"}
+                                                {formatAppointmentDate(appointment.appointmentDate)}
                                             </Typography>
 
                                             <Typography
@@ -474,9 +479,7 @@ export default function PatientAppointments() {
                                                 <Button
                                                     color="error"
                                                     onClick={() =>
-                                                        cancelAppointment(
-                                                            appointment._id
-                                                        )
+                                                        setAppointmentToCancel(appointment)
                                                     }
                                                 >
                                                     Cancel
@@ -490,6 +493,15 @@ export default function PatientAppointments() {
                     }
                 )
             )}
+            <ConfirmDialog
+                open={Boolean(appointmentToCancel)}
+                title="Cancel appointment?"
+                description={appointmentToCancel ? `Your appointment with ${appointmentToCancel.doctorId?.doctorName || "this doctor"} will be cancelled.` : ""}
+                confirmLabel="Cancel appointment"
+                loading={cancelling}
+                onClose={() => setAppointmentToCancel(null)}
+                onConfirm={cancelAppointment}
+            />
         </DashboardLayout>
     );
 }

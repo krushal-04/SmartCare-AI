@@ -26,6 +26,7 @@ import {
 } from "@mui/icons-material";
 
 import DashboardLayout from "../../components/dashboard/DashboardLayout";
+import ConfirmDialog from "../../components/common/ConfirmDialog";
 import MedicalMap from "../../components/MedicalMap";
 import api from "../../services/api";
 import { colors } from "../../theme/colors";
@@ -43,6 +44,8 @@ export default function PatientEmergency() {
     const [pageLoading, setPageLoading] = useState(true);
     const [error, setError] = useState("");
     const [message, setMessage] = useState("");
+    const [requestToCancel, setRequestToCancel] = useState(null);
+    const [cancelling, setCancelling] = useState(false);
 
     const isPhoneValid = phone.length === 10 && /^[6-9]\d{9}$/.test(phone);
 
@@ -190,12 +193,17 @@ export default function PatientEmergency() {
         }
     };
 
-    const cancelRequest = async (id) => {
+    const cancelRequest = async () => {
+        if (!requestToCancel) return;
         try {
-            await api.put(`/emergency/${id}/cancel`);
+            setCancelling(true);
+            await api.put(`/emergency/${requestToCancel._id}/cancel`);
+            setRequestToCancel(null);
             getRequests();
         } catch (err) {
             setError(err.response?.data?.message || "Unable to cancel request.");
+        } finally {
+            setCancelling(false);
         }
     };
 
@@ -566,7 +574,7 @@ export default function PatientEmergency() {
                                         size="small"
                                         variant="outlined"
                                         color="error"
-                                        onClick={() => cancelRequest(request._id)}
+                                        onClick={() => setRequestToCancel(request)}
                                         sx={{ borderRadius: 2.5, fontWeight: 700 }}
                                     >
                                         Cancel Request
@@ -577,6 +585,15 @@ export default function PatientEmergency() {
                     </Card>
                 ))
             )}
+            <ConfirmDialog
+                open={Boolean(requestToCancel)}
+                title="Cancel ambulance request?"
+                description="Only cancel if help is no longer needed. Once an ambulance is on the way, cancellation is unavailable for patient safety."
+                confirmLabel="Cancel request"
+                loading={cancelling}
+                onClose={() => setRequestToCancel(null)}
+                onConfirm={cancelRequest}
+            />
         </DashboardLayout>
     );
 }

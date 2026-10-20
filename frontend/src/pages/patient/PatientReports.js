@@ -26,6 +26,7 @@ import {
 } from "@mui/icons-material";
 
 import DashboardLayout from "../../components/dashboard/DashboardLayout";
+import ConfirmDialog from "../../components/common/ConfirmDialog";
 import api from "../../services/api";
 
 export default function PatientReports() {
@@ -52,6 +53,9 @@ export default function PatientReports() {
 
     const [error, setError] =
         useState("");
+
+    const [reportToDelete, setReportToDelete] = useState(null);
+    const [deleting, setDeleting] = useState(false);
 
     const loadReports =
         async () => {
@@ -180,21 +184,14 @@ export default function PatientReports() {
             }
         };
 
-    const deleteReport =
-        async (id) => {
-            if (
-                !window.confirm(
-                    "Delete this medical report?"
-                )
-            ) {
-                return;
-            }
-
+    const deleteReport = async () => {
+            if (!reportToDelete) return;
             try {
+                setDeleting(true);
                 await api.delete(
-                    `/reports/${id}`
+                    `/reports/${reportToDelete._id}`
                 );
-
+                setReportToDelete(null);
                 loadReports();
             } catch (err) {
                 setError(
@@ -202,7 +199,7 @@ export default function PatientReports() {
                         ?.message ||
                         "Unable to delete report."
                 );
-            }
+            } finally { setDeleting(false); }
         };
 
     return (
@@ -512,9 +509,11 @@ export default function PatientReports() {
                                                 variant="outlined"
                                                 label={
                                                     report.createdAt
-                                                        ? new Date(
-                                                              report.createdAt
-                                                          ).toLocaleDateString()
+                                                        ? new Intl.DateTimeFormat("en-GB", {
+                                                              day: "2-digit",
+                                                              month: "short",
+                                                              year: "numeric",
+                                                          }).format(new Date(report.createdAt))
                                                         : "—"
                                                 }
                                             />
@@ -562,9 +561,7 @@ export default function PatientReports() {
                                                 <CloseOutlined />
                                             }
                                             onClick={() =>
-                                                deleteReport(
-                                                    report._id
-                                                )
+                                                setReportToDelete(report)
                                             }
                                         >
                                             Delete
@@ -576,6 +573,15 @@ export default function PatientReports() {
                     )
                 )
             )}
+            <ConfirmDialog
+                open={Boolean(reportToDelete)}
+                title="Delete medical report?"
+                description={reportToDelete ? `“${reportToDelete.originalName}” will be permanently removed from your records.` : ""}
+                confirmLabel="Delete report"
+                loading={deleting}
+                onClose={() => setReportToDelete(null)}
+                onConfirm={deleteReport}
+            />
         </DashboardLayout>
     );
 }

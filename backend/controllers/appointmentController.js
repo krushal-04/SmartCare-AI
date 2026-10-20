@@ -55,6 +55,19 @@ const getTodayString = () => {
     return `${y}-${m}-${d}`;
 };
 
+// Appointments scheduled before today are no longer actionable.  Keeping this
+// at the API boundary means the patient, hospital and admin screens all agree.
+const completePastAppointments = async (patientId) => {
+    const today = getTodayString();
+    const { start } = getDateRange(today);
+    const query = {
+        appointmentDate: { $lt: start },
+        status: { $in: ["Pending", "Confirmed"] },
+    };
+    if (patientId) query.patientId = patientId;
+    await Appointment.updateMany(query, { $set: { status: "Completed" } });
+};
+
 exports.getAvailableSlots = async (
     req,
     res
@@ -577,6 +590,7 @@ exports.getMyAppointments = async (
     res
 ) => {
     try {
+        await completePastAppointments(req.user._id);
         const appointments =
             await Appointment.find({
                 patientId:
@@ -623,6 +637,7 @@ exports.getHospitalAppointments = async (
     res
 ) => {
     try {
+        await completePastAppointments();
         const hospital =
             await Hospital.findOne({
                 userId: req.user._id,
@@ -788,6 +803,19 @@ exports.updateAppointmentStatus = async (
                         "This appointment cannot be cancelled.",
                 });
             }
+
+            const today = getTodayString();
+            const appointmentDay = appointment.appointmentDate.toISOString().slice(0, 10);
+            if (appointmentDay < today) {
+                if (["Pending", "Confirmed"].includes(appointment.status)) {
+                    appointment.status = "Completed";
+                    await appointment.save();
+                }
+                return res.status(400).json({
+                    success: false,
+                    message: "Past appointments are completed automatically and cannot be cancelled.",
+                });
+            }
         }
 
         if (
@@ -875,6 +903,7 @@ exports.updateAppointmentStatus = async (
 
 exports.getAllAppointments = async (req, res) => {
     try {
+        await completePastAppointments();
         const query = {};
         if (req.query.status) query.status = req.query.status;
         if (req.query.hospitalId) query.hospitalId = req.query.hospitalId;
