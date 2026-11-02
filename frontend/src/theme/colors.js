@@ -1,27 +1,28 @@
 // ─────────────────────────────────────────────────────────────
-// SmartCare AI — Design Tokens (Premium Teal & Ocean Blue)
+// SmartCare AI — Shared healthcare design tokens
 // ─────────────────────────────────────────────────────────────
 
 export const colors = {
     // Canvas & Neutral
-    ink: "#0F172A",          // Slate 900
-    inkSoft: "#1E293B",      // Slate 800
-    canvas: "#F8FAFC",       // Slate 50 ultra-clean hospital background
-    canvasDeep: "#F1F5F9",   // Slate 100
+    navy: "#102A43",         // Primary / navigation
+    ink: "#172B4D",          // Main text
+    inkSoft: "#243B53",      // Dark supporting text
+    canvas: "#F5F7FA",       // Primary page background
+    canvasDeep: "#EEF2F6",   // Raised page background
     white: "#FFFFFF",
 
-    // Healthcare Primary: Deep Medical Teal
+    // Healthcare actions
     pine: "#0D9488",         // Teal 600
     pineDeep: "#0F766E",     // Teal 700
-    pineSoft: "#E6FFFA",     // Mint / Teal 50
-    primary: "#0D9488",
-    primaryDark: "#0F766E",
-    primaryLight: "#CCFBF1",
+    pineSoft: "#CCFBF1",     // Mint / Teal 50
+    primary: "#102A43",
+    primaryDark: "#0B2033",
+    primaryLight: "#D9E8F5",
 
     // Healthcare Secondary: Tech Ocean Blue
-    secondary: "#0284C7",    // Sky 600
-    secondaryDark: "#0369A1",
-    secondarySoft: "#E0F2FE",
+    secondary: "#0D9488",    // Professional teal
+    secondaryDark: "#0F766E",
+    secondarySoft: "#CCFBF1",
     blue: "#2563EB",
 
     // Warm Accents
@@ -35,8 +36,12 @@ export const colors = {
     brickSoft: "#FEE2E2",    // Red 100
 
     // Success Emerald
-    emerald: "#10B981",
-    emeraldSoft: "#D1FAE5",
+    emerald: "#16A34A",
+    emeraldSoft: "#DCFCE7",
+    success: "#16A34A",
+    warning: "#F59E0B",
+    error: "#DC2626",
+    info: "#2563EB",
 
     // Borders & Lines
     slate: "#64748B",        // Slate 500
@@ -46,9 +51,9 @@ export const colors = {
 };
 
 export const fonts = {
-    display: "'Outfit', 'Inter', -apple-system, sans-serif",
+    display: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
     body: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
 };
 
 export const fontImportUrl =
-    "https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800&display=swap";
+    "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap";

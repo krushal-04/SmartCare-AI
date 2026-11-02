@@ -33,7 +33,6 @@ import {
     EmergencyOutlined,
     GroupOutlined,
     LocalHospitalOutlined,
-    LocalPharmacyOutlined,
     LogoutOutlined,
     MedicalServicesOutlined,
     MenuOutlined,
@@ -143,8 +142,8 @@ const roleMeta = {
     patient: {
         title: "Patient Portal",
         badge: "Patient Account",
-        badgeBg: "rgba(113,233,223,0.18)",
-        badgeColor: "#71E9DF",
+        badgeBg: "rgba(13,148,136,0.18)",
+        badgeColor: "#5EEAD4",
         avatarBg: colors.pine,
         homeRoute: "/patient",
         notifRoute: "/patient/notifications",
@@ -152,18 +151,18 @@ const roleMeta = {
     hospital: {
         title: "Hospital Hub",
         badge: "Hospital Staff",
-        badgeBg: "rgba(214,138,60,0.2)",
-        badgeColor: colors.amber,
-        avatarBg: colors.amber,
+        badgeBg: "rgba(37,99,235,0.2)",
+        badgeColor: "#93C5FD",
+        avatarBg: colors.info,
         homeRoute: "/hospital",
         notifRoute: "/hospital/notifications",
     },
     admin: {
         title: "Admin Console",
         badge: "Administrator",
-        badgeBg: "rgba(197,139,42,0.2)",
-        badgeColor: "#F6C065",
-        avatarBg: "#C58B2A",
+        badgeBg: "rgba(13,148,136,0.2)",
+        badgeColor: "#99F6E4",
+        avatarBg: colors.pine,
         homeRoute: "/admin",
         notifRoute: "/admin/notifications",
     },
@@ -208,7 +207,7 @@ export default function DashboardLayout({ role, children, title, subtitle }) {
                 height: "100%",
                 display: "flex",
                 flexDirection: "column",
-                bgcolor: colors.ink,
+                bgcolor: colors.navy,
                 color: colors.white,
                 userSelect: "none",
             }}
@@ -251,10 +250,9 @@ export default function DashboardLayout({ role, children, title, subtitle }) {
                         <Stack direction="row" alignItems="center" spacing={1}>
                             <Typography
                                 sx={{
-                                    fontFamily: "'Newsreader', serif",
-                                    fontStyle: "italic",
-                                    fontWeight: 600,
-                                    fontSize: 22,
+                                    fontFamily: "Inter, sans-serif",
+                                    fontWeight: 750,
+                                    fontSize: 20,
                                     lineHeight: 1,
                                     color: colors.white,
                                 }}
@@ -267,7 +265,7 @@ export default function DashboardLayout({ role, children, title, subtitle }) {
                                 fontSize: 8.5,
                                 letterSpacing: 1.8,
                                 fontWeight: 800,
-                                color: colors.amber,
+                                color: "#5EEAD4",
                                 mt: 0.3,
                             }}
                         >
@@ -366,15 +364,15 @@ export default function DashboardLayout({ role, children, title, subtitle }) {
                                                 borderRadius: 2.5,
                                                 py: 1.1,
                                                 px: 1.6,
-                                                bgcolor: active ? colors.amberDeep : colors.amber,
-                                                color: colors.ink,
-                                                boxShadow: "0 4px 14px rgba(214,138,60,0.3)",
+                                                bgcolor: active ? colors.secondaryDark : colors.secondary,
+                                                color: colors.white,
+                                                boxShadow: "0 4px 14px rgba(13,148,136,0.25)",
                                                 "&:hover": {
-                                                    bgcolor: colors.amberDeep,
+                                                    bgcolor: colors.secondaryDark,
                                                 },
                                             }}
                                         >
-                                            <ListItemIcon sx={{ minWidth: 36, color: colors.ink }}>
+                                            <ListItemIcon sx={{ minWidth: 36, color: colors.white }}>
                                                 {item.icon}
                                             </ListItemIcon>
                                             <ListItemText
@@ -382,7 +380,7 @@ export default function DashboardLayout({ role, children, title, subtitle }) {
                                                 primaryTypographyProps={{
                                                     fontSize: 13.5,
                                                     fontWeight: 800,
-                                                    color: colors.ink,
+                                                    color: colors.white,
                                                 }}
                                             />
                                         </ListItemButton>
@@ -400,9 +398,9 @@ export default function DashboardLayout({ role, children, title, subtitle }) {
                                             px: 1.6,
                                             color: active ? colors.white : "rgba(255,255,255,0.72)",
                                             bgcolor: active
-                                                ? "rgba(113,233,223,0.15)"
+                                                ? "rgba(13,148,136,0.18)"
                                                 : "transparent",
-                                            borderLeft: active ? `3px solid ${colors.amber}` : "3px solid transparent",
+                                            borderLeft: active ? `3px solid ${colors.secondary}` : "3px solid transparent",
                                             "&:hover": {
                                                 bgcolor: "rgba(255,255,255,0.07)",
                                                 color: colors.white,
@@ -412,7 +410,7 @@ export default function DashboardLayout({ role, children, title, subtitle }) {
                                         <ListItemIcon
                                             sx={{
                                                 minWidth: 36,
-                                                color: active ? colors.amber : "inherit",
+                                                color: active ? "#5EEAD4" : "inherit",
                                             }}
                                         >
                                             {item.icon}
@@ -499,7 +497,7 @@ export default function DashboardLayout({ role, children, title, subtitle }) {
                 PaperProps={{
                     sx: {
                         width: { xs: "85%", sm: SIDEBAR_WIDTH + 20 },
-                        bgcolor: colors.ink,
+                        bgcolor: colors.navy,
                         boxShadow: "0 10px 40px rgba(0,0,0,0.3)",
                     },
                 }}
@@ -553,8 +551,8 @@ export default function DashboardLayout({ role, children, title, subtitle }) {
                                 <Typography
                                     variant="h5"
                                     sx={{
-                                        fontFamily: "'Newsreader', serif",
-                                        fontWeight: 600,
+                                        fontFamily: "Inter, sans-serif",
+                                        fontWeight: 750,
                                         fontSize: { xs: 20, md: 24 },
                                         color: colors.ink,
                                         lineHeight: 1.15,
@@ -583,15 +581,15 @@ export default function DashboardLayout({ role, children, title, subtitle }) {
                                     startIcon={<CalendarMonthOutlined fontSize="small" />}
                                     onClick={() => handleNavigate("/book-appointment")}
                                     sx={{
-                                        bgcolor: colors.amber,
-                                        color: colors.ink,
+                                        bgcolor: colors.secondary,
+                                        color: colors.white,
                                         fontWeight: 800,
                                         fontSize: 13,
                                         px: 2,
                                         py: 0.8,
                                         borderRadius: 2.2,
                                         display: { xs: "none", sm: "inline-flex" },
-                                        "&:hover": { bgcolor: colors.amberDeep },
+                                        "&:hover": { bgcolor: colors.secondaryDark },
                                     }}
                                 >
                                     Book Appointment

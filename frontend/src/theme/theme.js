@@ -25,9 +25,10 @@ const theme = createTheme({
             light: colors.emeraldSoft,
         },
         warning: {
-            main: colors.amber,
+            main: colors.warning,
             light: colors.amberSoft,
         },
+        info: { main: colors.info },
         background: {
             default: colors.canvas,
             paper: colors.white,
@@ -41,14 +42,17 @@ const theme = createTheme({
 
     typography: {
         fontFamily: fonts.body,
-        h1: { fontFamily: fonts.display, fontWeight: 800, fontSize: "clamp(1.9rem, 3vw, 2.5rem)", lineHeight: 1.16 },
-        h2: { fontFamily: fonts.display, fontWeight: 800, fontSize: "clamp(1.6rem, 2.5vw, 2.1rem)", lineHeight: 1.2 },
-        h3: { fontFamily: fonts.display, fontWeight: 700, fontSize: "clamp(1.35rem, 2vw, 1.75rem)" },
-        h4: { fontFamily: fonts.display, fontWeight: 700, fontSize: "1.35rem" },
-        h5: { fontFamily: fonts.display, fontWeight: 700, fontSize: "1.16rem" },
-        h6: { fontFamily: fonts.display, fontWeight: 600, fontSize: "1rem" },
-        subtitle1: { fontFamily: fonts.body, fontWeight: 500 },
-        button: { textTransform: "none", fontWeight: 700 },
+        h1: { fontFamily: fonts.display, fontWeight: 750, fontSize: "clamp(1.5rem, 2vw, 1.75rem)", lineHeight: 1.25 },
+        h2: { fontFamily: fonts.display, fontWeight: 750, fontSize: "1.25rem", lineHeight: 1.3 },
+        h3: { fontFamily: fonts.display, fontWeight: 700, fontSize: "1.125rem", lineHeight: 1.35 },
+        h4: { fontFamily: fonts.display, fontWeight: 700, fontSize: "1.0625rem" },
+        h5: { fontFamily: fonts.display, fontWeight: 700, fontSize: "1rem" },
+        h6: { fontFamily: fonts.display, fontWeight: 700, fontSize: "0.9375rem" },
+        body1: { fontSize: "0.9375rem", lineHeight: 1.55 },
+        body2: { fontSize: "0.875rem", lineHeight: 1.5 },
+        caption: { fontSize: "0.8125rem", lineHeight: 1.45 },
+        subtitle1: { fontFamily: fonts.body, fontWeight: 500, fontSize: "0.9375rem" },
+        button: { textTransform: "none", fontWeight: 700, fontSize: "0.875rem" },
     },
 
     shape: {
@@ -63,28 +67,30 @@ const theme = createTheme({
                     fontWeight: 700,
                     borderRadius: 10,
                     boxShadow: "none",
-                    padding: "8px 18px",
+                    minHeight: 40,
+                    padding: "8px 16px",
                     transition: "all 0.2s ease-in-out",
                 },
                 containedPrimary: {
-                    background: "linear-gradient(135deg, #0D9488 0%, #0F766E 100%)",
-                    boxShadow: "0 4px 12px rgba(13, 148, 136, 0.25)",
+                    background: colors.primary,
+                    boxShadow: "0 2px 6px rgba(16, 42, 67, 0.18)",
                     "&:hover": {
-                        background: "linear-gradient(135deg, #0F766E 0%, #115E59 100%)",
-                        boxShadow: "0 6px 16px rgba(13, 148, 136, 0.35)",
+                        background: colors.primaryDark,
+                        boxShadow: "0 4px 10px rgba(16, 42, 67, 0.22)",
                     },
                 },
                 containedSecondary: {
-                    background: "linear-gradient(135deg, #0284C7 0%, #0369A1 100%)",
-                    boxShadow: "0 4px 12px rgba(2, 132, 199, 0.25)",
+                    background: colors.secondary,
+                    boxShadow: "0 2px 6px rgba(13, 148, 136, 0.18)",
                     "&:hover": {
-                        background: "linear-gradient(135deg, #0369A1 0%, #075985 100%)",
-                        boxShadow: "0 6px 16px rgba(2, 132, 199, 0.35)",
+                        background: colors.secondaryDark,
+                        boxShadow: "0 4px 10px rgba(13, 148, 136, 0.22)",
                     },
                 },
                 sizeLarge: {
-                    paddingTop: 12,
-                    paddingBottom: 12,
+                    minHeight: 48,
+                    paddingTop: 10,
+                    paddingBottom: 10,
                     paddingLeft: 24,
                     paddingRight: 24,
                     fontSize: "1rem",
@@ -94,7 +100,7 @@ const theme = createTheme({
         MuiCard: {
             styleOverrides: {
                 root: {
-                    boxShadow: "0 4px 20px -2px rgba(15, 23, 42, 0.05)",
+                    boxShadow: "0 2px 8px rgba(16, 42, 67, 0.06)",
                     border: `1px solid ${colors.hairline}`,
                     borderRadius: 16,
                     transition: "box-shadow 0.2s ease-in-out, transform 0.2s ease-in-out",
@@ -111,6 +117,9 @@ const theme = createTheme({
                 paper: { margin: 16, borderRadius: 16 },
             },
         },
+        MuiDialogTitle: { styleOverrides: { root: { padding: "20px 24px 12px", fontWeight: 700, fontSize: "1.125rem" } } },
+        MuiDialogContent: { styleOverrides: { root: { padding: "12px 24px 20px" } } },
+        MuiDialogActions: { styleOverrides: { root: { padding: "12px 24px 20px", gap: 8 } } },
         MuiChip: {
             styleOverrides: {
                 root: {
@@ -137,6 +146,17 @@ const theme = createTheme({
                 },
             },
         },
+        MuiInputLabel: { styleOverrides: { root: { fontSize: "0.875rem", fontWeight: 600, color: colors.inkSoft } } },
+        MuiTableContainer: { styleOverrides: { root: { border: `1px solid ${colors.hairline}`, borderRadius: 12 } } },
+        MuiTableHead: { styleOverrides: { root: { backgroundColor: "#F1F5F9" } } },
+        MuiTableCell: {
+            styleOverrides: {
+                root: { borderColor: colors.hairline, padding: "12px 16px", fontSize: "0.875rem", color: colors.ink },
+                head: { fontWeight: 700, color: colors.ink, fontSize: "0.75rem", letterSpacing: "0.03em", textTransform: "uppercase" },
+            },
+        },
+        MuiTableRow: { styleOverrides: { root: { "&:last-child td, &:last-child th": { borderBottom: 0 }, "&:hover": { backgroundColor: "#F8FAFC" } } } },
+        MuiAlert: { styleOverrides: { root: { borderRadius: 10, alignItems: "center" } } },
         MuiPaper: {
             styleOverrides: {
                 root: {

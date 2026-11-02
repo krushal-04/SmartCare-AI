@@ -13,7 +13,7 @@ export default function PageHeader({
     const navigate = useNavigate();
 
     return (
-        <Box sx={{ mb: 3 }}>
+        <Box sx={{ mb: 3, "& .MuiButton-root": { minHeight: 36 } }}>
             {backTo && (
                 <Box sx={{ mb: 1.5 }}>
                     <Button
@@ -40,7 +40,7 @@ export default function PageHeader({
                 gap={2}
             >
                 <Box>
-                    <Typography fontSize={{ xs: 24, md: 30 }} fontWeight={900}>
+                    <Typography component="h1" fontSize={{ xs: 24, md: 28 }} fontWeight={750} lineHeight={1.25}>
                         {title}
                     </Typography>
                     {subtitle && (
