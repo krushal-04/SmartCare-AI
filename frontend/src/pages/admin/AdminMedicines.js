@@ -11,7 +11,6 @@ import {
     DialogContent,
     DialogTitle,
     FormControl,
-    Grid,
     IconButton,
     InputAdornment,
     InputLabel,
@@ -311,8 +310,8 @@ export default function AdminMedicines() {
                             </Button>
                         </Box>
                     ) : (
-                        <TableContainer>
-                            <Table>
+                        <TableContainer sx={{ overflowX: "auto" }}>
+                            <Table sx={{ minWidth: 700 }}>
                                 <TableHead>
                                     <TableRow sx={{ bgcolor: "#F8FAFB" }}>
                                         <TableCell sx={{ fontWeight: 800 }}>Medicine & Generic</TableCell>
@@ -424,8 +423,8 @@ export default function AdminMedicines() {
                         {editingMed ? "Edit Medicine" : "Register Pharmaceutical Product"}
                     </DialogTitle>
                     <DialogContent dividers>
-                        <Grid container spacing={2.5} sx={{ mt: 0.5 }}>
-                            <Grid item xs={12} sm={6}>
+                        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(6, 1fr)" }, gap: 2.5, mt: 0.5 }}>
+                            <Box sx={{ gridColumn: { xs: "span 1", sm: "span 3" } }}>
                                 <TextField
                                     fullWidth
                                     required
@@ -434,9 +433,9 @@ export default function AdminMedicines() {
                                     value={form.medicineName}
                                     onChange={(e) => setForm({ ...form, medicineName: e.target.value })}
                                 />
-                            </Grid>
+                            </Box>
 
-                            <Grid item xs={12} sm={6}>
+                            <Box sx={{ gridColumn: { xs: "span 1", sm: "span 3" } }}>
                                 <TextField
                                     fullWidth
                                     required
@@ -445,9 +444,9 @@ export default function AdminMedicines() {
                                     value={form.genericName}
                                     onChange={(e) => setForm({ ...form, genericName: e.target.value })}
                                 />
-                            </Grid>
+                            </Box>
 
-                            <Grid item xs={12} sm={4}>
+                            <Box sx={{ gridColumn: { xs: "span 1", sm: "span 2" } }}>
                                 <FormControl fullWidth required>
                                     <InputLabel>Category</InputLabel>
                                     <Select
@@ -462,9 +461,9 @@ export default function AdminMedicines() {
                                         ))}
                                     </Select>
                                 </FormControl>
-                            </Grid>
+                            </Box>
 
-                            <Grid item xs={12} sm={4}>
+                            <Box sx={{ gridColumn: { xs: "span 1", sm: "span 2" } }}>
                                 <FormControl fullWidth required>
                                     <InputLabel>Dosage Form</InputLabel>
                                     <Select
@@ -479,9 +478,9 @@ export default function AdminMedicines() {
                                         ))}
                                     </Select>
                                 </FormControl>
-                            </Grid>
+                            </Box>
 
-                            <Grid item xs={12} sm={4}>
+                            <Box sx={{ gridColumn: { xs: "span 1", sm: "span 2" } }}>
                                 <TextField
                                     fullWidth
                                     label="Strength / Dosage"
@@ -489,9 +488,9 @@ export default function AdminMedicines() {
                                     value={form.strength}
                                     onChange={(e) => setForm({ ...form, strength: e.target.value })}
                                 />
-                            </Grid>
+                            </Box>
 
-                            <Grid item xs={12} sm={6}>
+                            <Box sx={{ gridColumn: { xs: "span 1", sm: "span 3" } }}>
                                 <TextField
                                     fullWidth
                                     required
@@ -500,9 +499,9 @@ export default function AdminMedicines() {
                                     value={form.manufacturer}
                                     onChange={(e) => setForm({ ...form, manufacturer: e.target.value })}
                                 />
-                            </Grid>
+                            </Box>
 
-                            <Grid item xs={12} sm={6}>
+                            <Box sx={{ gridColumn: { xs: "span 1", sm: "span 3" } }}>
                                 <TextField
                                     fullWidth
                                     label="General Description"
@@ -510,9 +509,9 @@ export default function AdminMedicines() {
                                     value={form.description}
                                     onChange={(e) => setForm({ ...form, description: e.target.value })}
                                 />
-                            </Grid>
+                            </Box>
 
-                            <Grid item xs={12} sm={6}>
+                            <Box sx={{ gridColumn: { xs: "span 1", sm: "span 3" } }}>
                                 <TextField
                                     fullWidth
                                     multiline
@@ -522,9 +521,9 @@ export default function AdminMedicines() {
                                     value={form.usageInfo}
                                     onChange={(e) => setForm({ ...form, usageInfo: e.target.value })}
                                 />
-                            </Grid>
+                            </Box>
 
-                            <Grid item xs={12} sm={6}>
+                            <Box sx={{ gridColumn: { xs: "span 1", sm: "span 3" } }}>
                                 <TextField
                                     fullWidth
                                     multiline
@@ -534,8 +533,8 @@ export default function AdminMedicines() {
                                     value={form.precautions}
                                     onChange={(e) => setForm({ ...form, precautions: e.target.value })}
                                 />
-                            </Grid>
-                        </Grid>
+                            </Box>
+                        </Box>
                     </DialogContent>
                     <DialogActions sx={{ p: 2.5 }}>
                         <Button onClick={() => setOpenDialog(false)} color="inherit" sx={{ fontWeight: 600 }}>
@@ -560,32 +559,32 @@ export default function AdminMedicines() {
                 </DialogTitle>
                 <DialogContent dividers>
                     {detailMed && (
-                        <Grid container spacing={2}>
-                            <Grid item xs={12} sm={6}>
+                        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))" }, gap: 2 }}>
+                            <Box>
                                 <Typography variant="caption" color="text.secondary">Brand Name</Typography>
                                 <Typography fontWeight={800}>{detailMed.medicineName}</Typography>
-                            </Grid>
-                            <Grid item xs={12} sm={6}>
+                            </Box>
+                            <Box>
                                 <Typography variant="caption" color="text.secondary">Generic Name</Typography>
                                 <Typography fontWeight={700}>{detailMed.genericName}</Typography>
-                            </Grid>
-                            <Grid item xs={12} sm={6}>
+                            </Box>
+                            <Box>
                                 <Typography variant="caption" color="text.secondary">Category & Form</Typography>
                                 <Typography fontWeight={600}>{detailMed.category} • {detailMed.dosageForm} ({detailMed.strength || "Standard"})</Typography>
-                            </Grid>
-                            <Grid item xs={12} sm={6}>
+                            </Box>
+                            <Box>
                                 <Typography variant="caption" color="text.secondary">Manufacturer</Typography>
                                 <Typography fontWeight={600}>{detailMed.manufacturer}</Typography>
-                            </Grid>
-                            <Grid item xs={12}>
+                            </Box>
+                            <Box sx={{ gridColumn: { xs: "span 1", sm: "span 2" } }}>
                                 <Typography variant="caption" color="text.secondary">Usage & Dosage Instructions</Typography>
                                 <Typography variant="body2" sx={{ mt: 0.5 }}>{detailMed.usageInfo || "Follow physician advice."}</Typography>
-                            </Grid>
-                            <Grid item xs={12}>
+                            </Box>
+                            <Box sx={{ gridColumn: { xs: "span 1", sm: "span 2" } }}>
                                 <Typography variant="caption" color="text.secondary">Precautions & Warnings</Typography>
                                 <Typography variant="body2" sx={{ mt: 0.5, color: "warning.dark" }}>{detailMed.precautions || "Standard clinical precautions apply."}</Typography>
-                            </Grid>
-                        </Grid>
+                            </Box>
+                        </Box>
                     )}
                 </DialogContent>
                 <DialogActions sx={{ p: 2 }}>

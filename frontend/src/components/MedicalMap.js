@@ -142,6 +142,7 @@ export default function MedicalMap({
                 mapInstanceRef.current = null;
             }
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isLoaded]);
 
     // Update hospital markers

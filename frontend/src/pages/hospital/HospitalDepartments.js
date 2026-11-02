@@ -223,8 +223,8 @@ export default function HospitalDepartments() {
                             )}
                         </Box>
                     ) : (
-                        <TableContainer>
-                            <Table>
+                        <TableContainer sx={{ overflowX: "auto" }}>
+                            <Table sx={{ minWidth: 650 }}>
                                 <TableHead>
                                     <TableRow sx={{ bgcolor: "#F8FAFB" }}>
                                         <TableCell sx={{ fontWeight: 800 }}>Department</TableCell>

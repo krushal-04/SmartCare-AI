@@ -13,7 +13,6 @@ import {
     DialogContent,
     DialogTitle,
     FormControl,
-    Grid,
     IconButton,
     InputAdornment,
     InputLabel,
@@ -40,7 +39,6 @@ import {
     MedicalServicesOutlined,
     EmailOutlined,
     PhoneOutlined,
-    FilterListRounded,
 } from "@mui/icons-material";
 
 import DashboardLayout from "../../components/dashboard/DashboardLayout";
@@ -326,8 +324,8 @@ export default function HospitalDoctors() {
                             )}
                         </Box>
                     ) : (
-                        <TableContainer>
-                            <Table>
+                        <TableContainer sx={{ overflowX: "auto", width: "100%" }}>
+                            <Table sx={{ minWidth: 680 }}>
                                 <TableHead>
                                     <TableRow sx={{ bgcolor: "#F8FAFB" }}>
                                         <TableCell sx={{ fontWeight: 800 }}>Doctor</TableCell>
@@ -444,14 +442,29 @@ export default function HospitalDoctors() {
             </Card>
 
             {/* Add / Edit Doctor Dialog */}
-            <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="md" fullWidth>
+            <Dialog
+                open={openDialog}
+                onClose={() => setOpenDialog(false)}
+                maxWidth="md"
+                fullWidth
+                PaperProps={{
+                    sx: { m: { xs: 1.5, sm: 2 }, borderRadius: 3.5 },
+                }}
+            >
                 <form onSubmit={handleSubmit}>
                     <DialogTitle sx={{ fontWeight: 800 }}>
                         {editingDoctor ? "Edit Doctor Profile" : "Register New Doctor"}
                     </DialogTitle>
                     <DialogContent dividers>
-                        <Grid container spacing={2.5} sx={{ mt: 0.5 }}>
-                            <Grid item xs={12} sm={6}>
+                        <Box
+                            sx={{
+                                display: "grid",
+                                gridTemplateColumns: { xs: "1fr", sm: "repeat(6, minmax(0, 1fr))" },
+                                gap: 2.5,
+                                mt: 0.5,
+                            }}
+                        >
+                            <Box sx={{ gridColumn: { sm: "span 3" } }}>
                                 <TextField
                                     fullWidth
                                     required
@@ -460,9 +473,9 @@ export default function HospitalDoctors() {
                                     value={form.doctorName}
                                     onChange={(e) => setForm({ ...form, doctorName: e.target.value })}
                                 />
-                            </Grid>
+                            </Box>
 
-                            <Grid item xs={12} sm={6}>
+                            <Box sx={{ gridColumn: { sm: "span 3" } }}>
                                 <FormControl fullWidth required>
                                     <InputLabel>Department</InputLabel>
                                     <Select
@@ -477,9 +490,9 @@ export default function HospitalDoctors() {
                                         ))}
                                     </Select>
                                 </FormControl>
-                            </Grid>
+                            </Box>
 
-                            <Grid item xs={12} sm={6}>
+                            <Box sx={{ gridColumn: { sm: "span 3" } }}>
                                 <TextField
                                     fullWidth
                                     required
@@ -488,9 +501,9 @@ export default function HospitalDoctors() {
                                     value={form.email}
                                     onChange={(e) => setForm({ ...form, email: e.target.value })}
                                 />
-                            </Grid>
+                            </Box>
 
-                            <Grid item xs={12} sm={6}>
+                            <Box sx={{ gridColumn: { sm: "span 3" } }}>
                                 <TextField
                                     fullWidth
                                     required
@@ -498,9 +511,9 @@ export default function HospitalDoctors() {
                                     value={form.phone}
                                     onChange={(e) => setForm({ ...form, phone: e.target.value })}
                                 />
-                            </Grid>
+                            </Box>
 
-                            <Grid item xs={12} sm={6}>
+                            <Box sx={{ gridColumn: { sm: "span 3" } }}>
                                 <TextField
                                     fullWidth
                                     required
@@ -509,9 +522,9 @@ export default function HospitalDoctors() {
                                     value={form.qualification}
                                     onChange={(e) => setForm({ ...form, qualification: e.target.value })}
                                 />
-                            </Grid>
+                            </Box>
 
-                            <Grid item xs={12} sm={6}>
+                            <Box sx={{ gridColumn: { sm: "span 3" } }}>
                                 <TextField
                                     fullWidth
                                     required
@@ -520,9 +533,9 @@ export default function HospitalDoctors() {
                                     value={form.specialization}
                                     onChange={(e) => setForm({ ...form, specialization: e.target.value })}
                                 />
-                            </Grid>
+                            </Box>
 
-                            <Grid item xs={12} sm={4}>
+                            <Box sx={{ gridColumn: { sm: "span 2" } }}>
                                 <TextField
                                     fullWidth
                                     type="number"
@@ -530,9 +543,9 @@ export default function HospitalDoctors() {
                                     value={form.experience}
                                     onChange={(e) => setForm({ ...form, experience: e.target.value })}
                                 />
-                            </Grid>
+                            </Box>
 
-                            <Grid item xs={12} sm={4}>
+                            <Box sx={{ gridColumn: { sm: "span 2" } }}>
                                 <TextField
                                     fullWidth
                                     type="number"
@@ -540,9 +553,9 @@ export default function HospitalDoctors() {
                                     value={form.consultationFee}
                                     onChange={(e) => setForm({ ...form, consultationFee: e.target.value })}
                                 />
-                            </Grid>
+                            </Box>
 
-                            <Grid item xs={12} sm={4}>
+                            <Box sx={{ gridColumn: { sm: "span 2" } }}>
                                 <FormControl fullWidth>
                                     <InputLabel>Gender</InputLabel>
                                     <Select
@@ -555,9 +568,9 @@ export default function HospitalDoctors() {
                                         <MenuItem value="Other">Other</MenuItem>
                                     </Select>
                                 </FormControl>
-                            </Grid>
+                            </Box>
 
-                            <Grid item xs={12} sm={6}>
+                            <Box sx={{ gridColumn: { sm: "span 6" } }}>
                                 <TextField
                                     fullWidth
                                     label="Languages Spoken"
@@ -566,9 +579,9 @@ export default function HospitalDoctors() {
                                     onChange={(e) => setForm({ ...form, languages: e.target.value })}
                                     helperText="Comma separated list"
                                 />
-                            </Grid>
+                            </Box>
 
-                            <Grid item xs={12}>
+                            <Box sx={{ gridColumn: { sm: "span 6" } }}>
                                 <ImageUpload
                                     label="Doctor Profile Photo"
                                     value={form.doctorImage}
@@ -577,8 +590,8 @@ export default function HospitalDoctors() {
                                     circle={true}
                                     helperText="Browse or drag doctor profile photo to store in Cloudinary."
                                 />
-                            </Grid>
-                        </Grid>
+                            </Box>
+                        </Box>
                     </DialogContent>
                     <DialogActions sx={{ p: 2.5 }}>
                         <Button onClick={() => setOpenDialog(false)} color="inherit" sx={{ fontWeight: 600 }}>

@@ -10,7 +10,6 @@ import {
     CircularProgress,
     Container,
     Divider,
-    Grid,
     Stack,
     Typography,
 } from "@mui/material";
@@ -217,22 +216,21 @@ function HospitalDetails() {
                                 <Typography variant="h6" fontWeight={800} color={colors.ink}>
                                     Key Facilities & Specialties
                                 </Typography>
-                                <Grid container spacing={1.2} mt={1}>
+                                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.2, mt: 1 }}>
                                     {hospital.facilities.map((facility) => (
-                                        <Grid item key={facility}>
-                                            <Chip
-                                                label={facility}
-                                                variant="outlined"
-                                                sx={{
-                                                    borderRadius: 2,
-                                                    borderColor: colors.hairline,
-                                                    bgcolor: colors.canvas,
-                                                    fontWeight: 600,
-                                                }}
-                                            />
-                                        </Grid>
+                                        <Chip
+                                            key={facility}
+                                            label={facility}
+                                            variant="outlined"
+                                            sx={{
+                                                borderRadius: 2,
+                                                borderColor: colors.hairline,
+                                                bgcolor: colors.canvas,
+                                                fontWeight: 600,
+                                            }}
+                                        />
                                     ))}
-                                </Grid>
+                                </Box>
                             </Box>
                         )}
 
@@ -242,29 +240,28 @@ function HospitalDetails() {
                                 <Typography variant="h6" fontWeight={800} color={colors.ink} mb={1.5}>
                                     Hospital Gallery & Infrastructure
                                 </Typography>
-                                <Grid container spacing={2}>
+                                <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))", md: "repeat(3, minmax(0, 1fr))" }, gap: 2 }}>
                                     {hospital.hospitalImages.map((imgUrl, idx) => (
-                                        <Grid item xs={12} sm={6} md={4} key={idx}>
-                                            <Box
-                                                component="img"
-                                                src={imgUrl}
-                                                alt={`${hospital.hospitalName} facility ${idx + 1}`}
-                                                onError={(e) => {
-                                                    e.currentTarget.onerror = null;
-                                                    e.currentTarget.src = "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=400&q=80";
-                                                }}
-                                                sx={{
-                                                    width: "100%",
-                                                    height: 180,
-                                                    objectFit: "cover",
-                                                    borderRadius: 3,
-                                                    border: "1px solid #E2E8F0",
-                                                    boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
-                                                }}
-                                            />
-                                        </Grid>
+                                        <Box
+                                            key={idx}
+                                            component="img"
+                                            src={imgUrl}
+                                            alt={`${hospital.hospitalName} facility ${idx + 1}`}
+                                            onError={(e) => {
+                                                e.currentTarget.onerror = null;
+                                                e.currentTarget.src = "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=400&q=80";
+                                            }}
+                                            sx={{
+                                                width: "100%",
+                                                height: 180,
+                                                objectFit: "cover",
+                                                borderRadius: 3,
+                                                border: "1px solid #E2E8F0",
+                                                boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+                                            }}
+                                        />
                                     ))}
-                                </Grid>
+                                </Box>
                             </Box>
                         )}
 

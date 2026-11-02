@@ -7,7 +7,6 @@ import {
     Card,
     CardContent,
     CircularProgress,
-    Grid,
     TextField,
     Typography,
 } from "@mui/material";
@@ -181,15 +180,8 @@ export default function PatientProfile() {
                         component="form"
                         onSubmit={saveProfile}
                     >
-                        <Grid
-                            container
-                            spacing={2.5}
-                        >
-                            <Grid
-                                item
-                                xs={12}
-                                md={6}
-                            >
+                        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))" }, gap: 2.5 }}>
+                            <Box>
                                 <TextField
                                     fullWidth
                                     label="Full Name"
@@ -207,13 +199,9 @@ export default function PatientProfile() {
                                     }
                                     required
                                 />
-                            </Grid>
+                            </Box>
 
-                            <Grid
-                                item
-                                xs={12}
-                                md={6}
-                            >
+                            <Box>
                                 <TextField
                                     fullWidth
                                     label="Email"
@@ -222,13 +210,9 @@ export default function PatientProfile() {
                                     }
                                     disabled
                                 />
-                            </Grid>
+                            </Box>
 
-                            <Grid
-                                item
-                                xs={12}
-                                md={6}
-                            >
+                            <Box>
                                 <TextField
                                     fullWidth
                                     label="Phone Number"
@@ -246,8 +230,8 @@ export default function PatientProfile() {
                                     }
                                     required
                                 />
-                            </Grid>
-                        </Grid>
+                            </Box>
+                        </Box>
 
                         <Button
                             type="submit"

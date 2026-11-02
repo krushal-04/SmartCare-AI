@@ -84,7 +84,7 @@ import AdminUsers from "./pages/admin/AdminUsers";
 import AdminDoctors from "./pages/admin/AdminDoctors";
 import AdminDepartments from "./pages/admin/AdminDepartments";
 import AdminAmbulances from "./pages/admin/AdminAmbulances";
-import AdminMedicines from "./pages/admin/AdminMedicines";
+// import AdminMedicines from "./pages/admin/AdminMedicines";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import AdminReports from "./pages/admin/AdminReports";
 import AdminNotifications from "./pages/admin/AdminNotifications";

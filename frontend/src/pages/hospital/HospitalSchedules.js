@@ -12,7 +12,6 @@ import {
     FormControl,
     FormControlLabel,
     FormGroup,
-    Grid,
     InputLabel,
     MenuItem,
     Select,
@@ -277,10 +276,8 @@ export default function HospitalSchedules() {
                     </Typography>
                 </Card>
             ) : (
-                <Grid container spacing={3}>
-                    {/* Schedule Configuration Card */}
-                    <Grid item xs={12} lg={10} xl={9}>
-                        <Card elevation={0} sx={{ borderRadius: 3, border: "1px solid #E2E8F0" }}>
+                <Box sx={{ maxWidth: 1040, mx: "auto", width: "100%" }}>
+                    <Card elevation={0} sx={{ borderRadius: 3, border: "1px solid #E2E8F0" }}>
                             <CardContent sx={{ p: { xs: 2.5, md: 4 } }}>
                                 <form onSubmit={handleSaveSchedule}>
                                     {/* 1. Doctor Selector */}
@@ -364,8 +361,8 @@ export default function HospitalSchedules() {
                                         <Typography variant="body2" color="text.secondary" sx={{ mb: 2.5, fontSize: 13 }}>
                                             Specify standard shift operating hours and appointment slot duration.
                                         </Typography>
-                                        <Grid container spacing={2.5}>
-                                            <Grid item xs={12} sm={4}>
+                                        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(3, minmax(0, 1fr))" }, gap: 2.5 }}>
+                                            <Box>
                                                 <TextField
                                                     fullWidth
                                                     size="small"
@@ -376,8 +373,8 @@ export default function HospitalSchedules() {
                                                     onChange={(e) => setStartTime(e.target.value)}
                                                     helperText="Format: HH:MM (e.g. 09:00)"
                                                 />
-                                            </Grid>
-                                            <Grid item xs={12} sm={4}>
+                                            </Box>
+                                            <Box>
                                                 <TextField
                                                     fullWidth
                                                     size="small"
@@ -388,8 +385,8 @@ export default function HospitalSchedules() {
                                                     onChange={(e) => setEndTime(e.target.value)}
                                                     helperText="Format: HH:MM (e.g. 17:00)"
                                                 />
-                                            </Grid>
-                                            <Grid item xs={12} sm={4}>
+                                            </Box>
+                                            <Box>
                                                 <FormControl fullWidth size="small">
                                                     <InputLabel>Slot Duration</InputLabel>
                                                     <Select
@@ -404,8 +401,8 @@ export default function HospitalSchedules() {
                                                         <MenuItem value={60}>60 Minutes</MenuItem>
                                                     </Select>
                                                 </FormControl>
-                                            </Grid>
-                                        </Grid>
+                                            </Box>
+                                        </Box>
                                     </Box>
 
                                     <Divider sx={{ my: 3 }} />
@@ -436,62 +433,56 @@ export default function HospitalSchedules() {
 
                                         {/* Date range picker controls */}
                                         <Box sx={{ p: 2.5, bgcolor: "#F8FAFC", borderRadius: 2, border: "1px solid #E2E8F0", mb: 2.5 }}>
-                                            <Grid container spacing={2} alignItems="center">
-                                                <Grid item xs={12} sm={4}>
-                                                    <Box>
-                                                        <Typography fontSize={12} fontWeight={700} color="#334155" mb={0.5}>
-                                                            From Date *
-                                                        </Typography>
-                                                        <TextField
-                                                            fullWidth
-                                                            size="small"
-                                                            type="date"
-                                                            value={leaveStartDate}
-                                                            onChange={(e) => {
-                                                                setLeaveStartDate(e.target.value);
-                                                                if (leaveError) setLeaveError("");
-                                                            }}
-                                                            inputProps={{
-                                                                style: { padding: "8.5px 12px" },
-                                                            }}
-                                                        />
-                                                    </Box>
-                                                </Grid>
-                                                <Grid item xs={12} sm={4}>
-                                                    <Box>
-                                                        <Typography fontSize={12} fontWeight={700} color="#334155" mb={0.5}>
-                                                            To Date (Optional)
-                                                        </Typography>
-                                                        <TextField
-                                                            fullWidth
-                                                            size="small"
-                                                            type="date"
-                                                            value={leaveEndDate}
-                                                            onChange={(e) => {
-                                                                setLeaveEndDate(e.target.value);
-                                                                if (leaveError) setLeaveError("");
-                                                            }}
-                                                            inputProps={{
-                                                                style: { padding: "8.5px 12px" },
-                                                            }}
-                                                        />
-                                                    </Box>
-                                                </Grid>
-                                                <Grid item xs={12} sm={4}>
-                                                    <Box sx={{ pt: { xs: 0, sm: 2.8 } }}>
-                                                        <Button
-                                                            fullWidth
-                                                            variant="contained"
-                                                            color="primary"
-                                                            startIcon={<AddRounded />}
-                                                            onClick={handleAddLeaveRange}
-                                                            sx={{ py: 1, textTransform: "none", fontWeight: 700 }}
-                                                        >
-                                                            Add Leave Range
-                                                        </Button>
-                                                    </Box>
-                                                </Grid>
-                                            </Grid>
+                                            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(3, minmax(0, 1fr))" }, gap: 2, alignItems: "end" }}>
+                                                <Box>
+                                                    <Typography fontSize={12} fontWeight={700} color="#334155" mb={0.5}>
+                                                        From Date *
+                                                    </Typography>
+                                                    <TextField
+                                                        fullWidth
+                                                        size="small"
+                                                        type="date"
+                                                        value={leaveStartDate}
+                                                        onChange={(e) => {
+                                                            setLeaveStartDate(e.target.value);
+                                                            if (leaveError) setLeaveError("");
+                                                        }}
+                                                        inputProps={{
+                                                            style: { padding: "8.5px 12px" },
+                                                        }}
+                                                    />
+                                                </Box>
+                                                <Box>
+                                                    <Typography fontSize={12} fontWeight={700} color="#334155" mb={0.5}>
+                                                        To Date (Optional)
+                                                    </Typography>
+                                                    <TextField
+                                                        fullWidth
+                                                        size="small"
+                                                        type="date"
+                                                        value={leaveEndDate}
+                                                        onChange={(e) => {
+                                                            setLeaveEndDate(e.target.value);
+                                                            if (leaveError) setLeaveError("");
+                                                        }}
+                                                        inputProps={{
+                                                            style: { padding: "8.5px 12px" },
+                                                        }}
+                                                    />
+                                                </Box>
+                                                <Box>
+                                                    <Button
+                                                        fullWidth
+                                                        variant="contained"
+                                                        color="primary"
+                                                        startIcon={<AddRounded />}
+                                                        onClick={handleAddLeaveRange}
+                                                        sx={{ py: 1, textTransform: "none", fontWeight: 700 }}
+                                                    >
+                                                        Add Leave Range
+                                                    </Button>
+                                                </Box>
+                                            </Box>
 
                                             {/* Quick Range Presets */}
                                             <Stack direction="row" spacing={1} mt={2} flexWrap="wrap" useFlexGap alignItems="center">
@@ -607,8 +598,7 @@ export default function HospitalSchedules() {
                                 </form>
                             </CardContent>
                         </Card>
-                    </Grid>
-                </Grid>
+                </Box>
             )}
         </DashboardLayout>
     );

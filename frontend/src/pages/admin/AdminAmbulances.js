@@ -11,7 +11,6 @@ import {
     DialogContent,
     DialogTitle,
     FormControl,
-    Grid,
     IconButton,
     InputAdornment,
     InputLabel,
@@ -36,7 +35,6 @@ import {
     SearchRounded,
     TimeToLeaveOutlined,
     PhoneOutlined,
-    LocationOnOutlined,
 } from "@mui/icons-material";
 
 import DashboardLayout from "../../components/dashboard/DashboardLayout";
@@ -298,8 +296,8 @@ export default function AdminAmbulances() {
                             </Button>
                         </Box>
                     ) : (
-                        <TableContainer>
-                            <Table>
+                        <TableContainer sx={{ overflowX: "auto" }}>
+                            <Table sx={{ minWidth: 700 }}>
                                 <TableHead>
                                     <TableRow sx={{ bgcolor: "#F8FAFB" }}>
                                         <TableCell sx={{ fontWeight: 800 }}>Vehicle Details</TableCell>
@@ -440,26 +438,22 @@ export default function AdminAmbulances() {
                                 </Select>
                             </FormControl>
 
-                            <Grid container spacing={2}>
-                                <Grid item xs={6}>
-                                    <TextField
-                                        fullWidth
-                                        required
-                                        label="Driver Name"
-                                        value={form.driverName}
-                                        onChange={(e) => setForm({ ...form, driverName: e.target.value })}
-                                    />
-                                </Grid>
-                                <Grid item xs={6}>
-                                    <TextField
-                                        fullWidth
-                                        required
-                                        label="Driver Phone"
-                                        value={form.driverPhone}
-                                        onChange={(e) => setForm({ ...form, driverPhone: e.target.value })}
-                                    />
-                                </Grid>
-                            </Grid>
+                            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))" }, gap: 2 }}>
+                                <TextField
+                                    fullWidth
+                                    required
+                                    label="Driver Name"
+                                    value={form.driverName}
+                                    onChange={(e) => setForm({ ...form, driverName: e.target.value })}
+                                />
+                                <TextField
+                                    fullWidth
+                                    required
+                                    label="Driver Phone"
+                                    value={form.driverPhone}
+                                    onChange={(e) => setForm({ ...form, driverPhone: e.target.value })}
+                                />
+                            </Box>
 
                             <FormControl fullWidth>
                                 <InputLabel>Assign to Hospital Center</InputLabel>

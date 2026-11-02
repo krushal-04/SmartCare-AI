@@ -10,7 +10,6 @@ import {
     Chip,
     CircularProgress,
     Divider,
-    Grid,
     IconButton,
     Paper,
     Stack,
@@ -604,8 +603,8 @@ export default function PatientAI() {
                     width: "100%",
                 }}
             >
-                <Grid container spacing={1}>
-                    <Grid item xs={12} sm={4}>
+                <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(3, minmax(0, 1fr))" }, gap: 1, width: "100%" }}>
+                    <Box>
                         <Button
                             fullWidth
                             onClick={() => setActiveTab(0)}
@@ -632,9 +631,9 @@ export default function PatientAI() {
                         >
                             Symptom Assessment & Routing
                         </Button>
-                    </Grid>
+                    </Box>
 
-                    <Grid item xs={12} sm={4}>
+                    <Box>
                         <Button
                             fullWidth
                             onClick={() => setActiveTab(1)}
@@ -661,8 +660,9 @@ export default function PatientAI() {
                         >
                             Interactive Health Consult Chat
                         </Button>
-                    </Grid>
-                    <Grid item xs={12} sm={4}>
+                    </Box>
+
+                    <Box>
                         <Button
                             fullWidth
                             onClick={() => setActiveTab(2)}
@@ -677,15 +677,15 @@ export default function PatientAI() {
                         >
                             Report review
                         </Button>
-                    </Grid>
-                </Grid>
+                    </Box>
+                </Box>
             </Box>
 
             {/* TAB 0: SYMPTOM ASSESSMENT & ROUTING */}
             {activeTab === 0 && (
-                <Grid container spacing={3}>
+                <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", lg: "7fr 5fr" }, gap: 3, alignItems: "start" }}>
                     {/* LEFT COLUMN: INPUT CONSOLE & PRESETS */}
-                    <Grid item xs={12} lg={7}>
+                    <Box sx={{ minWidth: 0, width: "100%" }}>
                         <Card
                             elevation={0}
                             sx={{
@@ -731,56 +731,55 @@ export default function PatientAI() {
                                         Quick Clinical Scenarios (Click to auto-populate):
                                     </Typography>
 
-                                    <Grid container spacing={1.2}>
+                                    <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))" }, gap: 1.2 }}>
                                         {QUICK_SYMPTOMS.map((q) => (
-                                            <Grid item xs={12} sm={6} key={q.label}>
-                                                <Box
-                                                    onClick={() => {
-                                                        setSymptoms(q.text);
-                                                        handleAnalyze(q.text);
-                                                    }}
-                                                    sx={{
-                                                        p: 1.5,
-                                                        borderRadius: 3,
-                                                        border: `1px solid ${colors.hairline}`,
-                                                        bgcolor: colors.canvas,
-                                                        cursor: "pointer",
-                                                        transition: "all 0.18s ease-in-out",
-                                                        display: "flex",
-                                                        alignItems: "center",
-                                                        gap: 1.2,
-                                                        "&:hover": {
-                                                            borderColor: colors.pine,
-                                                            bgcolor: colors.pineSoft,
-                                                            transform: "translateY(-1px)",
-                                                            boxShadow: "0 4px 10px rgba(15,82,75,0.06)",
-                                                        },
-                                                    }}
-                                                >
-                                                    <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", width: 28, height: 28 }}>
-                                                        {renderCategoryIcon(q.iconType)}
-                                                    </Box>
-                                                    <Box sx={{ overflow: "hidden" }}>
-                                                        <Typography
-                                                            fontSize={13}
-                                                            fontWeight={700}
-                                                            color={colors.ink}
-                                                            noWrap
-                                                        >
-                                                            {q.label}
-                                                        </Typography>
-                                                        <Typography
-                                                            fontSize={11.5}
-                                                            color="text.secondary"
-                                                            noWrap
-                                                        >
-                                                            {q.category}
-                                                        </Typography>
-                                                    </Box>
+                                            <Box
+                                                key={q.label}
+                                                onClick={() => {
+                                                    setSymptoms(q.text);
+                                                    handleAnalyze(q.text);
+                                                }}
+                                                sx={{
+                                                    p: 1.5,
+                                                    borderRadius: 3,
+                                                    border: `1px solid ${colors.hairline}`,
+                                                    bgcolor: colors.canvas,
+                                                    cursor: "pointer",
+                                                    transition: "all 0.18s ease-in-out",
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    gap: 1.2,
+                                                    "&:hover": {
+                                                        borderColor: colors.pine,
+                                                        bgcolor: colors.pineSoft,
+                                                        transform: "translateY(-1px)",
+                                                        boxShadow: "0 4px 10px rgba(15,82,75,0.06)",
+                                                    },
+                                                }}
+                                            >
+                                                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", width: 28, height: 28 }}>
+                                                    {renderCategoryIcon(q.iconType)}
                                                 </Box>
-                                            </Grid>
+                                                <Box sx={{ overflow: "hidden" }}>
+                                                    <Typography
+                                                        fontSize={13}
+                                                        fontWeight={700}
+                                                        color={colors.ink}
+                                                        noWrap
+                                                    >
+                                                        {q.label}
+                                                    </Typography>
+                                                    <Typography
+                                                        fontSize={11.5}
+                                                        color="text.secondary"
+                                                        noWrap
+                                                    >
+                                                        {q.category}
+                                                    </Typography>
+                                                </Box>
+                                            </Box>
                                         ))}
-                                    </Grid>
+                                    </Box>
                                 </Box>
 
                                 {/* SYMPTOM INPUT FIELD */}
@@ -890,10 +889,10 @@ export default function PatientAI() {
                                 </Stack>
                             </CardContent>
                         </Card>
-                    </Grid>
+                    </Box>
 
                     {/* RIGHT COLUMN: CLINICAL PROCESS & GUIDANCE */}
-                    <Grid item xs={12} lg={5}>
+                    <Box sx={{ minWidth: 0, width: "100%" }}>
                         <Card
                             elevation={0}
                             sx={{
@@ -997,11 +996,11 @@ export default function PatientAI() {
                                 </Stack>
                             </CardContent>
                         </Card>
-                    </Grid>
+                    </Box>
 
                     {/* RESULTS SECTION: ULTRA-PREMIUM MEDICAL DIAGNOSTIC CARD */}
                     {result && (
-                        <Grid item xs={12}>
+                        <Box sx={{ gridColumn: { lg: "1 / -1" }, width: "100%" }}>
                             <Card
                                 elevation={0}
                                 sx={{
@@ -1089,110 +1088,104 @@ export default function PatientAI() {
 
                                 <CardContent sx={{ p: { xs: 2.5, sm: 4 } }}>
                                     {/* 3 KPI HIGHLIGHT CARDS */}
-                                    <Grid container spacing={2.5} mb={3.5}>
-                                        <Grid item xs={12} sm={4}>
-                                            <Paper
-                                                elevation={0}
-                                                sx={{
-                                                    p: 2.5,
-                                                    borderRadius: 3.5,
-                                                    bgcolor: colors.canvas,
-                                                    border: `1px solid ${colors.hairline}`,
-                                                }}
+                                    <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(3, minmax(0, 1fr))" }, gap: 2.5, mb: 3.5 }}>
+                                        <Paper
+                                            elevation={0}
+                                            sx={{
+                                                p: 2.5,
+                                                borderRadius: 3.5,
+                                                bgcolor: colors.canvas,
+                                                border: `1px solid ${colors.hairline}`,
+                                            }}
+                                        >
+                                            <Typography
+                                                fontSize={12}
+                                                fontWeight={800}
+                                                color="text.secondary"
+                                                textTransform="uppercase"
                                             >
-                                                <Typography
-                                                    fontSize={12}
-                                                    fontWeight={800}
-                                                    color="text.secondary"
-                                                    textTransform="uppercase"
-                                                >
-                                                    Triage Urgency
-                                                </Typography>
-                                                <Typography
-                                                    fontSize={16}
-                                                    fontWeight={900}
-                                                    mt={0.5}
-                                                    color={
-                                                        isEmergency
-                                                            ? "#DC2626"
-                                                            : isUrgent
-                                                            ? "#D97706"
-                                                            : colors.pine
-                                                    }
-                                                >
-                                                    {isEmergency
-                                                        ? "Emergency Attention"
+                                                Triage Urgency
+                                            </Typography>
+                                            <Typography
+                                                fontSize={16}
+                                                fontWeight={900}
+                                                mt={0.5}
+                                                color={
+                                                    isEmergency
+                                                        ? "#DC2626"
                                                         : isUrgent
-                                                        ? "Prompt Assessment"
-                                                        : "Routine Consultation"}
-                                                </Typography>
-                                            </Paper>
-                                        </Grid>
-
-                                        <Grid item xs={12} sm={4}>
-                                            <Paper
-                                                elevation={0}
-                                                sx={{
-                                                    p: 2.5,
-                                                    borderRadius: 3.5,
-                                                    bgcolor: colors.canvas,
-                                                    border: `1px solid ${colors.hairline}`,
-                                                }}
+                                                        ? "#D97706"
+                                                        : colors.pine
+                                                }
                                             >
-                                                <Typography
-                                                    fontSize={12}
-                                                    fontWeight={800}
-                                                    color="text.secondary"
-                                                    textTransform="uppercase"
-                                                >
-                                                    Primary Specialty
-                                                </Typography>
-                                                <Typography
-                                                    fontSize={16}
-                                                    fontWeight={900}
-                                                    mt={0.5}
-                                                    color={colors.ink}
-                                                >
-                                                    {result.departments[0] || "General Medicine"}
-                                                </Typography>
-                                            </Paper>
-                                        </Grid>
+                                                {isEmergency
+                                                    ? "Emergency Attention"
+                                                    : isUrgent
+                                                    ? "Prompt Assessment"
+                                                    : "Routine Consultation"}
+                                            </Typography>
+                                        </Paper>
 
-                                        <Grid item xs={12} sm={4}>
-                                            <Paper
-                                                elevation={0}
-                                                sx={{
-                                                    p: 2.5,
-                                                    borderRadius: 3.5,
-                                                    bgcolor: colors.canvas,
-                                                    border: `1px solid ${colors.hairline}`,
-                                                }}
+                                        <Paper
+                                            elevation={0}
+                                            sx={{
+                                                p: 2.5,
+                                                borderRadius: 3.5,
+                                                bgcolor: colors.canvas,
+                                                border: `1px solid ${colors.hairline}`,
+                                            }}
+                                        >
+                                            <Typography
+                                                fontSize={12}
+                                                fontWeight={800}
+                                                color="text.secondary"
+                                                textTransform="uppercase"
                                             >
-                                                <Typography
-                                                    fontSize={12}
-                                                    fontWeight={800}
-                                                    color="text.secondary"
-                                                    textTransform="uppercase"
-                                                >
-                                                    Action Protocol
-                                                </Typography>
-                                                <Typography
-                                                    fontSize={16}
-                                                    fontWeight={900}
-                                                    mt={0.5}
-                                                    color={colors.ink}
-                                                >
-                                                    {isEmergency
-                                                        ? "Immediate ER / Ambulance"
-                                                        : "Book Specialist Visit"}
-                                                </Typography>
-                                            </Paper>
-                                        </Grid>
-                                    </Grid>
+                                                Primary Specialty
+                                            </Typography>
+                                            <Typography
+                                                fontSize={16}
+                                                fontWeight={900}
+                                                mt={0.5}
+                                                color={colors.ink}
+                                            >
+                                                {result.departments[0] || "General Medicine"}
+                                            </Typography>
+                                        </Paper>
 
-                                    <Grid container spacing={4}>
+                                        <Paper
+                                            elevation={0}
+                                            sx={{
+                                                p: 2.5,
+                                                borderRadius: 3.5,
+                                                bgcolor: colors.canvas,
+                                                border: `1px solid ${colors.hairline}`,
+                                            }}
+                                        >
+                                            <Typography
+                                                fontSize={12}
+                                                fontWeight={800}
+                                                color="text.secondary"
+                                                textTransform="uppercase"
+                                            >
+                                                Action Protocol
+                                            </Typography>
+                                            <Typography
+                                                fontSize={16}
+                                                fontWeight={900}
+                                                mt={0.5}
+                                                color={colors.ink}
+                                            >
+                                                {isEmergency
+                                                    ? "Immediate ER / Ambulance"
+                                                    : "Book Specialist Visit"}
+                                            </Typography>
+                                        </Paper>
+                                    </Box>
+
+                                    <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "7fr 5fr" }, gap: 4 }}>
                                         {/* SUMMARY & SPECIALTY MAPPINGS */}
-                                        <Grid item xs={12} md={7}>
+                                        <Box sx={{ minWidth: 0 }}>
                                             <Typography
                                                 fontSize={13}
                                                 fontWeight={800}
@@ -1269,10 +1262,10 @@ export default function PatientAI() {
                                                     {result.nextStep}
                                                 </Typography>
                                             </Box>
-                                        </Grid>
+                                        </Box>
 
                                         {/* DIRECT ACTION BUTTONS (FOR TAB 0 ROUTING) */}
-                                        <Grid item xs={12} md={5}>
+                                        <Box sx={{ minWidth: 0 }}>
                                             <Box
                                                 sx={{
                                                     p: 3,
@@ -1373,8 +1366,8 @@ export default function PatientAI() {
                                                     )}
                                                 </Stack>
                                             </Box>
-                                        </Grid>
-                                    </Grid>
+                                        </Box>
+                                    </Box>
 
                                     {/* CLINICAL EXPLANATION EXPANDER */}
                                     <Box
@@ -1411,9 +1404,9 @@ export default function PatientAI() {
                                     </Alert>
                                 </CardContent>
                             </Card>
-                        </Grid>
+                        </Box>
                     )}
-                </Grid>
+                </Box>
             )}
 
             {/* TAB 2: MEDICAL REPORT REVIEW */}
@@ -1493,20 +1486,16 @@ export default function PatientAI() {
                                     </Table>
                                 </TableContainer>
 
-                                <Grid container spacing={2} sx={{ mt: 0.5 }}>
-                                    <Grid item xs={12} md={6}>
-                                        <Box sx={{ p: 2, borderRadius: 2, bgcolor: colors.canvas }}>
-                                            <Typography fontWeight={800} mb={0.8}>Key findings</Typography>
-                                            {reportResult.keyFindings.length ? reportResult.keyFindings.map((item, index) => <Typography key={index} variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>• {item}</Typography>) : <Typography variant="body2" color="text.secondary">No additional findings were extracted.</Typography>}
-                                        </Box>
-                                    </Grid>
-                                    <Grid item xs={12} md={6}>
-                                        <Box sx={{ p: 2, borderRadius: 2, bgcolor: colors.canvas }}>
-                                            <Typography fontWeight={800} mb={0.8}>Discuss with a clinician</Typography>
-                                            {reportResult.clinicianDiscussion.length ? reportResult.clinicianDiscussion.map((item, index) => <Typography key={index} variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>• {item}</Typography>) : <Typography variant="body2" color="text.secondary">Share the original report for a complete clinical interpretation.</Typography>}
-                                        </Box>
-                                    </Grid>
-                                </Grid>
+                                <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))" }, gap: 2, mt: 0.5 }}>
+                                    <Box sx={{ p: 2, borderRadius: 2, bgcolor: colors.canvas }}>
+                                        <Typography fontWeight={800} mb={0.8}>Key findings</Typography>
+                                        {reportResult.keyFindings.length ? reportResult.keyFindings.map((item, index) => <Typography key={index} variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>• {item}</Typography>) : <Typography variant="body2" color="text.secondary">No additional findings were extracted.</Typography>}
+                                    </Box>
+                                    <Box sx={{ p: 2, borderRadius: 2, bgcolor: colors.canvas }}>
+                                        <Typography fontWeight={800} mb={0.8}>Discuss with a clinician</Typography>
+                                        {reportResult.clinicianDiscussion.length ? reportResult.clinicianDiscussion.map((item, index) => <Typography key={index} variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>• {item}</Typography>) : <Typography variant="body2" color="text.secondary">Share the original report for a complete clinical interpretation.</Typography>}
+                                    </Box>
+                                </Box>
                                 <Box sx={{ mt: 2, p: 2, borderLeft: `3px solid ${colors.pine}`, bgcolor: colors.pineSoft }}>
                                     <Typography fontWeight={800}>Review priority: {reportResult.reviewPriority}</Typography>
                                     <Typography variant="body2" color="text.secondary">{reportResult.priorityExplanation}</Typography>

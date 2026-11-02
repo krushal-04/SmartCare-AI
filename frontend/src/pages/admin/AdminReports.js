@@ -7,7 +7,6 @@ import {
     CardContent,
     CircularProgress,
     FormControl,
-    Grid,
     InputLabel,
     MenuItem,
     Select,
@@ -26,8 +25,6 @@ import {
 import {
     DescriptionOutlined,
     FileDownloadOutlined,
-    FilterListRounded,
-    CalendarMonthOutlined,
 } from "@mui/icons-material";
 
 import DashboardLayout from "../../components/dashboard/DashboardLayout";
@@ -48,7 +45,6 @@ export default function AdminReports() {
     const [reportType, setReportType] = useState("appointments");
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
-    const [status, setStatus] = useState("");
 
     const [loading, setLoading] = useState(true);
     const [alert, setAlert] = useState({ type: "", message: "" });
@@ -61,7 +57,6 @@ export default function AdminReports() {
             const params = { reportType };
             if (startDate) params.startDate = startDate;
             if (endDate) params.endDate = endDate;
-            if (status) params.status = status;
 
             const res = await api.get("/admin/reports", { params });
             if (res.data.success) {
@@ -193,8 +188,8 @@ export default function AdminReports() {
 
             {/* Filter Configuration Card */}
             <Card elevation={0} sx={{ p: 3, borderRadius: 4, border: "1px solid #E3EBEE", mb: 3.5 }}>
-                <Grid container spacing={2} alignItems="center">
-                    <Grid item xs={12} sm={4}>
+                <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr", md: "4fr 2.5fr 2.5fr 3fr" }, gap: 2, alignItems: "center" }}>
+                    <Box>
                         <FormControl fullWidth size="small">
                             <InputLabel>Report Classification</InputLabel>
                             <Select
@@ -209,9 +204,9 @@ export default function AdminReports() {
                                 ))}
                             </Select>
                         </FormControl>
-                    </Grid>
+                    </Box>
 
-                    <Grid item xs={6} sm={2.5}>
+                    <Box>
                         <TextField
                             fullWidth
                             size="small"
@@ -222,9 +217,9 @@ export default function AdminReports() {
                             onChange={(e) => setStartDate(e.target.value)}
                             inputProps={{ style: { padding: "8.5px 12px" } }}
                         />
-                    </Grid>
+                    </Box>
 
-                    <Grid item xs={6} sm={2.5}>
+                    <Box>
                         <TextField
                             fullWidth
                             size="small"
@@ -235,9 +230,9 @@ export default function AdminReports() {
                             onChange={(e) => setEndDate(e.target.value)}
                             inputProps={{ style: { padding: "8.5px 12px" } }}
                         />
-                    </Grid>
+                    </Box>
 
-                    <Grid item xs={12} sm={3}>
+                    <Box>
                         <Stack direction="row" spacing={1}>
                             <Button
                                 fullWidth
@@ -262,34 +257,33 @@ export default function AdminReports() {
                                 </Button>
                             )}
                         </Stack>
-                    </Grid>
-                </Grid>
+                    </Box>
+                </Box>
             </Card>
 
             {/* Summary Highlights */}
             {reportData?.summary && (
-                <Grid container spacing={2.5} sx={{ mb: 3.5 }}>
+                <Box sx={{ display: "grid", gridTemplateColumns: { xs: "repeat(2, 1fr)", sm: "repeat(4, minmax(0, 1fr))" }, gap: 2.5, mb: 3.5 }}>
                     {Object.entries(reportData.summary).map(([k, v]) => (
-                        <Grid item xs={6} sm={3} key={k}>
-                            <Box
-                                sx={{
-                                    p: 2.2,
-                                    borderRadius: 3,
-                                    border: "1.5px solid #E2E8F0",
-                                    bgcolor: "#FFFFFF",
-                                    boxShadow: "0 2px 8px rgba(0,0,0,0.02)",
-                                }}
-                            >
-                                <Typography variant="caption" color="text.secondary" fontWeight={800} sx={{ textTransform: "uppercase", letterSpacing: 0.5 }}>
-                                    {k.replace(/([A-Z])/g, " $1")}
-                                </Typography>
-                                <Typography variant="h5" fontWeight={900} sx={{ mt: 0.5, color: "#0F766E" }}>
-                                    {v}
-                                </Typography>
-                            </Box>
-                        </Grid>
+                        <Box
+                            key={k}
+                            sx={{
+                                p: 2.2,
+                                borderRadius: 3,
+                                border: "1.5px solid #E2E8F0",
+                                bgcolor: "#FFFFFF",
+                                boxShadow: "0 2px 8px rgba(0,0,0,0.02)",
+                            }}
+                        >
+                            <Typography variant="caption" color="text.secondary" fontWeight={800} sx={{ textTransform: "uppercase", letterSpacing: 0.5 }}>
+                                {k.replace(/([A-Z])/g, " $1")}
+                            </Typography>
+                            <Typography variant="h5" fontWeight={900} sx={{ mt: 0.5, color: "#0F766E" }}>
+                                {v}
+                            </Typography>
+                        </Box>
                     ))}
-                </Grid>
+                </Box>
             )}
 
             {/* Records Table */}
@@ -310,8 +304,8 @@ export default function AdminReports() {
                             </Typography>
                         </Box>
                     ) : (
-                        <TableContainer>
-                            <Table size="small">
+                        <TableContainer sx={{ overflowX: "auto" }}>
+                            <Table size="small" sx={{ minWidth: 680 }}>
                                 <TableHead>
                                     <TableRow sx={{ bgcolor: "#F8FAFC" }}>
                                         <TableCell sx={{ fontWeight: 800, py: 1.5 }}>Record ID</TableCell>
@@ -326,10 +320,10 @@ export default function AdminReports() {
                                         const dt = new Date(r.appointmentDate || r.createdAt);
                                         const formattedDate = !isNaN(dt)
                                             ? dt.toLocaleDateString("en-GB", {
-                                                  day: "2-digit",
-                                                  month: "short",
-                                                  year: "numeric",
-                                              })
+                                                day: "2-digit",
+                                                month: "short",
+                                                year: "numeric",
+                                            })
                                             : "—";
 
                                         const idSnippet = String(r._id || "").slice(-6).toUpperCase();

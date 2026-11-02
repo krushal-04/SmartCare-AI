@@ -10,7 +10,6 @@ import {
     Chip,
     CircularProgress,
     Container,
-    Grid,
     InputAdornment,
     Stack,
     TextField,
@@ -311,17 +310,14 @@ function Departments() {
                 {!loading &&
                     !error &&
                     filteredDepartments.length > 0 && (
-                        <Grid container spacing={3}>
+                        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))", md: "repeat(3, minmax(0, 1fr))" }, gap: 3 }}>
                             {filteredDepartments.map(
                                 (department) => (
-                                    <Grid
-                                        item
-                                        xs={12}
-                                        sm={6}
-                                        md={4}
+                                    <Box
                                         key={
                                             department._id
                                         }
+                                        sx={{ display: "flex", height: "100%" }}
                                     >
                                         <Card
                                             elevation={0}
@@ -444,10 +440,10 @@ function Departments() {
                                                 </Button>
                                             </CardContent>
                                         </Card>
-                                    </Grid>
+                                    </Box>
                                 )
                             )}
-                        </Grid>
+                        </Box>
                     )}
 
                 {!loading &&

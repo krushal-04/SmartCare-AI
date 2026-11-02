@@ -12,8 +12,6 @@ import {
     DialogActions,
     DialogContent,
     DialogTitle,
-    Divider,
-    Grid,
     IconButton,
     InputAdornment,
     Stack,
@@ -32,8 +30,6 @@ import {
     PersonOutlineOutlined,
     HistoryRounded,
     DescriptionOutlined,
-    CalendarMonthOutlined,
-    CheckCircleOutlined,
     CloseRounded,
 } from "@mui/icons-material";
 
@@ -134,8 +130,8 @@ export default function HospitalPatients() {
                             </Typography>
                         </Box>
                     ) : (
-                        <TableContainer>
-                            <Table>
+                        <TableContainer sx={{ overflowX: "auto" }}>
+                            <Table sx={{ minWidth: 700 }}>
                                 <TableHead>
                                     <TableRow sx={{ bgcolor: "#F8FAFB" }}>
                                         <TableCell sx={{ fontWeight: 800 }}>Patient Details</TableCell>
@@ -253,8 +249,8 @@ export default function HospitalPatients() {
                             No appointment history recorded for this patient at your hospital.
                         </Typography>
                     ) : (
-                        <TableContainer>
-                            <Table size="small">
+                        <TableContainer sx={{ overflowX: "auto" }}>
+                            <Table size="small" sx={{ minWidth: 600 }}>
                                 <TableHead>
                                     <TableRow sx={{ bgcolor: "#F8FAFC" }}>
                                         <TableCell sx={{ fontWeight: 800 }}>Date & Time</TableCell>

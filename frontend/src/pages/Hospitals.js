@@ -10,7 +10,6 @@ import {
     CardContent,
     CardMedia,
     Button,
-    Grid,
     Chip,
     CircularProgress,
     Alert,
@@ -160,8 +159,15 @@ export default function Hospitals() {
                     boxShadow: "0 4px 16px -2px rgba(15,23,42,0.04)",
                 }}
             >
-                <Grid container spacing={2} alignItems="center">
-                    <Grid item xs={12} md={5}>
+                <Box
+                    sx={{
+                        display: "grid",
+                        gridTemplateColumns: { xs: "1fr", md: "5fr 7fr" },
+                        gap: 2,
+                        alignItems: "center",
+                    }}
+                >
+                    <Box>
                         <TextField
                             fullWidth
                             size="small"
@@ -176,10 +182,10 @@ export default function Hospitals() {
                                 ),
                             }}
                         />
-                    </Grid>
+                    </Box>
 
-                    <Grid item xs={12} sm={12} md={7}>
-                        <Stack direction="row" spacing={1} alignItems="center" justifyContent={{ xs: "flex-start", md: "flex-end" }} flexWrap="wrap" gap={1}>
+                    <Box sx={{ display: "flex", justifyContent: { xs: "flex-start", md: "flex-end" } }}>
+                        <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" gap={1}>
                             <Button
                                 variant={userLocation ? "contained" : "outlined"}
                                 color={userLocation ? "success" : "primary"}
@@ -210,8 +216,8 @@ export default function Hospitals() {
                                 sx={{ fontWeight: 700, borderRadius: 2 }}
                             />
                         </Stack>
-                    </Grid>
-                </Grid>
+                    </Box>
+                </Box>
 
                 {geoError && (
                     <Alert severity="warning" onClose={() => setGeoError("")} sx={{ mt: 2, borderRadius: 2 }}>
@@ -236,31 +242,36 @@ export default function Hospitals() {
             {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
 
             {!loading && !error && (
-                <Grid container spacing={3.5}>
+                <Box
+                    sx={{
+                        display: "grid",
+                        gridTemplateColumns: { xs: "1fr", lg: "1fr 1fr" },
+                        gap: 3.5,
+                        alignItems: "start",
+                    }}
+                >
                     {/* LEFT / TOP: INTERACTIVE MAP */}
-                    <Grid item xs={12} lg={6}>
-                        <Box sx={{ position: "sticky", top: 88 }}>
-                            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1.5 }}>
-                                <Typography fontSize={17} fontWeight={800} color="#0F172A">
-                                    Interactive Hospital Locator
-                                </Typography>
-                                <Typography fontSize={12} color="#0D9488" fontWeight={700}>
-                                    Live OpenStreetMap & Carto Engine
-                                </Typography>
-                            </Box>
-
-                            <MedicalMap
-                                hospitals={filteredHospitals}
-                                patientLocation={userLocation}
-                                onLocateMe={(coords) => setUserLocation(coords)}
-                                selectedHospitalId={selectedHospitalId}
-                                height={520}
-                            />
+                    <Box sx={{ width: "100%", position: { lg: "sticky" }, top: { lg: 88 } }}>
+                        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1.5 }}>
+                            <Typography fontSize={17} fontWeight={800} color="#0F172A">
+                                Interactive Hospital Locator
+                            </Typography>
+                            <Typography fontSize={12} color="#0D9488" fontWeight={700}>
+                                Live OpenStreetMap & Carto Engine
+                            </Typography>
                         </Box>
-                    </Grid>
+
+                        <MedicalMap
+                            hospitals={filteredHospitals}
+                            patientLocation={userLocation}
+                            onLocateMe={(coords) => setUserLocation(coords)}
+                            selectedHospitalId={selectedHospitalId}
+                            height={520}
+                        />
+                    </Box>
 
                     {/* RIGHT: HOSPITAL CARDS */}
-                    <Grid item xs={12} lg={6}>
+                    <Box sx={{ width: "100%", minWidth: 0 }}>
                         <Stack spacing={2.5}>
                             {filteredHospitals.length === 0 ? (
                                 <Paper elevation={0} sx={{ p: 6, textAlign: "center", borderRadius: 3, border: "1px dashed #CBD5E1" }}>
@@ -385,8 +396,8 @@ export default function Hospitals() {
                                 })
                             )}
                         </Stack>
-                    </Grid>
-                </Grid>
+                    </Box>
+                </Box>
             )}
         </Box>
     );

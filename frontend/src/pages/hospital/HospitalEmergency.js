@@ -10,7 +10,6 @@ import {
     DialogContent,
     DialogTitle,
     FormControl,
-    Grid,
     InputLabel,
     MenuItem,
     Select,
@@ -222,12 +221,12 @@ export default function HospitalEmergency() {
                     </Typography>
                 </Card>
             ) : (
-                <Grid container spacing={2.5}>
+                <Stack spacing={2.5}>
                     {filtered.map((em) => {
                         const isUrgent = em.status === "Requested";
                         const amb = em.ambulanceId;
                         return (
-                            <Grid item xs={12} key={em._id}>
+                            <Box key={em._id} sx={{ width: "100%" }}>
                                 <Card
                                     elevation={0}
                                     sx={{
@@ -245,7 +244,7 @@ export default function HospitalEmergency() {
                                         alignItems={{ xs: "flex-start", md: "center" }}
                                         gap={2}
                                     >
-                                        <Box sx={{ flex: 1 }}>
+                                        <Box sx={{ flex: 1, minWidth: 0, width: "100%" }}>
                                             <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 1 }}>
                                                 <Chip
                                                     label={em.status}
@@ -261,8 +260,8 @@ export default function HospitalEmergency() {
                                                 "{em.description}"
                                             </Typography>
 
-                                            <Grid container spacing={2} sx={{ mt: 1 }}>
-                                                <Grid item xs={12} sm={4}>
+                                            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(3, minmax(0, 1fr))" }, gap: 2, mt: 1 }}>
+                                                <Box>
                                                     <Typography variant="body2" color="text.secondary" fontSize={12}>
                                                         Patient / Caller
                                                     </Typography>
@@ -286,9 +285,9 @@ export default function HospitalEmergency() {
                                                     >
                                                         <PhoneOutlined fontSize="small" /> {em.contactNumber?.length === 10 ? `+91 ${em.contactNumber}` : em.contactNumber}
                                                     </Typography>
-                                                </Grid>
+                                                </Box>
 
-                                                <Grid item xs={12} sm={4}>
+                                                <Box>
                                                     <Typography variant="body2" color="text.secondary" fontSize={12}>
                                                         Location / Address
                                                     </Typography>
@@ -301,9 +300,9 @@ export default function HospitalEmergency() {
                                                             Coordinates: {em.latitude.toFixed(4)}, {em.longitude.toFixed(4)}
                                                         </Typography>
                                                     )}
-                                                </Grid>
+                                                </Box>
 
-                                                <Grid item xs={12} sm={4}>
+                                                <Box>
                                                     <Typography variant="body2" color="text.secondary" fontSize={12}>
                                                         Assigned Ambulance
                                                     </Typography>
@@ -321,8 +320,8 @@ export default function HospitalEmergency() {
                                                             No ambulance assigned yet
                                                         </Typography>
                                                     )}
-                                                </Grid>
-                                            </Grid>
+                                                </Box>
+                                            </Box>
 
                                             {em.hospitalNotes && (
                                                 <Box sx={{ mt: 1.5, p: 1, bgcolor: "#F1F5F9", borderRadius: 2 }}>
@@ -351,10 +350,10 @@ export default function HospitalEmergency() {
                                         </Box>
                                     </Stack>
                                 </Card>
-                            </Grid>
+                            </Box>
                         );
                     })}
-                </Grid>
+                </Stack>
             )}
 
             {/* Status & Ambulance Assignment Modal */}

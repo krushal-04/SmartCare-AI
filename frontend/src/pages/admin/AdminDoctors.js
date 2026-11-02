@@ -28,12 +28,10 @@ import {
     DialogContent,
     DialogActions,
     Button,
-    Grid,
 } from "@mui/material";
 import {
     SearchRounded,
     MedicalServicesOutlined,
-    LocalHospitalOutlined,
     InfoOutlined,
     DeleteOutlineRounded,
 } from "@mui/icons-material";
@@ -192,8 +190,8 @@ export default function AdminDoctors() {
                             </Typography>
                         </Box>
                     ) : (
-                        <TableContainer>
-                            <Table>
+                        <TableContainer sx={{ overflowX: "auto" }}>
+                            <Table sx={{ minWidth: 700 }}>
                                 <TableHead>
                                     <TableRow sx={{ bgcolor: "#F8FAFB" }}>
                                         <TableCell sx={{ fontWeight: 800 }}>Physician</TableCell>
@@ -298,40 +296,40 @@ export default function AdminDoctors() {
                 </DialogTitle>
                 <DialogContent dividers>
                     {detailDoctor && (
-                        <Grid container spacing={2}>
-                            <Grid item xs={12} sm={6}>
+                        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))" }, gap: 2 }}>
+                            <Box>
                                 <Typography variant="caption" color="text.secondary">Full Name</Typography>
                                 <Typography fontWeight={700}>Dr. {detailDoctor.doctorName}</Typography>
-                            </Grid>
-                            <Grid item xs={12} sm={6}>
+                            </Box>
+                            <Box>
                                 <Typography variant="caption" color="text.secondary">Hospital</Typography>
                                 <Typography fontWeight={700}>{detailDoctor.hospitalId?.hospitalName}</Typography>
-                            </Grid>
-                            <Grid item xs={12} sm={6}>
+                            </Box>
+                            <Box>
                                 <Typography variant="caption" color="text.secondary">Specialization</Typography>
                                 <Typography fontWeight={600}>{detailDoctor.specialization}</Typography>
-                            </Grid>
-                            <Grid item xs={12} sm={6}>
+                            </Box>
+                            <Box>
                                 <Typography variant="caption" color="text.secondary">Qualification</Typography>
                                 <Typography fontWeight={600}>{detailDoctor.qualification}</Typography>
-                            </Grid>
-                            <Grid item xs={12} sm={6}>
+                            </Box>
+                            <Box>
                                 <Typography variant="caption" color="text.secondary">Email</Typography>
                                 <Typography fontWeight={600}>{detailDoctor.email}</Typography>
-                            </Grid>
-                            <Grid item xs={12} sm={6}>
+                            </Box>
+                            <Box>
                                 <Typography variant="caption" color="text.secondary">Phone</Typography>
                                 <Typography fontWeight={600}>{detailDoctor.phone}</Typography>
-                            </Grid>
-                            <Grid item xs={12} sm={6}>
+                            </Box>
+                            <Box>
                                 <Typography variant="caption" color="text.secondary">Fee</Typography>
                                 <Typography fontWeight={700}>₹{detailDoctor.consultationFee}</Typography>
-                            </Grid>
-                            <Grid item xs={12} sm={6}>
+                            </Box>
+                            <Box>
                                 <Typography variant="caption" color="text.secondary">Experience</Typography>
                                 <Typography fontWeight={600}>{detailDoctor.experience} Years</Typography>
-                            </Grid>
-                        </Grid>
+                            </Box>
+                        </Box>
                     )}
                 </DialogContent>
                 <DialogActions sx={{ p: 2 }}>

@@ -10,7 +10,6 @@ import {
     CircularProgress,
     Container,
     Divider,
-    Grid,
     Stack,
     Typography,
 } from "@mui/material";
@@ -225,91 +224,81 @@ function DoctorDetails() {
                         <Divider sx={{ my: 3, borderColor: colors.hairline }} />
 
                         {/* DETAILS GRID */}
-                        <Grid container spacing={1.5}>
+                        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))", md: "repeat(3, minmax(0, 1fr))" }, gap: 1.5 }}>
                             {doctor.hospitalId?.hospitalName && (
-                                <Grid item xs={12} sm={6}>
-                                    <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: colors.canvas, border: `1px solid ${colors.hairline}` }}>
-                                        <Stack direction="row" spacing={1.2} alignItems="center">
-                                            <LocalHospital sx={{ color: colors.pine, fontSize: 22 }} />
-                                            <Box>
-                                                <Typography fontSize={11.5} fontWeight={700} color={colors.slate}>
-                                                    AFFILIATED HOSPITAL
-                                                </Typography>
-                                                <Typography fontSize={14.5} fontWeight={700} color={colors.ink}>
-                                                    {doctor.hospitalId.hospitalName}
-                                                </Typography>
-                                            </Box>
-                                        </Stack>
-                                    </Box>
-                                </Grid>
+                                <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: colors.canvas, border: `1px solid ${colors.hairline}` }}>
+                                    <Stack direction="row" spacing={1.2} alignItems="center">
+                                        <LocalHospital sx={{ color: colors.pine, fontSize: 22 }} />
+                                        <Box>
+                                            <Typography fontSize={11.5} fontWeight={700} color={colors.slate}>
+                                                AFFILIATED HOSPITAL
+                                            </Typography>
+                                            <Typography fontSize={14.5} fontWeight={700} color={colors.ink}>
+                                                {doctor.hospitalId.hospitalName}
+                                            </Typography>
+                                        </Box>
+                                    </Stack>
+                                </Box>
                             )}
 
                             {doctor.departmentId?.departmentName && (
-                                <Grid item xs={12} sm={6}>
-                                    <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: colors.canvas, border: `1px solid ${colors.hairline}` }}>
-                                        <Stack direction="row" spacing={1.2} alignItems="center">
-                                            <SchoolOutlined sx={{ color: colors.amber, fontSize: 22 }} />
-                                            <Box>
-                                                <Typography fontSize={11.5} fontWeight={700} color={colors.slate}>
-                                                    DEPARTMENT
-                                                </Typography>
-                                                <Typography fontSize={14.5} fontWeight={700} color={colors.ink}>
-                                                    {doctor.departmentId.departmentName}
-                                                </Typography>
-                                            </Box>
-                                        </Stack>
-                                    </Box>
-                                </Grid>
-                            )}
-
-                            <Grid item xs={12} sm={4}>
                                 <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: colors.canvas, border: `1px solid ${colors.hairline}` }}>
                                     <Stack direction="row" spacing={1.2} alignItems="center">
-                                        <WorkHistoryOutlined sx={{ color: colors.pine, fontSize: 22 }} />
+                                        <SchoolOutlined sx={{ color: colors.amber, fontSize: 22 }} />
                                         <Box>
                                             <Typography fontSize={11.5} fontWeight={700} color={colors.slate}>
-                                                EXPERIENCE
+                                                DEPARTMENT
                                             </Typography>
                                             <Typography fontSize={14.5} fontWeight={700} color={colors.ink}>
-                                                {doctor.experience || 0}+ Years
+                                                {doctor.departmentId.departmentName}
                                             </Typography>
                                         </Box>
                                     </Stack>
                                 </Box>
-                            </Grid>
+                            )}
 
-                            <Grid item xs={12} sm={4}>
-                                <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: colors.canvas, border: `1px solid ${colors.hairline}` }}>
-                                    <Stack direction="row" spacing={1.2} alignItems="center">
-                                        <PaymentsOutlined sx={{ color: colors.pine, fontSize: 22 }} />
-                                        <Box>
-                                            <Typography fontSize={11.5} fontWeight={700} color={colors.slate}>
-                                                CONSULTATION FEE
-                                            </Typography>
-                                            <Typography fontSize={14.5} fontWeight={800} color={colors.pine}>
-                                                ₹{doctor.consultationFee || 0}
-                                            </Typography>
-                                        </Box>
-                                    </Stack>
-                                </Box>
-                            </Grid>
+                            <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: colors.canvas, border: `1px solid ${colors.hairline}` }}>
+                                <Stack direction="row" spacing={1.2} alignItems="center">
+                                    <WorkHistoryOutlined sx={{ color: colors.pine, fontSize: 22 }} />
+                                    <Box>
+                                        <Typography fontSize={11.5} fontWeight={700} color={colors.slate}>
+                                            EXPERIENCE
+                                        </Typography>
+                                        <Typography fontSize={14.5} fontWeight={700} color={colors.ink}>
+                                            {doctor.experience || 0}+ Years
+                                        </Typography>
+                                    </Box>
+                                </Stack>
+                            </Box>
 
-                            <Grid item xs={12} sm={4}>
-                                <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: colors.canvas, border: `1px solid ${colors.hairline}` }}>
-                                    <Stack direction="row" spacing={1.2} alignItems="center">
-                                        <TranslateOutlined sx={{ color: colors.amber, fontSize: 22 }} />
-                                        <Box>
-                                            <Typography fontSize={11.5} fontWeight={700} color={colors.slate}>
-                                                LANGUAGES
-                                            </Typography>
-                                            <Typography fontSize={13.5} fontWeight={700} color={colors.ink} noWrap>
-                                                {(doctor.languages || []).join(", ") || "English"}
-                                            </Typography>
-                                        </Box>
-                                    </Stack>
-                                </Box>
-                            </Grid>
-                        </Grid>
+                            <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: colors.canvas, border: `1px solid ${colors.hairline}` }}>
+                                <Stack direction="row" spacing={1.2} alignItems="center">
+                                    <PaymentsOutlined sx={{ color: colors.pine, fontSize: 22 }} />
+                                    <Box>
+                                        <Typography fontSize={11.5} fontWeight={700} color={colors.slate}>
+                                            CONSULTATION FEE
+                                        </Typography>
+                                        <Typography fontSize={14.5} fontWeight={800} color={colors.pine}>
+                                            ₹{doctor.consultationFee || 0}
+                                        </Typography>
+                                    </Box>
+                                </Stack>
+                            </Box>
+
+                            <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: colors.canvas, border: `1px solid ${colors.hairline}` }}>
+                                <Stack direction="row" spacing={1.2} alignItems="center">
+                                    <TranslateOutlined sx={{ color: colors.amber, fontSize: 22 }} />
+                                    <Box>
+                                        <Typography fontSize={11.5} fontWeight={700} color={colors.slate}>
+                                            LANGUAGES
+                                        </Typography>
+                                        <Typography fontSize={13.5} fontWeight={700} color={colors.ink} noWrap>
+                                            {(doctor.languages || []).join(", ") || "English"}
+                                        </Typography>
+                                    </Box>
+                                </Stack>
+                            </Box>
+                        </Box>
 
                         {/* CTA SECTION */}
                         <Box sx={{ mt: 3.5 }}>

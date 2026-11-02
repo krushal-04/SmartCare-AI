@@ -4,10 +4,8 @@ import {
     Box,
     Button,
     Card,
-    CardContent,
     Chip,
     CircularProgress,
-    Grid,
     LinearProgress,
     Stack,
     Typography,
@@ -20,14 +18,12 @@ import {
     EmergencyOutlined,
     GroupOutlined,
     LocalHospitalOutlined,
-    LocalPharmacyOutlined,
     MedicalServicesOutlined,
     TimeToLeaveOutlined,
     DescriptionOutlined,
     NotificationsOutlined,
     RefreshRounded,
     ArrowForwardRounded,
-    CheckCircleOutline,
     HourglassEmptyRounded,
 } from "@mui/icons-material";
 
@@ -138,7 +134,7 @@ export default function AdminDashboard() {
             ) : (
                 <>
 
-                    <Grid container spacing={2.5} sx={{ mb: 3.5 }}>
+                    <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))", md: "repeat(4, minmax(0, 1fr))" }, gap: 2.5, mb: 3.5 }}>
                         {[
                             {
                                 label: "Total Users",
@@ -203,242 +199,220 @@ export default function AdminDashboard() {
                                 bg: "rgba(75,85,99,0.08)",
                                 path: "/admin/ambulances",
                             },
-                            /*
-                            {
-                                label: "Pharmacy Catalog",
-                                value: stats?.totalMedicines ?? 0,
-                                sub: "Verified Formulations",
-                                icon: <LocalPharmacyOutlined sx={{ fontSize: 26 }} />,
-                                color: "#0D9488",
-                                bg: "rgba(13,148,136,0.08)",
-                                path: "/admin/medicines",
-                            },
-                            */
                         ].map((m) => (
-                            <Grid item xs={12} sm={6} md={3} key={m.label}>
-                                <Card
-                                    elevation={0}
-                                    onClick={() => navigate(m.path)}
-                                    sx={{
-                                        p: 2.5,
-                                        borderRadius: 3.5,
-                                        border: "1px solid #E3EBEE",
-                                        cursor: "pointer",
-                                        transition: "all 0.2s ease",
-                                        "&:hover": {
-                                            transform: "translateY(-3px)",
-                                            boxShadow: "0 10px 20px rgba(15,82,75,0.07)",
-                                            borderColor: m.color,
-                                        },
-                                    }}
-                                >
-                                    <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
-                                        <Box>
-                                            <Typography variant="body2" color="text.secondary" fontWeight={600}>
-                                                {m.label}
-                                            </Typography>
-                                            <Typography variant="h4" fontWeight={900} sx={{ mt: 0.5, color: "#1E293B" }}>
-                                                {m.value}
-                                            </Typography>
-                                            <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: "block", fontWeight: 600 }}>
-                                                {m.sub}
-                                            </Typography>
-                                        </Box>
-                                        <Box
-                                            sx={{
-                                                width: 48,
-                                                height: 48,
-                                                borderRadius: 2.5,
-                                                bgcolor: m.bg,
-                                                color: m.color,
-                                                display: "flex",
-                                                alignItems: "center",
-                                                justifyContent: "center",
-                                            }}
-                                        >
-                                            {m.icon}
-                                        </Box>
-                                    </Stack>
-                                </Card>
-                            </Grid>
+                            <Card
+                                key={m.label}
+                                elevation={0}
+                                onClick={() => navigate(m.path)}
+                                sx={{
+                                    p: 2.5,
+                                    borderRadius: 3.5,
+                                    border: "1px solid #E3EBEE",
+                                    cursor: "pointer",
+                                    transition: "all 0.2s ease",
+                                    "&:hover": {
+                                        transform: "translateY(-3px)",
+                                        boxShadow: "0 10px 20px rgba(15,82,75,0.07)",
+                                        borderColor: m.color,
+                                    },
+                                }}
+                            >
+                                <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+                                    <Box>
+                                        <Typography variant="body2" color="text.secondary" fontWeight={600}>
+                                            {m.label}
+                                        </Typography>
+                                        <Typography variant="h4" fontWeight={900} sx={{ mt: 0.5, color: "#1E293B" }}>
+                                            {m.value}
+                                        </Typography>
+                                        <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: "block", fontWeight: 600 }}>
+                                            {m.sub}
+                                        </Typography>
+                                    </Box>
+                                    <Box
+                                        sx={{
+                                            width: 48,
+                                            height: 48,
+                                            borderRadius: 2.5,
+                                            bgcolor: m.bg,
+                                            color: m.color,
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                        }}
+                                    >
+                                        {m.icon}
+                                    </Box>
+                                </Stack>
+                            </Card>
                         ))}
-                    </Grid>
+                    </Box>
 
                     {/* Analytics Charts */}
-                    <Grid container spacing={3} sx={{ mb: 3.5 }}>
+                    <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", lg: "repeat(2, minmax(0, 1fr))" }, gap: 3, mb: 3.5 }}>
                         {/* 7-Day Appointments Bar Chart */}
-                        <Grid item xs={12} md={6}>
-                            <Card elevation={0} sx={{ p: 3, borderRadius: 4, border: "1px solid #E3EBEE", height: "100%" }}>
-                                <Typography variant="h6" fontWeight={800} gutterBottom>
-                                    Platform Appointment Bookings (Last 7 Days)
-                                </Typography>
-                                <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                                    System-wide patient booking volume
-                                </Typography>
+                        <Card elevation={0} sx={{ p: 3, borderRadius: 4, border: "1px solid #E3EBEE", height: "100%" }}>
+                            <Typography variant="h6" fontWeight={800} gutterBottom>
+                                Platform Appointment Bookings (Last 7 Days)
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                                System-wide patient booking volume
+                            </Typography>
 
-                                <Box sx={{ display: "flex", alignItems: "flex-end", height: 180, gap: 2, pt: 2 }}>
-                                    {charts?.appointmentTrend?.map((d) => {
-                                        const hPct = Math.max((d.appointments / maxAppointmentTrend) * 100, 10);
-                                        return (
+                            <Box sx={{ display: "flex", alignItems: "flex-end", height: 180, gap: 2, pt: 2 }}>
+                                {charts?.appointmentTrend?.map((d) => {
+                                    const hPct = Math.max((d.appointments / maxAppointmentTrend) * 100, 10);
+                                    return (
+                                        <Box
+                                            key={d.date}
+                                            sx={{
+                                                flex: 1,
+                                                display: "flex",
+                                                flexDirection: "column",
+                                                alignItems: "center",
+                                                height: "100%",
+                                                justifyContent: "flex-end",
+                                            }}
+                                        >
+                                            <Typography fontSize={11} fontWeight={800} color="primary.main" sx={{ mb: 0.5 }}>
+                                                {d.appointments}
+                                            </Typography>
                                             <Box
-                                                key={d.date}
                                                 sx={{
-                                                    flex: 1,
-                                                    display: "flex",
-                                                    flexDirection: "column",
-                                                    alignItems: "center",
-                                                    height: "100%",
-                                                    justifyContent: "flex-end",
+                                                    width: "100%",
+                                                    maxWidth: 36,
+                                                    height: `${hPct}%`,
+                                                    bgcolor: "#0F524B",
+                                                    borderRadius: "6px 6px 0 0",
                                                 }}
-                                            >
-                                                <Typography fontSize={11} fontWeight={800} color="primary.main" sx={{ mb: 0.5 }}>
-                                                    {d.appointments}
-                                                </Typography>
-                                                <Box
-                                                    sx={{
-                                                        width: "100%",
-                                                        maxWidth: 36,
-                                                        height: `${hPct}%`,
-                                                        bgcolor: "#0F524B",
-                                                        borderRadius: "6px 6px 0 0",
-                                                    }}
-                                                />
-                                                <Typography fontSize={11} color="text.secondary" fontWeight={600} sx={{ mt: 1 }}>
-                                                    {d.day}
-                                                </Typography>
-                                            </Box>
-                                        );
-                                    })}
-                                </Box>
-                            </Card>
-                        </Grid>
+                                            />
+                                            <Typography fontSize={11} color="text.secondary" fontWeight={600} sx={{ mt: 1 }}>
+                                                {d.day}
+                                            </Typography>
+                                        </Box>
+                                    );
+                                })}
+                            </Box>
+                        </Card>
 
                         {/* User Growth (Last 6 Months) */}
-                        <Grid item xs={12} md={6}>
-                            <Card elevation={0} sx={{ p: 3, borderRadius: 4, border: "1px solid #E3EBEE", height: "100%" }}>
-                                <Typography variant="h6" fontWeight={800} gutterBottom>
-                                    User Registration Growth (Last 6 Months)
-                                </Typography>
-                                <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                                    Patient and hospital onboarding trajectory
-                                </Typography>
+                        <Card elevation={0} sx={{ p: 3, borderRadius: 4, border: "1px solid #E3EBEE", height: "100%" }}>
+                            <Typography variant="h6" fontWeight={800} gutterBottom>
+                                User Registration Growth (Last 6 Months)
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                                Patient and hospital onboarding trajectory
+                            </Typography>
 
-                                <Box sx={{ display: "flex", alignItems: "flex-end", height: 180, gap: 2, pt: 2 }}>
-                                    {charts?.userGrowth?.map((u) => {
-                                        const hPct = Math.max((u.users / maxUserGrowth) * 100, 10);
-                                        return (
+                            <Box sx={{ display: "flex", alignItems: "flex-end", height: 180, gap: 2, pt: 2 }}>
+                                {charts?.userGrowth?.map((u) => {
+                                    const hPct = Math.max((u.users / maxUserGrowth) * 100, 10);
+                                    return (
+                                        <Box
+                                            key={u.month}
+                                            sx={{
+                                                flex: 1,
+                                                display: "flex",
+                                                flexDirection: "column",
+                                                alignItems: "center",
+                                                height: "100%",
+                                                justifyContent: "flex-end",
+                                            }}
+                                        >
+                                            <Typography fontSize={11} fontWeight={800} color="secondary.main" sx={{ mb: 0.5 }}>
+                                                {u.users}
+                                            </Typography>
                                             <Box
-                                                key={u.month}
                                                 sx={{
-                                                    flex: 1,
-                                                    display: "flex",
-                                                    flexDirection: "column",
-                                                    alignItems: "center",
-                                                    height: "100%",
-                                                    justifyContent: "flex-end",
+                                                    width: "100%",
+                                                    maxWidth: 36,
+                                                    height: `${hPct}%`,
+                                                    bgcolor: "#0284C7",
+                                                    borderRadius: "6px 6px 0 0",
                                                 }}
-                                            >
-                                                <Typography fontSize={11} fontWeight={800} color="secondary.main" sx={{ mb: 0.5 }}>
-                                                    {u.users}
-                                                </Typography>
-                                                <Box
-                                                    sx={{
-                                                        width: "100%",
-                                                        maxWidth: 36,
-                                                        height: `${hPct}%`,
-                                                        bgcolor: "#0284C7",
-                                                        borderRadius: "6px 6px 0 0",
-                                                    }}
-                                                />
-                                                <Typography fontSize={11} color="text.secondary" fontWeight={600} sx={{ mt: 1 }}>
-                                                    {u.month.split(" ")[0]}
-                                                </Typography>
-                                            </Box>
-                                        );
-                                    })}
-                                </Box>
-                            </Card>
-                        </Grid>
+                                            />
+                                            <Typography fontSize={11} color="text.secondary" fontWeight={600} sx={{ mt: 1 }}>
+                                                {u.month.split(" ")[0]}
+                                            </Typography>
+                                        </Box>
+                                    );
+                                })}
+                            </Box>
+                        </Card>
 
                         {/* Emergency Triage Status Breakdown */}
-                        <Grid item xs={12} md={6}>
-                            <Card elevation={0} sx={{ p: 3, borderRadius: 4, border: "1px solid #E3EBEE" }}>
-                                <Typography variant="h6" fontWeight={800} gutterBottom>
-                                    Emergency Response Status
-                                </Typography>
-                                <Typography variant="body2" color="text.secondary" sx={{ mb: 2.5 }}>
-                                    System-wide distress call lifecycle
-                                </Typography>
+                        <Card elevation={0} sx={{ p: 3, borderRadius: 4, border: "1px solid #E3EBEE" }}>
+                            <Typography variant="h6" fontWeight={800} gutterBottom>
+                                Emergency Response Status
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary" sx={{ mb: 2.5 }}>
+                                System-wide distress call lifecycle
+                            </Typography>
 
-                                <Grid container spacing={1.5}>
-                                    {[
-                                        { label: "Requested", val: charts?.emergencyBreakdown?.requested || 0, color: "error" },
-                                        { label: "Ambulance Assigned", val: charts?.emergencyBreakdown?.assigned || 0, color: "warning" },
-                                        { label: "On The Way", val: charts?.emergencyBreakdown?.onTheWay || 0, color: "secondary" },
-                                        { label: "Arrived On Scene", val: charts?.emergencyBreakdown?.arrived || 0, color: "info" },
-                                        { label: "Completed", val: charts?.emergencyBreakdown?.completed || 0, color: "success" },
-                                        { label: "Cancelled", val: charts?.emergencyBreakdown?.cancelled || 0, color: "default" },
-                                    ].map((e) => (
-                                        <Grid item xs={6} sm={4} key={e.label}>
-                                            <Box sx={{ p: 1.5, borderRadius: 2.5, border: "1px solid #EAEAEA", bgcolor: "#FAFCFC" }}>
-                                                <Typography fontSize={12} color="text.secondary" fontWeight={600}>
-                                                    {e.label}
-                                                </Typography>
-                                                <Typography variant="h6" fontWeight={900} sx={{ mt: 0.5 }}>
-                                                    {e.val}
-                                                </Typography>
-                                            </Box>
-                                        </Grid>
-                                    ))}
-                                </Grid>
-                            </Card>
-                        </Grid>
+                            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "repeat(2, 1fr)", sm: "repeat(3, 1fr)" }, gap: 1.5 }}>
+                                {[
+                                    { label: "Requested", val: charts?.emergencyBreakdown?.requested || 0, color: "error" },
+                                    { label: "Ambulance Assigned", val: charts?.emergencyBreakdown?.assigned || 0, color: "warning" },
+                                    { label: "On The Way", val: charts?.emergencyBreakdown?.onTheWay || 0, color: "secondary" },
+                                    { label: "Arrived On Scene", val: charts?.emergencyBreakdown?.arrived || 0, color: "info" },
+                                    { label: "Completed", val: charts?.emergencyBreakdown?.completed || 0, color: "success" },
+                                    { label: "Cancelled", val: charts?.emergencyBreakdown?.cancelled || 0, color: "default" },
+                                ].map((e) => (
+                                    <Box key={e.label} sx={{ p: 1.5, borderRadius: 2.5, border: "1px solid #EAEAEA", bgcolor: "#FAFCFC" }}>
+                                        <Typography fontSize={12} color="text.secondary" fontWeight={600}>
+                                            {e.label}
+                                        </Typography>
+                                        <Typography variant="h6" fontWeight={900} sx={{ mt: 0.5 }}>
+                                            {e.val}
+                                        </Typography>
+                                    </Box>
+                                ))}
+                            </Box>
+                        </Card>
 
                         {/* Clinical Specialties Utilization */}
-                        <Grid item xs={12} md={6}>
-                            <Card elevation={0} sx={{ p: 3, borderRadius: 4, border: "1px solid #E3EBEE" }}>
-                                <Typography variant="h6" fontWeight={800} gutterBottom>
-                                    Clinical Specialty Distribution
-                                </Typography>
-                                <Typography variant="body2" color="text.secondary" sx={{ mb: 2.5 }}>
-                                    Hospital department registration counts
-                                </Typography>
+                        <Card elevation={0} sx={{ p: 3, borderRadius: 4, border: "1px solid #E3EBEE" }}>
+                            <Typography variant="h6" fontWeight={800} gutterBottom>
+                                Clinical Specialty Distribution
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary" sx={{ mb: 2.5 }}>
+                                Hospital department registration counts
+                            </Typography>
 
-                                {charts?.departmentUsage?.length === 0 ? (
-                                    <Typography color="text.secondary" fontSize={14}>
-                                        No departments configured yet.
-                                    </Typography>
-                                ) : (
-                                    <Stack spacing={1.5}>
-                                        {charts?.departmentUsage?.map((d) => (
-                                            <Box key={d.name}>
-                                                <Stack direction="row" justifyContent="space-between" sx={{ mb: 0.5 }}>
-                                                    <Typography fontSize={13} fontWeight={700}>
-                                                        {d.name}
-                                                    </Typography>
-                                                    <Typography fontSize={13} color="text.secondary">
-                                                        {d.count} Units
-                                                    </Typography>
-                                                </Stack>
-                                                <LinearProgress
-                                                    variant="determinate"
-                                                    value={Math.min((d.count / (stats?.totalDepartments || 1)) * 100, 100)}
-                                                    sx={{ height: 6, borderRadius: 3, bgcolor: "#E2E8F0" }}
-                                                />
-                                            </Box>
-                                        ))}
-                                    </Stack>
-                                )}
-                            </Card>
-                        </Grid>
-                    </Grid>
+                            {charts?.departmentUsage?.length === 0 ? (
+                                <Typography color="text.secondary" fontSize={14}>
+                                    No departments configured yet.
+                                </Typography>
+                            ) : (
+                                <Stack spacing={1.5}>
+                                    {charts?.departmentUsage?.map((d) => (
+                                        <Box key={d.name}>
+                                            <Stack direction="row" justifyContent="space-between" sx={{ mb: 0.5 }}>
+                                                <Typography fontSize={13} fontWeight={700}>
+                                                    {d.name}
+                                                </Typography>
+                                                <Typography fontSize={13} color="text.secondary">
+                                                    {d.count} Units
+                                                </Typography>
+                                            </Stack>
+                                            <LinearProgress
+                                                variant="determinate"
+                                                value={Math.min((d.count / (stats?.totalDepartments || 1)) * 100, 100)}
+                                                sx={{ height: 6, borderRadius: 3, bgcolor: "#E2E8F0" }}
+                                            />
+                                        </Box>
+                                    ))}
+                                </Stack>
+                            )}
+                        </Card>
+                    </Box>
 
                     {/* Operational Management Modules */}
                     <Box sx={{ mb: 2 }}>
                         <Typography variant="h6" fontWeight={800} sx={{ mb: 2 }}>
                             Management & Governance Modules
                         </Typography>
-                        <Grid container spacing={2}>
+                        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))", md: "repeat(3, minmax(0, 1fr))" }, gap: 2 }}>
                             {[
                                 {
                                     title: "Hospital Verification & Network",
@@ -471,14 +445,6 @@ export default function AdminDashboard() {
                                     icon: <TimeToLeaveOutlined />,
                                     path: "/admin/ambulances",
                                 },
-                                /*
-                                {
-                                    title: "Pharmacy & Medicines Catalog",
-                                    desc: "Manage drug directory, indications, and safety information",
-                                    icon: <LocalPharmacyOutlined />,
-                                    path: "/admin/medicines",
-                                },
-                                */
                                 {
                                     title: "System Reports & Export",
                                     desc: "Generate filtered CSV/PDF reports across appointments and users",
@@ -498,54 +464,53 @@ export default function AdminDashboard() {
                                     path: "/admin/notifications",
                                 },
                             ].map((m) => (
-                                <Grid item xs={12} sm={6} md={4} key={m.title}>
-                                    <Card
-                                        elevation={0}
-                                        onClick={() => navigate(m.path)}
-                                        sx={{
-                                            p: 2.5,
-                                            borderRadius: 3.5,
-                                            border: "1px solid",
-                                            borderColor: m.highlight ? "warning.light" : "#E3EBEE",
-                                            bgcolor: m.highlight ? "rgba(217,119,6,0.02)" : "background.paper",
-                                            cursor: "pointer",
-                                            transition: "all 0.2s ease",
-                                            "&:hover": {
-                                                borderColor: m.highlight ? "warning.main" : "primary.main",
-                                                transform: "translateY(-2px)",
-                                                boxShadow: "0 8px 16px rgba(15,82,75,0.06)",
-                                            },
-                                        }}
-                                    >
-                                        <Stack direction="row" spacing={2} alignItems="center">
-                                            <Box
-                                                sx={{
-                                                    width: 44,
-                                                    height: 44,
-                                                    borderRadius: 2.5,
-                                                    bgcolor: m.highlight ? "rgba(217,119,6,0.1)" : "rgba(15,82,75,0.08)",
-                                                    color: m.highlight ? "warning.main" : "primary.main",
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    justifyContent: "center",
-                                                }}
-                                            >
-                                                {m.icon}
-                                            </Box>
-                                            <Box sx={{ flex: 1 }}>
-                                                <Typography fontWeight={800} fontSize={15}>
-                                                    {m.title}
-                                                </Typography>
-                                                <Typography variant="body2" color="text.secondary" fontSize={12}>
-                                                    {m.desc}
-                                                </Typography>
-                                            </Box>
-                                            <ArrowForwardRounded fontSize="small" sx={{ color: "text.secondary" }} />
-                                        </Stack>
-                                    </Card>
-                                </Grid>
+                                <Card
+                                    key={m.title}
+                                    elevation={0}
+                                    onClick={() => navigate(m.path)}
+                                    sx={{
+                                        p: 2.5,
+                                        borderRadius: 3.5,
+                                        border: "1px solid",
+                                        borderColor: m.highlight ? "warning.light" : "#E3EBEE",
+                                        bgcolor: m.highlight ? "rgba(217,119,6,0.02)" : "background.paper",
+                                        cursor: "pointer",
+                                        transition: "all 0.2s ease",
+                                        "&:hover": {
+                                            borderColor: m.highlight ? "warning.main" : "primary.main",
+                                            transform: "translateY(-2px)",
+                                            boxShadow: "0 8px 16px rgba(15,82,75,0.06)",
+                                        },
+                                    }}
+                                >
+                                    <Stack direction="row" spacing={2} alignItems="center">
+                                        <Box
+                                            sx={{
+                                                width: 44,
+                                                height: 44,
+                                                borderRadius: 2.5,
+                                                bgcolor: m.highlight ? "rgba(217,119,6,0.1)" : "rgba(15,82,75,0.08)",
+                                                color: m.highlight ? "warning.main" : "primary.main",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                            }}
+                                        >
+                                            {m.icon}
+                                        </Box>
+                                        <Box sx={{ flex: 1 }}>
+                                            <Typography fontWeight={800} fontSize={15}>
+                                                {m.title}
+                                            </Typography>
+                                            <Typography variant="body2" color="text.secondary" fontSize={12}>
+                                                {m.desc}
+                                            </Typography>
+                                        </Box>
+                                        <ArrowForwardRounded fontSize="small" sx={{ color: "text.secondary" }} />
+                                    </Stack>
+                                </Card>
                             ))}
-                        </Grid>
+                        </Box>
                     </Box>
                 </>
             )}

@@ -10,7 +10,6 @@ import {
     Stack,
     TextField,
     Alert,
-    Grid,
     Paper,
     Chip,
     CircularProgress,
@@ -204,110 +203,104 @@ export default function Emergency() {
                 </Button>
 
                 {/* EMERGENCY HOTLINE QUICK CALL BAR */}
-                <Grid container spacing={2} sx={{ mb: 3.5 }}>
-                    <Grid item xs={12} sm={4}>
-                        <Paper
-                            elevation={0}
-                            component="a"
-                            href="tel:108"
-                            sx={{
-                                p: 2,
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 2,
-                                borderRadius: 3,
-                                bgcolor: "#FEF2F2",
-                                border: "1.5px solid #FCA5A5",
-                                textDecoration: "none",
-                                color: "#991B1B",
-                                transition: "transform 0.2s",
-                                "&:hover": { transform: "translateY(-2px)" },
-                            }}
-                        >
-                            <Box sx={{ p: 1.5, borderRadius: 2.5, bgcolor: "#EF4444", color: "#FFFFFF" }}>
-                                <Phone />
-                            </Box>
-                            <Box>
-                                <Typography fontSize={11} fontWeight={800} textTransform="uppercase" letterSpacing={0.5}>
-                                    National Ambulance
-                                </Typography>
-                                <Typography fontSize={20} fontWeight={900}>
-                                    Dial 108 / 112
-                                </Typography>
-                            </Box>
-                        </Paper>
-                    </Grid>
+                <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(3, minmax(0, 1fr))" }, gap: 2, mb: 3.5 }}>
+                    <Paper
+                        elevation={0}
+                        component="a"
+                        href="tel:108"
+                        sx={{
+                            p: 2,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 2,
+                            borderRadius: 3,
+                            bgcolor: "#FEF2F2",
+                            border: "1.5px solid #FCA5A5",
+                            textDecoration: "none",
+                            color: "#991B1B",
+                            transition: "transform 0.2s",
+                            "&:hover": { transform: "translateY(-2px)" },
+                        }}
+                    >
+                        <Box sx={{ p: 1.5, borderRadius: 2.5, bgcolor: "#EF4444", color: "#FFFFFF" }}>
+                            <Phone />
+                        </Box>
+                        <Box>
+                            <Typography fontSize={11} fontWeight={800} textTransform="uppercase" letterSpacing={0.5}>
+                                National Ambulance
+                            </Typography>
+                            <Typography fontSize={20} fontWeight={900}>
+                                Dial 108 / 112
+                            </Typography>
+                        </Box>
+                    </Paper>
 
-                    <Grid item xs={12} sm={4}>
-                        <Paper
-                            elevation={0}
-                            component="a"
-                            href="tel:+919999988888"
-                            sx={{
-                                p: 2,
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 2,
-                                borderRadius: 3,
-                                bgcolor: "#F0FDFA",
-                                border: "1.5px solid #99F6E4",
-                                textDecoration: "none",
-                                color: "#0F766E",
-                                transition: "transform 0.2s",
-                                "&:hover": { transform: "translateY(-2px)" },
-                            }}
-                        >
-                            <Box sx={{ p: 1.5, borderRadius: 2.5, bgcolor: "#0D9488", color: "#FFFFFF" }}>
-                                <LocalHospital />
-                            </Box>
-                            <Box>
-                                <Typography fontSize={11} fontWeight={800} textTransform="uppercase" letterSpacing={0.5}>
-                                    SmartCare 24x7 Helpline
-                                </Typography>
-                                <Typography fontSize={18} fontWeight={900}>
-                                    +91 99999 88888
-                                </Typography>
-                            </Box>
-                        </Paper>
-                    </Grid>
+                    <Paper
+                        elevation={0}
+                        component="a"
+                        href="tel:+919999988888"
+                        sx={{
+                            p: 2,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 2,
+                            borderRadius: 3,
+                            bgcolor: "#F0FDFA",
+                            border: "1.5px solid #99F6E4",
+                            textDecoration: "none",
+                            color: "#0F766E",
+                            transition: "transform 0.2s",
+                            "&:hover": { transform: "translateY(-2px)" },
+                        }}
+                    >
+                        <Box sx={{ p: 1.5, borderRadius: 2.5, bgcolor: "#0D9488", color: "#FFFFFF" }}>
+                            <LocalHospital />
+                        </Box>
+                        <Box>
+                            <Typography fontSize={11} fontWeight={800} textTransform="uppercase" letterSpacing={0.5}>
+                                SmartCare 24x7 Helpline
+                            </Typography>
+                            <Typography fontSize={18} fontWeight={900}>
+                                +91 99999 88888
+                            </Typography>
+                        </Box>
+                    </Paper>
 
-                    <Grid item xs={12} sm={4}>
-                        <Paper
-                            elevation={0}
-                            component="a"
-                            href="mailto:smartcareai.admin@gmail.com"
-                            sx={{
-                                p: 2,
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 2,
-                                borderRadius: 3,
-                                bgcolor: "#F0F9FF",
-                                border: "1.5px solid #BAE6FD",
-                                textDecoration: "none",
-                                color: "#0369A1",
-                                transition: "transform 0.2s",
-                                "&:hover": { transform: "translateY(-2px)" },
-                            }}
-                        >
-                            <Box sx={{ p: 1.5, borderRadius: 2.5, bgcolor: "#0284C7", color: "#FFFFFF" }}>
-                                <EmergencyOutlined />
-                            </Box>
-                            <Box>
-                                <Typography fontSize={11} fontWeight={800} textTransform="uppercase" letterSpacing={0.5}>
-                                    Emergency Admin Desk
-                                </Typography>
-                                <Typography fontSize={13} fontWeight={700} noWrap>
-                                    smartcareai.admin@gmail.com
-                                </Typography>
-                            </Box>
-                        </Paper>
-                    </Grid>
-                </Grid>
+                    <Paper
+                        elevation={0}
+                        component="a"
+                        href="mailto:smartcareai.admin@gmail.com"
+                        sx={{
+                            p: 2,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 2,
+                            borderRadius: 3,
+                            bgcolor: "#F0F9FF",
+                            border: "1.5px solid #BAE6FD",
+                            textDecoration: "none",
+                            color: "#0369A1",
+                            transition: "transform 0.2s",
+                            "&:hover": { transform: "translateY(-2px)" },
+                        }}
+                    >
+                        <Box sx={{ p: 1.5, borderRadius: 2.5, bgcolor: "#0284C7", color: "#FFFFFF" }}>
+                            <EmergencyOutlined />
+                        </Box>
+                        <Box>
+                            <Typography fontSize={11} fontWeight={800} textTransform="uppercase" letterSpacing={0.5}>
+                                Emergency Admin Desk
+                            </Typography>
+                            <Typography fontSize={13} fontWeight={700} noWrap>
+                                smartcareai.admin@gmail.com
+                            </Typography>
+                        </Box>
+                    </Paper>
+                </Box>
 
-                <Grid container spacing={3.5}>
+                <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", lg: "1fr 1fr" }, gap: 3.5, alignItems: "start" }}>
                     {/* DISPATCH FORM */}
-                    <Grid item xs={12} md={6}>
+                    <Box sx={{ width: "100%", minWidth: 0 }}>
                         <Card elevation={0} sx={{ borderRadius: 3.5, border: "1.5px solid #FECACA", overflow: "hidden" }}>
                             <Box sx={{ p: 3, bgcolor: "#FEF2F2", borderBottom: "1px solid #FECACA" }}>
                                 <Typography variant="h5" fontWeight={900} color="#991B1B">
@@ -448,31 +441,29 @@ export default function Emergency() {
                                 </Stack>
                             </CardContent>
                         </Card>
-                    </Grid>
+                    </Box>
 
                     {/* LIVE RADAR MAP */}
-                    <Grid item xs={12} md={6}>
-                        <Box sx={{ position: "sticky", top: 88 }}>
-                            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1.5 }}>
-                                <Typography fontSize={17} fontWeight={800} color="#0F172A">
-                                    Live Ambulance & Hospital Locator
-                                </Typography>
-                                <Typography fontSize={12} color="#DC2626" fontWeight={700}>
-                                    Tap map to adjust pickup pin
-                                </Typography>
-                            </Box>
-
-                            <MedicalMap
-                                hospitals={hospitals}
-                                patientLocation={location}
-                                selectable={true}
-                                onLocationSelect={(coords) => setLocation(coords)}
-                                onLocateMe={(coords) => setLocation(coords)}
-                                height={460}
-                            />
+                    <Box sx={{ width: "100%", minWidth: 0, position: { lg: "sticky" }, top: { lg: 88 } }}>
+                        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1.5 }}>
+                            <Typography fontSize={17} fontWeight={800} color="#0F172A">
+                                Live Ambulance & Hospital Locator
+                            </Typography>
+                            <Typography fontSize={12} color="#DC2626" fontWeight={700}>
+                                Tap map to adjust pickup pin
+                            </Typography>
                         </Box>
-                    </Grid>
-                </Grid>
+
+                        <MedicalMap
+                            hospitals={hospitals}
+                            patientLocation={location}
+                            selectable={true}
+                            onLocationSelect={(coords) => setLocation(coords)}
+                            onLocateMe={(coords) => setLocation(coords)}
+                            height={460}
+                        />
+                    </Box>
+                </Box>
             </Container>
 
             <Footer />

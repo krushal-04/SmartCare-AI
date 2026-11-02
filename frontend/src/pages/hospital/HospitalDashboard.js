@@ -4,10 +4,8 @@ import {
     Box,
     Button,
     Card,
-    CardContent,
     Chip,
     CircularProgress,
-    Grid,
     LinearProgress,
     Stack,
     Typography,
@@ -18,11 +16,9 @@ import {
     DomainOutlined,
     EmergencyOutlined,
     GroupOutlined,
-    LocalHospitalOutlined,
     MedicalServicesOutlined,
     ScheduleOutlined,
     DescriptionOutlined,
-    NotificationsOutlined,
     VerifiedOutlined,
     CheckCircleOutlined,
     TrendingUpOutlined,
@@ -125,7 +121,7 @@ export default function HospitalDashboard() {
             ) : (
                 <>
                     {/* Key Metrics Grid */}
-                    <Grid container spacing={2.5} sx={{ mb: 3.5 }}>
+                    <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))", md: "repeat(4, minmax(0, 1fr))" }, gap: 2.5, mb: 3.5 }}>
                         {[
                             {
                                 label: "Total Doctors",
@@ -192,11 +188,12 @@ export default function HospitalDashboard() {
                                 path: "/hospital/reports",
                             },
                         ].map((item) => (
-                            <Grid item xs={12} sm={6} md={3} key={item.label}>
+                            <Box key={item.label} sx={{ display: "flex", height: "100%" }}>
                                 <Card
                                     elevation={0}
                                     onClick={() => navigate(item.path)}
                                     sx={{
+                                        width: "100%",
                                         p: 2.5,
                                         borderRadius: 3.5,
                                         border: "1px solid #E3EBEE",
@@ -234,14 +231,14 @@ export default function HospitalDashboard() {
                                         </Box>
                                     </Stack>
                                 </Card>
-                            </Grid>
+                            </Box>
                         ))}
-                    </Grid>
+                    </Box>
 
                     {/* Charts Section */}
-                    <Grid container spacing={3} sx={{ mb: 3.5 }}>
+                    <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", lg: "repeat(2, minmax(0, 1fr))" }, gap: 3, mb: 3.5 }}>
                         {/* Daily Appointments Trend (7 Days) */}
-                        <Grid item xs={12} md={6}>
+                        <Box sx={{ minWidth: 0, width: "100%" }}>
                             <Card elevation={0} sx={{ p: 3, borderRadius: 4, border: "1px solid #E3EBEE", height: "100%" }}>
                                 <Typography variant="h6" fontWeight={800} gutterBottom>
                                     Daily Appointments (Last 7 Days)
@@ -286,10 +283,10 @@ export default function HospitalDashboard() {
                                     })}
                                 </Box>
                             </Card>
-                        </Grid>
+                        </Box>
 
                         {/* Monthly Trends */}
-                        <Grid item xs={12} md={6}>
+                        <Box sx={{ minWidth: 0, width: "100%" }}>
                             <Card elevation={0} sx={{ p: 3, borderRadius: 4, border: "1px solid #E3EBEE", height: "100%" }}>
                                 <Typography variant="h6" fontWeight={800} gutterBottom>
                                     Monthly Trend (Last 6 Months)
@@ -334,11 +331,11 @@ export default function HospitalDashboard() {
                                     })}
                                 </Box>
                             </Card>
-                        </Grid>
+                        </Box>
 
                         {/* Department Distribution */}
-                        <Grid item xs={12} md={6}>
-                            <Card elevation={0} sx={{ p: 3, borderRadius: 4, border: "1px solid #E3EBEE" }}>
+                        <Box sx={{ minWidth: 0, width: "100%" }}>
+                            <Card elevation={0} sx={{ p: 3, borderRadius: 4, border: "1px solid #E3EBEE", height: "100%" }}>
                                 <Typography variant="h6" fontWeight={800} gutterBottom>
                                     Department Utilization
                                 </Typography>
@@ -376,11 +373,11 @@ export default function HospitalDashboard() {
                                     </Stack>
                                 )}
                             </Card>
-                        </Grid>
+                        </Box>
 
                         {/* Emergency Status Breakdown */}
-                        <Grid item xs={12} md={6}>
-                            <Card elevation={0} sx={{ p: 3, borderRadius: 4, border: "1px solid #E3EBEE" }}>
+                        <Box sx={{ minWidth: 0, width: "100%" }}>
+                            <Card elevation={0} sx={{ p: 3, borderRadius: 4, border: "1px solid #E3EBEE", height: "100%" }}>
                                 <Typography variant="h6" fontWeight={800} gutterBottom>
                                     Emergency Operations Status
                                 </Typography>
@@ -388,7 +385,7 @@ export default function HospitalDashboard() {
                                     Breakdown of patient emergency calls
                                 </Typography>
 
-                                <Grid container spacing={1.5}>
+                                <Box sx={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 1.5 }}>
                                     {[
                                         { label: "Requested", val: charts?.emergencyBreakdown?.requested || 0, color: "warning" },
                                         { label: "Ambulance Assigned", val: charts?.emergencyBreakdown?.assigned || 0, color: "info" },
@@ -397,35 +394,34 @@ export default function HospitalDashboard() {
                                         { label: "Completed", val: charts?.emergencyBreakdown?.completed || 0, color: "success" },
                                         { label: "Cancelled", val: charts?.emergencyBreakdown?.cancelled || 0, color: "error" },
                                     ].map((e) => (
-                                        <Grid item xs={6} key={e.label}>
-                                            <Box
-                                                sx={{
-                                                    p: 1.5,
-                                                    borderRadius: 2.5,
-                                                    border: "1px solid #EAEAEA",
-                                                    bgcolor: "#FAFCFC",
-                                                }}
-                                            >
-                                                <Typography fontSize={12} color="text.secondary" fontWeight={600}>
-                                                    {e.label}
-                                                </Typography>
-                                                <Typography variant="h6" fontWeight={900} sx={{ mt: 0.5 }}>
-                                                    {e.val}
-                                                </Typography>
-                                            </Box>
-                                        </Grid>
+                                        <Box
+                                            key={e.label}
+                                            sx={{
+                                                p: 1.5,
+                                                borderRadius: 2.5,
+                                                border: "1px solid #EAEAEA",
+                                                bgcolor: "#FAFCFC",
+                                            }}
+                                        >
+                                            <Typography fontSize={12} color="text.secondary" fontWeight={600}>
+                                                {e.label}
+                                            </Typography>
+                                            <Typography variant="h6" fontWeight={900} sx={{ mt: 0.5 }}>
+                                                {e.val}
+                                            </Typography>
+                                        </Box>
                                     ))}
-                                </Grid>
+                                </Box>
                             </Card>
-                        </Grid>
-                    </Grid>
+                        </Box>
+                    </Box>
 
                     {/* Quick Operational Shortcuts */}
                     <Box sx={{ mb: 2 }}>
                         <Typography variant="h6" fontWeight={800} sx={{ mb: 2 }}>
                             Quick Operational Actions
                         </Typography>
-                        <Grid container spacing={2}>
+                        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))", md: "repeat(3, minmax(0, 1fr))" }, gap: 2 }}>
                             {[
                                 {
                                     title: "Manage Doctors",
@@ -465,11 +461,12 @@ export default function HospitalDashboard() {
                                     path: "/hospital/reports",
                                 },
                             ].map((a) => (
-                                <Grid item xs={12} sm={6} md={4} key={a.title}>
+                                <Box key={a.title} sx={{ display: "flex", height: "100%" }}>
                                     <Card
                                         elevation={0}
                                         onClick={() => navigate(a.path)}
                                         sx={{
+                                            width: "100%",
                                             p: 2.5,
                                             borderRadius: 3.5,
                                             border: "1px solid",
@@ -510,9 +507,9 @@ export default function HospitalDashboard() {
                                             <ArrowForwardRounded fontSize="small" sx={{ color: "text.secondary" }} />
                                         </Stack>
                                     </Card>
-                                </Grid>
+                                </Box>
                             ))}
-                        </Grid>
+                        </Box>
                     </Box>
                 </>
             )}

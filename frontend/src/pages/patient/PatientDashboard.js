@@ -9,7 +9,6 @@ import {
     CardContent,
     Chip,
     CircularProgress,
-    Grid,
     Stack,
     Typography,
 } from "@mui/material";
@@ -341,93 +340,54 @@ export default function PatientDashboard() {
                 </CardContent>
             </Card>
 
-            <Grid
-                container
-                spacing={2.5}
-                mb={4}
-            >
-                <Grid
-                    item
-                    xs={12}
-                    sm={6}
-                    lg={3}
-                >
-                    <StatCard
-                        title="Upcoming Appointments"
-                        value={
-                            stats.upcomingAppointments ||
-                            0
-                        }
-                        icon={
-                            <CalendarMonthOutlined />
-                        }
-                    />
-                </Grid>
+            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))", md: "repeat(4, minmax(0, 1fr))" }, gap: 2.5, mb: 4 }}>
+                <StatCard
+                    title="Upcoming Appointments"
+                    value={
+                        stats.upcomingAppointments ||
+                        0
+                    }
+                    icon={
+                        <CalendarMonthOutlined />
+                    }
+                />
 
-                <Grid
-                    item
-                    xs={12}
-                    sm={6}
-                    lg={3}
-                >
-                    <StatCard
-                        title="Total Appointments"
-                        value={
-                            stats.totalAppointments ||
-                            0
-                        }
-                        icon={
-                            <MedicalServicesOutlined />
-                        }
-                    />
-                </Grid>
+                <StatCard
+                    title="Total Appointments"
+                    value={
+                        stats.totalAppointments ||
+                        0
+                    }
+                    icon={
+                        <MedicalServicesOutlined />
+                    }
+                />
 
-                <Grid
-                    item
-                    xs={12}
-                    sm={6}
-                    lg={3}
-                >
-                    <StatCard
-                        title="Medical Reports"
-                        value={
-                            stats.reportCount ||
-                            0
-                        }
-                        icon={
-                            <DescriptionOutlined />
-                        }
-                    />
-                </Grid>
+                <StatCard
+                    title="Medical Reports"
+                    value={
+                        stats.reportCount ||
+                        0
+                    }
+                    icon={
+                        <DescriptionOutlined />
+                    }
+                />
 
-                <Grid
-                    item
-                    xs={12}
-                    sm={6}
-                    lg={3}
-                >
-                    <StatCard
-                        title="Emergency Requests"
-                        value={
-                            stats.emergencyCount ||
-                            0
-                        }
-                        icon={
-                            <EmergencyOutlined />
-                        }
-                    />
-                </Grid>
-            </Grid>
+                <StatCard
+                    title="Emergency Requests"
+                    value={
+                        stats.emergencyCount ||
+                        0
+                    }
+                    icon={
+                        <EmergencyOutlined />
+                    }
+                />
+            </Box>
 
-            <Grid
-                container
-                spacing={2.5}
-            >
-                <Grid
-                    item
-                    xs={12}
-                    lg={8}
-                >
+            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", lg: "8fr 4fr" }, gap: 2.5, alignItems: "start" }}>
+                <Box sx={{ minWidth: 0, width: "100%" }}>
                     <Card
                         elevation={0}
                         sx={{
@@ -608,13 +568,9 @@ export default function PatientDashboard() {
                             )}
                         </CardContent>
                     </Card>
-                </Grid>
+                </Box>
 
-                <Grid
-                    item
-                    xs={12}
-                    lg={4}
-                >
+                <Box sx={{ minWidth: 0, width: "100%" }}>
                     <Card
                         elevation={0}
                         sx={{
@@ -689,8 +645,8 @@ export default function PatientDashboard() {
                             )}
                         </CardContent>
                     </Card>
-                </Grid>
-            </Grid>
+                </Box>
+            </Box>
 
             <Box mt={4}>
                 <Stack
@@ -729,20 +685,14 @@ export default function PatientDashboard() {
                     </Button>
                 </Stack>
 
-                <Grid
-                    container
-                    spacing={2.5}
-                >
+                <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))", md: "repeat(3, minmax(0, 1fr))" }, gap: 2.5 }}>
                     {nearestHospitals.map(
                         (hospital) => (
-                            <Grid
-                                item
-                                xs={12}
-                                sm={6}
-                                md={4}
+                            <Box
                                 key={
                                     hospital._id
                                 }
+                                sx={{ display: "flex", height: "100%" }}
                             >
                                 <Card
                                     elevation={0}
@@ -844,10 +794,10 @@ export default function PatientDashboard() {
                                         </Button>
                                     </CardContent>
                                 </Card>
-                            </Grid>
+                            </Box>
                         )
                     )}
-                </Grid>
+                </Box>
             </Box>
         </DashboardLayout>
     );

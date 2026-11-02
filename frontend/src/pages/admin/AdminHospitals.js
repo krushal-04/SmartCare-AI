@@ -12,14 +12,8 @@ import {
     DialogActions,
     DialogContent,
     DialogTitle,
-    Divider,
-    FormControl,
-    Grid,
     IconButton,
     InputAdornment,
-    InputLabel,
-    MenuItem,
-    Select,
     Stack,
     Tab,
     Table,
@@ -39,13 +33,9 @@ import {
     CancelOutlined,
     SearchRounded,
     LocalHospitalOutlined,
-    LocationOnOutlined,
-    PhoneOutlined,
-    EmailOutlined,
     InfoOutlined,
     EditOutlined,
     EmergencyOutlined,
-    VerifiedOutlined,
 } from "@mui/icons-material";
 
 import DashboardLayout from "../../components/dashboard/DashboardLayout";
@@ -295,8 +285,8 @@ export default function AdminHospitals() {
                             </Typography>
                         </Box>
                     ) : (
-                        <TableContainer>
-                            <Table>
+                        <TableContainer sx={{ overflowX: "auto" }}>
+                            <Table sx={{ minWidth: 750 }}>
                                 <TableHead>
                                     <TableRow sx={{ bgcolor: "#F8FAFB" }}>
                                         <TableCell sx={{ fontWeight: 800 }}>Hospital Information</TableCell>
@@ -479,17 +469,17 @@ export default function AdminHospitals() {
                 </DialogTitle>
                 <DialogContent dividers>
                     {detailHospital && (
-                        <Grid container spacing={3}>
-                            <Grid item xs={12} sm={6}>
+                        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))" }, gap: 3 }}>
+                            <Box>
                                 <Typography variant="caption" color="text.secondary">
                                     Hospital Name
                                 </Typography>
                                 <Typography variant="h6" fontWeight={800}>
                                     {detailHospital.hospitalProfile?.hospitalName || detailHospital.fullName}
                                 </Typography>
-                            </Grid>
+                            </Box>
 
-                            <Grid item xs={12} sm={6}>
+                            <Box>
                                 <Typography variant="caption" color="text.secondary">
                                     Current Status
                                 </Typography>
@@ -500,18 +490,18 @@ export default function AdminHospitals() {
                                         sx={{ fontWeight: 800 }}
                                     />
                                 </Box>
-                            </Grid>
+                            </Box>
 
-                            <Grid item xs={12} sm={6}>
+                            <Box>
                                 <Typography variant="caption" color="text.secondary">
                                     Contact Email & Phone
                                 </Typography>
                                 <Typography fontWeight={600}>
                                     {detailHospital.email} • {detailHospital.phone}
                                 </Typography>
-                            </Grid>
+                            </Box>
 
-                            <Grid item xs={12} sm={6}>
+                            <Box>
                                 <Typography variant="caption" color="text.secondary">
                                     Street Address & Pincode
                                 </Typography>
@@ -519,18 +509,18 @@ export default function AdminHospitals() {
                                     {detailHospital.hospitalProfile?.address || "—"}, {detailHospital.hospitalProfile?.city || ""}{" "}
                                     ({detailHospital.hospitalProfile?.pincode || ""})
                                 </Typography>
-                            </Grid>
+                            </Box>
 
-                            <Grid item xs={12}>
+                            <Box sx={{ gridColumn: { xs: "span 1", sm: "span 2" } }}>
                                 <Typography variant="caption" color="text.secondary">
                                     Overview & Description
                                 </Typography>
                                 <Typography variant="body2" sx={{ mt: 0.5 }}>
                                     {detailHospital.hospitalProfile?.description || "No overview provided."}
                                 </Typography>
-                            </Grid>
+                            </Box>
 
-                            <Grid item xs={12}>
+                            <Box sx={{ gridColumn: { xs: "span 1", sm: "span 2" } }}>
                                 <Typography variant="caption" color="text.secondary">
                                     Clinical Facilities
                                 </Typography>
@@ -545,16 +535,16 @@ export default function AdminHospitals() {
                                         </Typography>
                                     )}
                                 </Box>
-                            </Grid>
+                            </Box>
 
                             {detailHospital.status === "Rejected" && detailHospital.rejectionReason && (
-                                <Grid item xs={12}>
+                                <Box sx={{ gridColumn: { xs: "span 1", sm: "span 2" } }}>
                                     <Alert severity="error" sx={{ borderRadius: 2 }}>
                                         <strong>Rejection Reason:</strong> {detailHospital.rejectionReason}
                                     </Alert>
-                                </Grid>
+                                </Box>
                             )}
-                        </Grid>
+                        </Box>
                     )}
                 </DialogContent>
                 <DialogActions sx={{ p: 2 }}>
@@ -645,24 +635,20 @@ export default function AdminHospitals() {
                                 value={editForm.hospitalName}
                                 onChange={(e) => setEditForm({ ...editForm, hospitalName: e.target.value })}
                             />
-                            <Grid container spacing={2}>
-                                <Grid item xs={6}>
-                                    <TextField
-                                        fullWidth
-                                        label="City"
-                                        value={editForm.city}
-                                        onChange={(e) => setEditForm({ ...editForm, city: e.target.value })}
-                                    />
-                                </Grid>
-                                <Grid item xs={6}>
-                                    <TextField
-                                        fullWidth
-                                        label="Phone"
-                                        value={editForm.phone}
-                                        onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
-                                    />
-                                </Grid>
-                            </Grid>
+                            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))" }, gap: 2 }}>
+                                <TextField
+                                    fullWidth
+                                    label="City"
+                                    value={editForm.city}
+                                    onChange={(e) => setEditForm({ ...editForm, city: e.target.value })}
+                                />
+                                <TextField
+                                    fullWidth
+                                    label="Phone"
+                                    value={editForm.phone}
+                                    onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                                />
+                            </Box>
                             <TextField
                                 fullWidth
                                 label="Address"

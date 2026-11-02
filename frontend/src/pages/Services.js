@@ -7,7 +7,6 @@ import {
     Card,
     CardContent,
     Button,
-    Grid,
     Stack,
     Chip,
 } from "@mui/material";
@@ -239,8 +238,8 @@ export default function Services() {
                 }}
             >
                 <Container maxWidth="lg">
-                    <Grid container spacing={2}>
-                        <Grid item xs={6} md={3}>
+                    <Box sx={{ display: "grid", gridTemplateColumns: { xs: "repeat(2, 1fr)", md: "repeat(4, 1fr)" }, gap: 2 }}>
+                        <Box>
                             <Stack direction="row" spacing={1.5} alignItems="center">
                                 <SpeedOutlined sx={{ color: "#DC2626", fontSize: 26 }} />
                                 <Box>
@@ -252,9 +251,9 @@ export default function Services() {
                                     </Typography>
                                 </Box>
                             </Stack>
-                        </Grid>
+                        </Box>
 
-                        <Grid item xs={6} md={3}>
+                        <Box>
                             <Stack direction="row" spacing={1.5} alignItems="center">
                                 <VerifiedUserOutlined sx={{ color: "#0D9488", fontSize: 26 }} />
                                 <Box>
@@ -266,9 +265,9 @@ export default function Services() {
                                     </Typography>
                                 </Box>
                             </Stack>
-                        </Grid>
+                        </Box>
 
-                        <Grid item xs={6} md={3}>
+                        <Box>
                             <Stack direction="row" spacing={1.5} alignItems="center">
                                 <HealthAndSafetyOutlined sx={{ color: "#0284C7", fontSize: 26 }} />
                                 <Box>
@@ -280,9 +279,9 @@ export default function Services() {
                                     </Typography>
                                 </Box>
                             </Stack>
-                        </Grid>
+                        </Box>
 
-                        <Grid item xs={6} md={3}>
+                        <Box>
                             <Stack direction="row" spacing={1.5} alignItems="center">
                                 <ShieldOutlined sx={{ color: "#7C3AED", fontSize: 26 }} />
                                 <Box>
@@ -294,8 +293,8 @@ export default function Services() {
                                     </Typography>
                                 </Box>
                             </Stack>
-                        </Grid>
-                    </Grid>
+                        </Box>
+                    </Box>
                 </Container>
             </Box>
 
@@ -314,9 +313,9 @@ export default function Services() {
                     </Typography>
                 </Box>
 
-                <Grid container spacing={3.5}>
+                <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))", md: "repeat(3, minmax(0, 1fr))" }, gap: 3.5 }}>
                     {services.map((service) => (
-                        <Grid item xs={12} sm={6} md={4} key={service.title} sx={{ display: "flex" }}>
+                        <Box key={service.title} sx={{ display: "flex", height: "100%" }}>
                             <Card
                                 elevation={0}
                                 sx={{
@@ -449,9 +448,9 @@ export default function Services() {
                                     </Button>
                                 </CardContent>
                             </Card>
-                        </Grid>
+                        </Box>
                     ))}
-                </Grid>
+                </Box>
 
                 {/* WORKFLOW STEPS: PATIENT JOURNEY */}
                 <Box sx={{ mt: 10, pt: 6, borderTop: "1px solid #E2E8F0" }}>
@@ -464,37 +463,36 @@ export default function Services() {
                         </Typography>
                     </Box>
 
-                    <Grid container spacing={3}>
+                    <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))", md: "repeat(4, minmax(0, 1fr))" }, gap: 3 }}>
                         {workflowSteps.map((ws) => (
-                            <Grid item xs={12} sm={6} md={3} key={ws.step}>
-                                <Box
-                                    sx={{
-                                        p: 3,
-                                        height: "100%",
-                                        bgcolor: "#FFFFFF",
-                                        borderRadius: 3,
-                                        border: "1px solid #E2E8F0",
-                                        position: "relative",
-                                    }}
+                            <Box
+                                key={ws.step}
+                                sx={{
+                                    p: 3,
+                                    height: "100%",
+                                    bgcolor: "#FFFFFF",
+                                    borderRadius: 3,
+                                    border: "1px solid #E2E8F0",
+                                    position: "relative",
+                                }}
+                            >
+                                <Typography
+                                    fontSize={24}
+                                    fontWeight={900}
+                                    color="#0D9488"
+                                    sx={{ opacity: 0.85, mb: 1.5 }}
                                 >
-                                    <Typography
-                                        fontSize={24}
-                                        fontWeight={900}
-                                        color="#0D9488"
-                                        sx={{ opacity: 0.85, mb: 1.5 }}
-                                    >
-                                        {ws.step}
-                                    </Typography>
-                                    <Typography fontSize={16} fontWeight={800} color="#0F172A" mb={1}>
-                                        {ws.title}
-                                    </Typography>
-                                    <Typography fontSize={13} color="text.secondary" lineHeight={1.6}>
-                                        {ws.desc}
-                                    </Typography>
-                                </Box>
-                            </Grid>
+                                    {ws.step}
+                                </Typography>
+                                <Typography fontSize={16} fontWeight={800} color="#0F172A" mb={1}>
+                                    {ws.title}
+                                </Typography>
+                                <Typography fontSize={13} color="text.secondary" lineHeight={1.6}>
+                                    {ws.desc}
+                                </Typography>
+                            </Box>
                         ))}
-                    </Grid>
+                    </Box>
                 </Box>
 
                 {/* EMERGENCY CALLOUT BANNER */}

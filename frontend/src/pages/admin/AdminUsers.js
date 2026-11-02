@@ -12,7 +12,6 @@ import {
     DialogContent,
     DialogTitle,
     FormControl,
-    Grid,
     IconButton,
     InputAdornment,
     InputLabel,
@@ -36,8 +35,6 @@ import {
     CheckCircleOutlineRounded,
     BlockRounded,
     InfoOutlined,
-    AdminPanelSettingsOutlined,
-    LocalHospitalOutlined,
 } from "@mui/icons-material";
 
 import DashboardLayout from "../../components/dashboard/DashboardLayout";
@@ -217,8 +214,8 @@ export default function AdminUsers() {
                             </Typography>
                         </Box>
                     ) : (
-                        <TableContainer>
-                            <Table>
+                        <TableContainer sx={{ overflowX: "auto" }}>
+                            <Table sx={{ minWidth: 700 }}>
                                 <TableHead>
                                     <TableRow sx={{ bgcolor: "#F8FAFB" }}>
                                         <TableCell sx={{ fontWeight: 800 }}>User Profile</TableCell>
@@ -244,8 +241,8 @@ export default function AdminUsers() {
                                                                     u.role === "admin"
                                                                         ? "error.main"
                                                                         : u.role === "hospital"
-                                                                        ? "primary.main"
-                                                                        : "info.main",
+                                                                            ? "primary.main"
+                                                                            : "info.main",
                                                                 fontWeight: 800,
                                                             }}
                                                         >
@@ -289,8 +286,8 @@ export default function AdminUsers() {
                                                             u.status === "Approved"
                                                                 ? "success"
                                                                 : u.status === "Pending"
-                                                                ? "warning"
-                                                                : "error"
+                                                                    ? "warning"
+                                                                    : "error"
                                                         }
                                                         sx={{ fontWeight: 700 }}
                                                     />
@@ -371,8 +368,8 @@ export default function AdminUsers() {
                         {toggling
                             ? "Updating..."
                             : toggleUser?.isActive !== false
-                            ? "Confirm Deactivation"
-                            : "Confirm Activation"}
+                                ? "Confirm Deactivation"
+                                : "Confirm Activation"}
                     </Button>
                 </DialogActions>
             </Dialog>
@@ -384,56 +381,56 @@ export default function AdminUsers() {
                 </DialogTitle>
                 <DialogContent dividers>
                     {detailUser && (
-                        <Grid container spacing={2}>
-                            <Grid item xs={12} sm={6}>
+                        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))" }, gap: 2 }}>
+                            <Box>
                                 <Typography variant="caption" color="text.secondary">
                                     Full Name
                                 </Typography>
                                 <Typography fontWeight={700}>
                                     {detailUser.fullName}
                                 </Typography>
-                            </Grid>
-                            <Grid item xs={12} sm={6}>
+                            </Box>
+                            <Box>
                                 <Typography variant="caption" color="text.secondary">
                                     Role
                                 </Typography>
                                 <Typography fontWeight={700}>
                                     {detailUser.role.toUpperCase()}
                                 </Typography>
-                            </Grid>
-                            <Grid item xs={12} sm={6}>
+                            </Box>
+                            <Box>
                                 <Typography variant="caption" color="text.secondary">
                                     Email
                                 </Typography>
                                 <Typography fontWeight={600}>
                                     {detailUser.email}
                                 </Typography>
-                            </Grid>
-                            <Grid item xs={12} sm={6}>
+                            </Box>
+                            <Box>
                                 <Typography variant="caption" color="text.secondary">
                                     Phone Number
                                 </Typography>
                                 <Typography fontWeight={600}>
                                     {detailUser.phone}
                                 </Typography>
-                            </Grid>
-                            <Grid item xs={12} sm={6}>
+                            </Box>
+                            <Box>
                                 <Typography variant="caption" color="text.secondary">
                                     Account Status
                                 </Typography>
                                 <Typography fontWeight={600}>
                                     {detailUser.isActive !== false ? "Active" : "Deactivated"}
                                 </Typography>
-                            </Grid>
-                            <Grid item xs={12} sm={6}>
+                            </Box>
+                            <Box>
                                 <Typography variant="caption" color="text.secondary">
                                     Registration Date
                                 </Typography>
                                 <Typography fontWeight={600}>
                                     {new Date(detailUser.createdAt).toLocaleString()}
                                 </Typography>
-                            </Grid>
-                        </Grid>
+                            </Box>
+                        </Box>
                     )}
                 </DialogContent>
                 <DialogActions sx={{ p: 2 }}>

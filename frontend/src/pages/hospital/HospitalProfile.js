@@ -8,7 +8,6 @@ import {
     CircularProgress,
     Divider,
     FormControlLabel,
-    Grid,
     IconButton,
     InputAdornment,
     Stack,
@@ -374,8 +373,8 @@ export default function HospitalProfile() {
                             </Typography>
                             <Divider sx={{ mb: 3 }} />
 
-                            <Grid container spacing={2.5} sx={{ mb: 4 }}>
-                                <Grid item xs={12} md={6}>
+                            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))", md: "repeat(4, minmax(0, 1fr))" }, gap: 2.5, mb: 4 }}>
+                                <Box sx={{ gridColumn: { md: "span 2" } }}>
                                     <TextField
                                         fullWidth
                                         required
@@ -384,8 +383,8 @@ export default function HospitalProfile() {
                                         value={form.hospitalName}
                                         onChange={handleChange}
                                     />
-                                </Grid>
-                                <Grid item xs={12} sm={6} md={3}>
+                                </Box>
+                                <Box sx={{ gridColumn: { md: "span 1" } }}>
                                     <TextField
                                         fullWidth
                                         required
@@ -402,8 +401,8 @@ export default function HospitalProfile() {
                                             ),
                                         }}
                                     />
-                                </Grid>
-                                <Grid item xs={12} sm={6} md={3}>
+                                </Box>
+                                <Box sx={{ gridColumn: { md: "span 1" } }}>
                                     <TextField
                                         fullWidth
                                         required
@@ -419,8 +418,8 @@ export default function HospitalProfile() {
                                             ),
                                         }}
                                     />
-                                </Grid>
-                                <Grid item xs={12}>
+                                </Box>
+                                <Box sx={{ gridColumn: "1 / -1" }}>
                                     <TextField
                                         fullWidth
                                         multiline
@@ -431,16 +430,16 @@ export default function HospitalProfile() {
                                         onChange={handleChange}
                                         placeholder="Describe your medical center, specialties, accreditations, and patient amenities..."
                                     />
-                                </Grid>
-                            </Grid>
+                                </Box>
+                            </Box>
 
                             <Typography variant="h6" fontWeight={800} gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                                 <LocationOnOutlined color="primary" /> Location & Coordinates
                             </Typography>
                             <Divider sx={{ mb: 3 }} />
 
-                            <Grid container spacing={2.5} sx={{ mb: 4 }}>
-                                <Grid item xs={12} md={6}>
+                            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))", md: "repeat(6, minmax(0, 1fr))" }, gap: 2.5, mb: 4 }}>
+                                <Box sx={{ gridColumn: { md: "span 3" } }}>
                                     <TextField
                                         fullWidth
                                         required
@@ -449,8 +448,8 @@ export default function HospitalProfile() {
                                         value={form.address}
                                         onChange={handleChange}
                                     />
-                                </Grid>
-                                <Grid item xs={12} sm={4} md={2}>
+                                </Box>
+                                <Box sx={{ gridColumn: { sm: "span 1", md: "span 1" } }}>
                                     <TextField
                                         fullWidth
                                         required
@@ -459,8 +458,8 @@ export default function HospitalProfile() {
                                         value={form.city}
                                         onChange={handleChange}
                                     />
-                                </Grid>
-                                <Grid item xs={12} sm={4} md={2}>
+                                </Box>
+                                <Box sx={{ gridColumn: { sm: "span 1", md: "span 1" } }}>
                                     <TextField
                                         fullWidth
                                         required
@@ -469,8 +468,8 @@ export default function HospitalProfile() {
                                         value={form.state}
                                         onChange={handleChange}
                                     />
-                                </Grid>
-                                <Grid item xs={12} sm={4} md={2}>
+                                </Box>
+                                <Box sx={{ gridColumn: { sm: "span 1", md: "span 1" } }}>
                                     <TextField
                                         fullWidth
                                         required
@@ -479,9 +478,9 @@ export default function HospitalProfile() {
                                         value={form.pincode}
                                         onChange={handleChange}
                                     />
-                                </Grid>
+                                </Box>
                                 {/* QUICK GPS DETECTION ACTION BAR */}
-                                <Grid item xs={12}>
+                                <Box sx={{ gridColumn: "1 / -1" }}>
                                     <Paper
                                         elevation={0}
                                         sx={{
@@ -543,10 +542,10 @@ export default function HospitalProfile() {
                                             </Button>
                                         </Stack>
                                     </Paper>
-                                </Grid>
+                                </Box>
 
                                 {/* INTERACTIVE MAP PIN-PICKER */}
-                                <Grid item xs={12}>
+                                <Box sx={{ gridColumn: "1 / -1" }}>
                                     <Box sx={{ mb: 1 }}>
                                         <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
                                             <Typography fontSize={13.5} fontWeight={700} color="#0F172A">
@@ -598,9 +597,9 @@ export default function HospitalProfile() {
                                             height={260}
                                         />
                                     </Box>
-                                </Grid>
+                                </Box>
 
-                                <Grid item xs={12} sm={6}>
+                                <Box sx={{ gridColumn: { sm: "span 1", md: "span 3" } }}>
                                     <TextField
                                         fullWidth
                                         label="Latitude (GPS)"
@@ -610,8 +609,8 @@ export default function HospitalProfile() {
                                         placeholder="e.g. 23.0225"
                                         helperText="Auto-populated by GPS/Map, or enter manually"
                                     />
-                                </Grid>
-                                <Grid item xs={12} sm={6}>
+                                </Box>
+                                <Box sx={{ gridColumn: { sm: "span 1", md: "span 3" } }}>
                                     <TextField
                                         fullWidth
                                         label="Longitude (GPS)"
@@ -621,8 +620,8 @@ export default function HospitalProfile() {
                                         placeholder="e.g. 72.5714"
                                         helperText="Auto-populated by GPS/Map, or enter manually"
                                     />
-                                </Grid>
-                            </Grid>
+                                </Box>
+                            </Box>
 
                             <Typography variant="h6" fontWeight={800} gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                                 <EmergencyOutlined color="error" /> Clinical Facilities & Emergency Status
@@ -820,9 +819,9 @@ export default function HospitalProfile() {
                                         </Typography>
                                     </Box>
                                 ) : (
-                                    <Grid container spacing={2}>
+                                    <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))", md: "repeat(3, minmax(0, 1fr))", lg: "repeat(4, minmax(0, 1fr))" }, gap: 2 }}>
                                         {form.hospitalImages.map((img, idx) => (
-                                            <Grid item xs={12} sm={6} md={4} lg={3} key={idx}>
+                                            <Box key={idx} sx={{ width: "100%" }}>
                                                 <Box
                                                     sx={{
                                                         position: "relative",
@@ -876,9 +875,9 @@ export default function HospitalProfile() {
                                                         <CloseRounded fontSize="small" />
                                                     </IconButton>
                                                 </Box>
-                                            </Grid>
+                                            </Box>
                                         ))}
-                                    </Grid>
+                                    </Box>
                                 )}
                             </Box>
 

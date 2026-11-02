@@ -10,9 +10,7 @@ import {
     DialogActions,
     DialogContent,
     DialogTitle,
-    Divider,
     FormControl,
-    Grid,
     IconButton,
     InputAdornment,
     InputLabel,
@@ -37,9 +35,6 @@ import {
     InfoOutlined,
     SearchRounded,
     CalendarMonthOutlined,
-    PersonOutline,
-    FilterListRounded,
-    EditNoteOutlined,
 } from "@mui/icons-material";
 
 import DashboardLayout from "../../components/dashboard/DashboardLayout";
@@ -251,8 +246,8 @@ export default function HospitalAppointments() {
                             </Typography>
                         </Box>
                     ) : (
-                        <TableContainer>
-                            <Table>
+                        <TableContainer sx={{ overflowX: "auto" }}>
+                            <Table sx={{ minWidth: 720 }}>
                                 <TableHead>
                                     <TableRow sx={{ bgcolor: "#F8FAFB" }}>
                                         <TableCell sx={{ fontWeight: 800 }}>Patient</TableCell>
@@ -268,14 +263,14 @@ export default function HospitalAppointments() {
                                         const p = appt.patientId || {};
                                         const d = appt.doctorId || {};
                                         const dept = appt.departmentId?.departmentName || "General";
-                                        
+
                                         const dateObj = new Date(appt.appointmentDate);
                                         const dateStr = !isNaN(dateObj)
                                             ? dateObj.toLocaleDateString("en-GB", {
-                                                  day: "2-digit",
-                                                  month: "short",
-                                                  year: "numeric",
-                                              })
+                                                day: "2-digit",
+                                                month: "short",
+                                                year: "numeric",
+                                            })
                                             : appt.appointmentDate;
 
                                         let formattedTime = appt.appointmentTime || "";
@@ -472,10 +467,10 @@ export default function HospitalAppointments() {
                                 actionType === "confirm"
                                     ? "success"
                                     : actionType === "reject"
-                                    ? "error"
-                                    : actionType === "complete"
-                                    ? "primary"
-                                    : "warning"
+                                        ? "error"
+                                        : actionType === "complete"
+                                            ? "primary"
+                                            : "warning"
                             }
                             onClick={handleExecuteAction}
                             sx={{ fontWeight: 800, textTransform: "none", px: 3 }}

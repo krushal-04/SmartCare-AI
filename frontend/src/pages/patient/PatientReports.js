@@ -9,7 +9,6 @@ import {
     Chip,
     CircularProgress,
     FormControl,
-    Grid,
     InputLabel,
     MenuItem,
     Select,
@@ -243,16 +242,15 @@ export default function PatientReports() {
                         Upload Medical Report
                     </Typography>
 
-                    <Grid
-                        container
-                        spacing={2}
-                        mt={0.5}
+                    <Box
+                        sx={{
+                            display: "grid",
+                            gridTemplateColumns: { xs: "1fr", md: "1fr 2fr" },
+                            gap: 2,
+                            mt: 0.5,
+                        }}
                     >
-                        <Grid
-                            item
-                            xs={12}
-                            md={4}
-                        >
+                        <Box>
                             <FormControl
                                 fullWidth
                             >
@@ -304,13 +302,9 @@ export default function PatientReports() {
                                     </MenuItem>
                                 </Select>
                             </FormControl>
-                        </Grid>
+                        </Box>
 
-                        <Grid
-                            item
-                            xs={12}
-                            md={8}
-                        >
+                        <Box>
                             <Button
                                 component="label"
                                 variant="outlined"
@@ -320,6 +314,7 @@ export default function PatientReports() {
                                 sx={{
                                     height:
                                         "56px",
+                                    width: "100%",
                                 }}
                             >
                                 {file
@@ -340,12 +335,9 @@ export default function PatientReports() {
                                     }
                                 />
                             </Button>
-                        </Grid>
+                        </Box>
 
-                        <Grid
-                            item
-                            xs={12}
-                        >
+                        <Box sx={{ gridColumn: { md: "1 / -1" } }}>
                             <TextField
                                 fullWidth
                                 multiline
@@ -360,8 +352,8 @@ export default function PatientReports() {
                                     )
                                 }
                             />
-                        </Grid>
-                    </Grid>
+                        </Box>
+                    </Box>
 
                     <Button
                         variant="contained"

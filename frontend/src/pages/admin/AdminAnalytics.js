@@ -2,9 +2,7 @@ import React, { useEffect, useState } from "react";
 import {
     Box,
     Card,
-    CardContent,
     CircularProgress,
-    Grid,
     LinearProgress,
     Stack,
     Table,
@@ -16,7 +14,6 @@ import {
     Typography,
     Alert,
     Rating,
-    Chip,
 } from "@mui/material";
 import {
     AnalyticsOutlined,
@@ -86,9 +83,10 @@ export default function AdminAnalytics() {
                     {error}
                 </Alert>
             ) : (
-                <Grid container spacing={3}>
-                    {/* 14-Day Appointment Traffic Trend */}
-                    <Grid item xs={12} lg={6}>
+                <Stack spacing={3}>
+                    {/* Top Row: Two Analytics Charts */}
+                    <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", lg: "repeat(2, minmax(0, 1fr))" }, gap: 3 }}>
+                        {/* 14-Day Appointment Traffic Trend */}
                         <Card elevation={0} sx={{ p: 3, borderRadius: 4, border: "1px solid #E3EBEE", height: "100%" }}>
                             <Typography variant="h6" fontWeight={800} gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                                 <TrendingUpOutlined color="primary" /> Daily Appointment Trajectory (14 Days)
@@ -132,10 +130,8 @@ export default function AdminAnalytics() {
                                 })}
                             </Box>
                         </Card>
-                    </Grid>
 
-                    {/* 12-Month Longitudinal Trend */}
-                    <Grid item xs={12} lg={6}>
+                        {/* 12-Month Longitudinal Trend */}
                         <Card elevation={0} sx={{ p: 3, borderRadius: 4, border: "1px solid #E3EBEE", height: "100%" }}>
                             <Typography variant="h6" fontWeight={800} gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                                 <AnalyticsOutlined color="secondary" /> Monthly Booking Volume (Last 12 Months)
@@ -179,10 +175,11 @@ export default function AdminAnalytics() {
                                 })}
                             </Box>
                         </Card>
-                    </Grid>
+                    </Box>
 
-                    {/* Hospital Performance Benchmark Table */}
-                    <Grid item xs={12} md={8}>
+                    {/* Bottom Row: Hospital Benchmark & Emergency Status */}
+                    <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", lg: "8fr 4fr" }, gap: 3 }}>
+                        {/* Hospital Performance Benchmark Table */}
                         <Card elevation={0} sx={{ p: 3, borderRadius: 4, border: "1px solid #E3EBEE" }}>
                             <Typography variant="h6" fontWeight={800} gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                                 <LocalHospitalOutlined color="primary" /> Hospital Performance & Delivery Metrics
@@ -191,8 +188,8 @@ export default function AdminAnalytics() {
                                 Operational efficiency, patient completion rate, and verified center rating
                             </Typography>
 
-                            <TableContainer>
-                                <Table size="small">
+                            <TableContainer sx={{ overflowX: "auto" }}>
+                                <Table size="small" sx={{ minWidth: 600 }}>
                                     <TableHead>
                                         <TableRow sx={{ bgcolor: "#F8FAFB" }}>
                                             <TableCell sx={{ fontWeight: 800 }}>Hospital Center</TableCell>
@@ -227,10 +224,8 @@ export default function AdminAnalytics() {
                                 </Table>
                             </TableContainer>
                         </Card>
-                    </Grid>
 
-                    {/* Emergency Response Status Ratio */}
-                    <Grid item xs={12} md={4}>
+                        {/* Emergency Response Status Ratio */}
                         <Card elevation={0} sx={{ p: 3, borderRadius: 4, border: "1px solid #E3EBEE", height: "100%" }}>
                             <Typography variant="h6" fontWeight={800} gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                                 <EmergencyOutlined color="error" /> Emergency Triage Status
@@ -266,8 +261,8 @@ export default function AdminAnalytics() {
                                 ))}
                             </Stack>
                         </Card>
-                    </Grid>
-                </Grid>
+                    </Box>
+                </Stack>
             )}
         </DashboardLayout>
     );

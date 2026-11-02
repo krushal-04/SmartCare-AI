@@ -12,7 +12,6 @@ import {
     DialogContent,
     DialogTitle,
     FormControl,
-    Grid,
     IconButton,
     InputAdornment,
     InputLabel,
@@ -36,7 +35,6 @@ import {
     DeleteOutlineRounded,
     DescriptionOutlined,
     AttachFileOutlined,
-    FilterListRounded,
     SearchRounded,
 } from "@mui/icons-material";
 
@@ -308,8 +306,8 @@ export default function HospitalReports() {
                             </Button>
                         </Box>
                     ) : (
-                        <TableContainer>
-                            <Table>
+                        <TableContainer sx={{ overflowX: "auto" }}>
+                            <Table sx={{ minWidth: 700 }}>
                                 <TableHead>
                                     <TableRow sx={{ bgcolor: "#F8FAFB" }}>
                                         <TableCell sx={{ fontWeight: 800 }}>Patient</TableCell>
