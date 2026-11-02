@@ -1,5 +1,4 @@
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 
 import {
     Box,
@@ -32,52 +31,50 @@ function Home() {
     const navigate = useNavigate();
     const { isAuthenticated, role } = useAuth();
 
-    useEffect(() => {
-        if (isAuthenticated && role) {
-            const dest = role === "admin" ? "/admin" : role === "hospital" ? "/hospital" : "/patient";
-            navigate(dest, { replace: true });
-        }
-    }, [isAuthenticated, role, navigate]);
+    if (isAuthenticated && role) {
+        const destination = role === "admin" ? "/admin" : role === "hospital" ? "/hospital" : "/patient";
+        return <Navigate to={destination} replace />;
+    }
 
     return (
         <Box
             sx={{
                 minHeight: "100vh",
-                bgcolor: "#F7FBFC",
+                bgcolor: colors.canvas,
             }}
         >
             <Navbar />
 
             {/* HERO */}
 
-            <Container maxWidth="xl">
+            <Container maxWidth="lg">
                 <Box
                     sx={{
                         display: "grid",
                         gridTemplateColumns: {
                             xs: "1fr",
-                            lg: "1.05fr .95fr",
+                            lg: "1.08fr .92fr",
                         },
                         alignItems: "center",
                         gap: {
-                            xs: 5,
-                            lg: 8,
+                            xs: 4,
+                            lg: 7,
                         },
                         py: {
-                            xs: 6,
-                            md: 9,
+                            xs: 5,
+                            md: 7,
                         },
                     }}
                 >
-                    <Box>
+                    <Box sx={{ maxWidth: 610 }}>
                         <Chip
                             icon={<Psychology />}
                             label="SMART HEALTHCARE PLATFORM"
                             sx={{
-                                bgcolor: "#E5F7F8",
-                                color: "#0B8793",
-                                fontWeight: 900,
-                                mb: 3,
+                                bgcolor: colors.pineSoft,
+                                color: colors.pineDeep,
+                                fontWeight: 800,
+                                mb: 2.5,
                             }}
                         />
 
@@ -86,12 +83,12 @@ function Home() {
                                 fontSize: {
                                     xs: 44,
                                     sm: 54,
-                                    md: 68,
+                                    md: 58,
                                 },
                                 fontWeight: 900,
                                 lineHeight: 1,
                                 letterSpacing: "-0.055em",
-                                color: "#102F42",
+                                color: colors.navy,
                             }}
                         >
                             Healthcare,
@@ -99,7 +96,7 @@ function Home() {
                                 component="span"
                                 sx={{
                                     display: "block",
-                                    color: "#0B8793",
+                                    color: colors.pine,
                                 }}
                             >
                                 connected better.
@@ -108,14 +105,14 @@ function Home() {
 
                         <Typography
                             sx={{
-                                mt: 3,
+                                mt: 2.5,
                                 maxWidth: 610,
                                 fontSize: {
                                     xs: 16,
                                     md: 18,
                                 },
-                                color: "#667D88",
-                                lineHeight: 1.8,
+                                color: colors.slate,
+                                lineHeight: 1.65,
                             }}
                         >
                             SmartCare AI brings patients,
@@ -129,7 +126,7 @@ function Home() {
                                 sm: "row",
                             }}
                             spacing={1.5}
-                            mt={4}
+                            mt={3.5}
                         >
                             {isAuthenticated && role === "patient" ? (
                                 <>
@@ -141,12 +138,12 @@ function Home() {
                                         sx={{
                                             px: 3.2,
                                             py: 1.6,
-                                            bgcolor: colors.amber,
-                                            color: colors.ink,
+                                            bgcolor: colors.pine,
+                                            color: colors.white,
                                             fontWeight: 800,
-                                            boxShadow: "0 6px 20px rgba(214,138,60,0.35)",
+                                            boxShadow: "0 6px 20px rgba(13,148,136,0.24)",
                                             "&:hover": {
-                                                bgcolor: colors.amberDeep,
+                                                bgcolor: colors.pineDeep,
                                             },
                                         }}
                                     >
@@ -325,24 +322,21 @@ function Home() {
                             elevation={0}
                             sx={{
                                 width: "100%",
-                                maxWidth: 520,
-                                borderRadius: 5,
+                                maxWidth: 460,
+                                borderRadius: 3.5,
                                 p: 1,
-                                background:
-                                    "linear-gradient(145deg,#FFFFFF,#EEF8F9)",
-                                border:
-                                    "1px solid #E0ECEE",
-                                boxShadow:
-                                    "0 30px 80px rgba(16,70,85,.13)",
+                                bgcolor: colors.white,
+                                border: `1px solid ${colors.hairline}`,
+                                boxShadow: "0 20px 50px rgba(16,42,67,.10)",
                             }}
                         >
                             <Box
                                 sx={{
-                                    bgcolor: "#102F42",
-                                    borderRadius: 4,
+                                    bgcolor: colors.navy,
+                                    borderRadius: 3,
                                     p: {
-                                        xs: 2,
-                                        sm: 3,
+                                            xs: 2.5,
+                                            sm: 3,
                                     },
                                     color: "#fff",
                                 }}

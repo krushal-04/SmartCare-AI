@@ -56,7 +56,7 @@ export default function GuestNavbar() {
                 position="sticky"
                 elevation={0}
                 sx={{
-                    bgcolor: colors.ink,
+                    bgcolor: colors.navy,
                     color: colors.white,
                     borderBottom: `1px solid ${colors.hairlineOnDark}`,
                     backdropFilter: "blur(16px)",
@@ -99,10 +99,9 @@ export default function GuestNavbar() {
                         <Box>
                             <Typography
                                 sx={{
-                                    fontFamily: "'Newsreader', serif",
-                                    fontStyle: "italic",
-                                    fontWeight: 600,
-                                    fontSize: { xs: 21, md: 25 },
+                                    fontFamily: "Inter, sans-serif",
+                                    fontWeight: 750,
+                                    fontSize: { xs: 20, md: 22 },
                                     lineHeight: 1,
                                     color: colors.white,
                                 }}
@@ -114,7 +113,7 @@ export default function GuestNavbar() {
                                     fontSize: 8.5,
                                     letterSpacing: 2,
                                     fontWeight: 800,
-                                    color: colors.amber,
+                                    color: "#5EEAD4",
                                     display: { xs: "none", sm: "block" },
                                     mt: 0.3,
                                 }}
@@ -142,7 +141,7 @@ export default function GuestNavbar() {
                                         py: 0.9,
                                         borderRadius: 2,
                                         color: active ? colors.white : "rgba(243,245,240,0.74)",
-                                        bgcolor: active ? "rgba(113,233,223,0.12)" : "transparent",
+                                        bgcolor: active ? "rgba(13,148,136,0.22)" : "transparent",
                                         fontWeight: active ? 800 : 500,
                                         fontSize: 14,
                                         textTransform: "none",
@@ -234,18 +233,18 @@ export default function GuestNavbar() {
                             variant="contained"
                             onClick={() => handleNavigate("/register")}
                             sx={{
-                                bgcolor: colors.amber,
-                                color: colors.ink,
+                                bgcolor: colors.pine,
+                                color: colors.white,
                                 fontWeight: 800,
                                 fontSize: 13.5,
                                 px: 2,
                                 py: 0.85,
                                 borderRadius: 2.2,
                                 textTransform: "none",
-                                boxShadow: "0 4px 12px rgba(214,138,60,0.25)",
+                                boxShadow: "0 4px 12px rgba(13,148,136,0.22)",
                                 "&:hover": {
-                                    bgcolor: colors.amberDeep,
-                                    boxShadow: "0 6px 18px rgba(214,138,60,0.35)",
+                                    bgcolor: colors.pineDeep,
+                                    boxShadow: "0 6px 18px rgba(13,148,136,0.3)",
                                 },
                             }}
                         >
@@ -275,7 +274,7 @@ export default function GuestNavbar() {
                 PaperProps={{
                     sx: {
                         width: { xs: "85%", sm: 360 },
-                        bgcolor: colors.ink,
+                        bgcolor: colors.navy,
                         color: colors.white,
                         p: 3,
                     },
@@ -298,9 +297,8 @@ export default function GuestNavbar() {
                         </Box>
                         <Typography
                             sx={{
-                                fontFamily: "'Newsreader', serif",
-                                fontStyle: "italic",
-                                fontWeight: 600,
+                                fontFamily: "Inter, sans-serif",
+                                fontWeight: 750,
                                 fontSize: 22,
                                 color: colors.white,
                             }}
@@ -353,7 +351,7 @@ export default function GuestNavbar() {
                                     borderRadius: 2,
                                     mb: 0.8,
                                     bgcolor: active ? "rgba(255,255,255,0.12)" : "transparent",
-                                    color: active ? colors.amber : "rgba(255,255,255,0.85)",
+                                    color: active ? "#5EEAD4" : "rgba(255,255,255,0.85)",
                                 }}
                             >
                                 <ListItemIcon sx={{ color: "inherit", minWidth: 38 }}>
@@ -413,12 +411,12 @@ export default function GuestNavbar() {
                         startIcon={<PersonAddOutlined />}
                         onClick={() => handleNavigate("/register")}
                         sx={{
-                            bgcolor: colors.amber,
-                            color: colors.ink,
+                            bgcolor: colors.pine,
+                            color: colors.white,
                             py: 1.1,
                             fontWeight: 800,
                             borderRadius: 2.5,
-                            "&:hover": { bgcolor: colors.amberDeep },
+                            "&:hover": { bgcolor: colors.pineDeep },
                         }}
                     >
                         Create Account
