@@ -168,7 +168,7 @@ const roleMeta = {
     },
 };
 
-const SIDEBAR_WIDTH = 275;
+const SIDEBAR_WIDTH = 296;
 
 export default function DashboardLayout({ role, children, title, subtitle }) {
     const navigate = useNavigate();
@@ -216,7 +216,7 @@ export default function DashboardLayout({ role, children, title, subtitle }) {
             <Box
                 sx={{
                     px: 3,
-                    py: 2.6,
+                    py: 3,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between",
@@ -234,8 +234,8 @@ export default function DashboardLayout({ role, children, title, subtitle }) {
                 >
                     <Box
                         sx={{
-                            width: 38,
-                            height: 38,
+                            width: 42,
+                            height: 42,
                             borderRadius: 2.5,
                             display: "grid",
                             placeItems: "center",
@@ -252,7 +252,7 @@ export default function DashboardLayout({ role, children, title, subtitle }) {
                                 sx={{
                                     fontFamily: "Inter, sans-serif",
                                     fontWeight: 750,
-                                    fontSize: 20,
+                                    fontSize: 21,
                                     lineHeight: 1,
                                     color: colors.white,
                                 }}
@@ -328,13 +328,13 @@ export default function DashboardLayout({ role, children, title, subtitle }) {
             </Box>
 
             {/* NAVIGATION GROUPS */}
-            <Box sx={{ px: 1.6, flex: 1, overflowY: "auto" }}>
+            <Box sx={{ px: 1.8, pb: 1.5, flex: 1, overflowY: "auto" }}>
                 {groups.map((group) => (
-                    <Box key={group.group} sx={{ mb: 2 }}>
+                    <Box key={group.group} sx={{ mb: 2.4 }}>
                         <Typography
                             sx={{
                                 px: 1.5,
-                                mb: 0.8,
+                                mb: 1,
                                 fontSize: 10,
                                 fontWeight: 800,
                                 letterSpacing: 1.4,
@@ -362,6 +362,7 @@ export default function DashboardLayout({ role, children, title, subtitle }) {
                                             sx={{
                                                 mb: 0.6,
                                                 borderRadius: 2.5,
+                                                minHeight: 48,
                                                 py: 1.1,
                                                 px: 1.6,
                                                 bgcolor: active ? colors.secondaryDark : colors.secondary,
@@ -378,7 +379,7 @@ export default function DashboardLayout({ role, children, title, subtitle }) {
                                             <ListItemText
                                                 primary={item.label}
                                                 primaryTypographyProps={{
-                                                    fontSize: 13.5,
+                                                    fontSize: 14,
                                                     fontWeight: 800,
                                                     color: colors.white,
                                                 }}
@@ -394,6 +395,7 @@ export default function DashboardLayout({ role, children, title, subtitle }) {
                                         sx={{
                                             mb: 0.4,
                                             borderRadius: 2.2,
+                                            minHeight: 44,
                                             py: 0.95,
                                             px: 1.6,
                                             color: active ? colors.white : "rgba(255,255,255,0.72)",
@@ -418,7 +420,7 @@ export default function DashboardLayout({ role, children, title, subtitle }) {
                                         <ListItemText
                                             primary={item.label}
                                             primaryTypographyProps={{
-                                                fontSize: 13.5,
+                                                fontSize: 14,
                                                 fontWeight: active ? 700 : 500,
                                             }}
                                         />

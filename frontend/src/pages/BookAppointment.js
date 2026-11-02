@@ -10,7 +10,6 @@ import {
     CircularProgress,
     Container,
     FormControl,
-    Grid,
     InputLabel,
     MenuItem,
     Select,
@@ -280,9 +279,9 @@ export default function BookAppointment() {
     };
 
     const bookingContent = (
-        <Container maxWidth="md" sx={{ py: { xs: 2, md: 4 }, flex: 1 }}>
+        <Container maxWidth="lg" sx={{ py: { xs: 3, md: 5 }, flex: 1 }}>
                 {/* HEADER TITLE */}
-                <Box sx={{ mb: 4, textAlign: { xs: "center", sm: "left" } }}>
+                <Box sx={{ mb: 4, maxWidth: 960, mx: "auto", textAlign: { xs: "center", sm: "left" } }}>
                     <Stack direction="row" alignItems="center" spacing={1.5} justifyContent={{ xs: "center", sm: "flex-start" }}>
                         <Box
                             sx={{
@@ -301,9 +300,9 @@ export default function BookAppointment() {
                             <Typography
                                 variant="h4"
                                 sx={{
-                                    fontFamily: "'Newsreader', serif",
-                                    fontWeight: 700,
-                                    fontSize: { xs: 26, md: 32 },
+                                    fontFamily: "Inter, sans-serif",
+                                    fontWeight: 750,
+                                    fontSize: { xs: 24, md: 28 },
                                     color: colors.ink,
                                 }}
                             >
@@ -321,7 +320,7 @@ export default function BookAppointment() {
                     <Card
                         elevation={0}
                         sx={{
-                            borderRadius: 4,
+                            borderRadius: 3,
                             p: 4,
                             mb: 4,
                             bgcolor: colors.white,
@@ -360,16 +359,18 @@ export default function BookAppointment() {
                     <Card
                         elevation={0}
                         sx={{
-                            borderRadius: 4,
+                            borderRadius: 3,
                             border: `1px solid ${colors.hairline}`,
                             bgcolor: colors.white,
-                            boxShadow: "0 8px 30px rgba(0,0,0,0.04)",
+                            boxShadow: "0 8px 24px rgba(16,42,67,0.07)",
+                            maxWidth: 960,
+                            mx: "auto",
                             overflow: "hidden",
                         }}
                     >
-                        <Box sx={{ height: 6, bgcolor: colors.amber }} />
+                        <Box sx={{ height: 4, bgcolor: colors.secondary }} />
 
-                        <CardContent sx={{ p: { xs: 3, sm: 4, md: 5 } }}>
+                        <CardContent sx={{ p: { xs: 2.5, sm: 4, md: 4.5 } }}>
                             {loading && (
                                 <Box py={8} textAlign="center">
                                     <CircularProgress sx={{ color: colors.pine }} />
@@ -441,9 +442,9 @@ export default function BookAppointment() {
                                     )}
 
                                     {/* FORM FIELDS */}
-                                    <Grid container spacing={2.5}>
+                                    <Box sx={{ display: "grid", gridTemplateColumns: { xs: "minmax(0, 1fr)", md: "repeat(2, minmax(0, 1fr))" }, gap: 2.5 }}>
                                         {/* HOSPITAL SELECT */}
-                                        <Grid item xs={12}>
+                                        <Box sx={{ gridColumn: { md: "1 / -1" } }}>
                                             <FormControl fullWidth required>
                                                 <InputLabel id="hospital-label">Select Hospital</InputLabel>
                                                 <Select
@@ -459,10 +460,10 @@ export default function BookAppointment() {
                                                     ))}
                                                 </Select>
                                             </FormControl>
-                                        </Grid>
+                                        </Box>
 
                                         {/* DEPARTMENT SELECT */}
-                                        <Grid item xs={12} sm={6}>
+                                        <Box>
                                             <FormControl fullWidth required disabled={!form.hospitalId}>
                                                 <InputLabel id="dept-label">Department</InputLabel>
                                                 <Select
@@ -478,10 +479,10 @@ export default function BookAppointment() {
                                                     ))}
                                                 </Select>
                                             </FormControl>
-                                        </Grid>
+                                        </Box>
 
                                         {/* DOCTOR SELECT */}
-                                        <Grid item xs={12} sm={6}>
+                                        <Box>
                                             <FormControl fullWidth required disabled={!form.hospitalId}>
                                                 <InputLabel id="doctor-label">Doctor / Specialist</InputLabel>
                                                 <Select
@@ -497,10 +498,10 @@ export default function BookAppointment() {
                                                     ))}
                                                 </Select>
                                             </FormControl>
-                                        </Grid>
+                                        </Box>
 
                                         {/* DATE SELECT */}
-                                        <Grid item xs={12}>
+                                        <Box sx={{ gridColumn: { md: "1 / -1" } }}>
                                             <TextField
                                                 fullWidth
                                                 type="date"
@@ -518,10 +519,10 @@ export default function BookAppointment() {
                                                 required
                                                 disabled={!form.doctorId}
                                             />
-                                        </Grid>
+                                        </Box>
 
                                         {/* AVAILABLE SLOTS */}
-                                        <Grid item xs={12}>
+                                        <Box sx={{ gridColumn: { md: "1 / -1" } }}>
                                             <Typography fontWeight={800} fontSize={14.5} color={colors.ink} mb={1.2}>
                                                 Available Consultation Slots
                                             </Typography>
@@ -578,10 +579,10 @@ export default function BookAppointment() {
                                                     })}
                                                 </Box>
                                             )}
-                                        </Grid>
+                                        </Box>
 
                                         {/* REASON / NOTES */}
-                                        <Grid item xs={12}>
+                                        <Box sx={{ gridColumn: { md: "1 / -1" } }}>
                                             <TextField
                                                 fullWidth
                                                 multiline
@@ -596,8 +597,8 @@ export default function BookAppointment() {
                                                     }))
                                                 }
                                             />
-                                        </Grid>
-                                    </Grid>
+                                        </Box>
+                                    </Box>
 
                                     {/* SUBMIT BUTTON */}
                                     <Button
@@ -616,14 +617,14 @@ export default function BookAppointment() {
                                             mt: 4,
                                             py: 1.6,
                                             borderRadius: 2.5,
-                                            bgcolor: colors.amber,
-                                            color: colors.ink,
+                                            bgcolor: colors.secondary,
+                                            color: colors.white,
                                             fontWeight: 800,
                                             fontSize: 15.5,
-                                            boxShadow: "0 6px 20px rgba(214,138,60,0.3)",
+                                            boxShadow: "0 6px 20px rgba(13,148,136,0.24)",
                                             "&:hover": {
-                                                bgcolor: colors.amberDeep,
-                                                boxShadow: "0 8px 25px rgba(214,138,60,0.4)",
+                                                bgcolor: colors.secondaryDark,
+                                                boxShadow: "0 8px 25px rgba(13,148,136,0.3)",
                                             },
                                         }}
                                     >

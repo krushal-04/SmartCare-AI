@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 
 import {
     Box,
@@ -7,21 +6,12 @@ import {
     Typography,
     TextField,
     InputAdornment,
-    Card,
-    CardContent,
-    Button,
-    Stack,
-    Grid,
-    Chip,
     CircularProgress,
     Alert,
 } from "@mui/material";
 
 import {
     Search,
-    MedicalServicesOutlined,
-    LocalHospital,
-    CalendarMonth,
 } from "@mui/icons-material";
 
 import Navbar from "../components/Navbar";
@@ -33,7 +23,6 @@ import { colors } from "../theme/colors";
 import { useAuth } from "../context/AuthContext";
 
 function Doctors() {
-    const navigate = useNavigate();
     const { isAuthenticated, role, user } = useAuth();
 
     const [doctors, setDoctors] = useState([]);
@@ -107,13 +96,13 @@ function Doctors() {
 
                 {!loading && !error && (
                     <>
-                        <Grid container spacing={3}>
+                        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))", lg: "repeat(3, minmax(0, 1fr))", xl: "repeat(4, minmax(0, 1fr))" }, gap: 3 }}>
                             {filteredDoctors.map((doctor) => (
-                                <Grid item xs={12} sm={6} md={4} key={doctor._id} sx={{ display: "flex" }}>
+                                <Box key={doctor._id} sx={{ minWidth: 0, display: "flex" }}>
                                     <DoctorCard doctor={doctor} />
-                                </Grid>
+                                </Box>
                             ))}
-                        </Grid>
+                        </Box>
 
                         {filteredDoctors.length === 0 && (
                             <Box textAlign="center" py={8}>
@@ -197,20 +186,13 @@ function Doctors() {
 
                 {!loading && !error && (
                     <>
-                        <Grid container spacing={3}>
+                        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))", lg: "repeat(3, minmax(0, 1fr))" }, gap: 3 }}>
                             {filteredDoctors.map((doctor) => (
-                                <Grid
-                                    item
-                                    xs={12}
-                                    sm={6}
-                                    md={4}
-                                    key={doctor._id}
-                                    sx={{ display: "flex" }}
-                                >
+                                <Box key={doctor._id} sx={{ minWidth: 0, display: "flex" }}>
                                     <DoctorCard doctor={doctor} />
-                                </Grid>
+                                </Box>
                             ))}
-                        </Grid>
+                        </Box>
 
                         {filteredDoctors.length === 0 && (
                             <Box textAlign="center" py={8}>

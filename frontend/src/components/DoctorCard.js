@@ -57,10 +57,9 @@ export default function DoctorCard({ doctor }) {
             elevation={0}
             sx={{
                 width: "100%",
-                height: "100%",
-                minHeight: 458,
-                borderRadius: 4,
-                border: "1.5px solid #E2E8F0",
+                height: 472,
+                borderRadius: 3,
+                border: "1px solid #E2E8F0",
                 display: "flex",
                 flexDirection: "column",
                 overflow: "hidden",
@@ -77,7 +76,7 @@ export default function DoctorCard({ doctor }) {
             <Box
                 sx={{
                     position: "relative",
-                    height: 164,
+                    height: 168,
                     bgcolor: "#F1F5F9",
                     display: "flex",
                     alignItems: "center",
@@ -103,7 +102,7 @@ export default function DoctorCard({ doctor }) {
                         sx={{
                             width: "100%",
                             height: "100%",
-                            background: "linear-gradient(135deg, #0F524B 0%, #0D9488 100%)",
+                            background: "#0D9488",
                             display: "flex",
                             flexDirection: "column",
                             alignItems: "center",
@@ -183,9 +182,9 @@ export default function DoctorCard({ doctor }) {
             {/* CARD CONTENT */}
             <CardContent sx={{ p: 2, flexGrow: 1, display: "flex", flexDirection: "column" }}>
                 <Typography
-                    fontWeight={800}
-                    fontSize={16}
-                    color="#0F172A"
+                    fontWeight={750}
+                    fontSize={15}
+                    color="#172B4D"
                     noWrap
                     sx={{
                         lineHeight: 1.3,
@@ -256,7 +255,7 @@ export default function DoctorCard({ doctor }) {
                     <Typography fontSize={12} color="text.secondary">
                         Consultation:
                     </Typography>
-                    <Typography fontSize={15} fontWeight={800} color="#0F172A">
+                    <Typography fontSize={15} fontWeight={750} color="#172B4D">
                         {doctor.consultationFee > 0 ? `₹${doctor.consultationFee}` : "Standard OPD"}
                     </Typography>
                 </Box>
@@ -290,17 +289,17 @@ export default function DoctorCard({ doctor }) {
                         startIcon={<CalendarMonth fontSize="small" />}
                         onClick={handleBook}
                         sx={{
-                            bgcolor: "#0F524B",
+                            bgcolor: "#0D9488",
                             color: "#FFFFFF",
                             fontWeight: 800,
                             fontSize: 12.5,
                             py: 0.9,
                             borderRadius: 2.5,
                             textTransform: "none",
-                            boxShadow: "0 4px 12px rgba(15, 82, 75, 0.2)",
+                            boxShadow: "0 3px 10px rgba(13, 148, 136, 0.2)",
                             "&:hover": {
-                                bgcolor: "#0B3C37",
-                                boxShadow: "0 6px 16px rgba(15, 82, 75, 0.3)",
+                                bgcolor: "#0F766E",
+                                boxShadow: "0 5px 14px rgba(13, 148, 136, 0.28)",
                             },
                         }}
                     >
