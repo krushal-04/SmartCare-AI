@@ -10,37 +10,46 @@ async function sync() {
         await mongoose.connect(process.env.MONGO_URI);
         console.log("Connected successfully.");
 
-        const paidPayments = await Payment.find({ paymentStatus: "Paid" }).lean();
-        console.log(`Found ${paidPayments.length} Paid payment records.`);
+        // 1. Sync Paid / Refunded from Payment collection to Appointment collection
+        const allPayments = await Payment.find().lean();
+        console.log(`Found ${allPayments.length} total payment records.`);
 
-        let syncedCount = 0;
-        for (const p of paidPayments) {
+        for (const p of allPayments) {
             if (!p.appointmentId) continue;
-
             const appt = await Appointment.findById(p.appointmentId);
             if (appt) {
-                let needsUpdate = false;
                 const updateFields = {};
-
-                if (appt.paymentStatus !== "Paid") {
+                if (p.paymentStatus === "Paid" && appt.paymentStatus !== "Paid") {
                     updateFields.paymentStatus = "Paid";
-                    needsUpdate = true;
                 }
-
-                if (!appt.paymentId || String(appt.paymentId) !== String(p._id)) {
+                if (p.paymentStatus === "Refunded" && appt.paymentStatus !== "Refunded") {
+                    updateFields.paymentStatus = "Refunded";
+                }
+                if (!appt.paymentId) {
                     updateFields.paymentId = p._id;
-                    needsUpdate = true;
                 }
-
-                if (needsUpdate) {
+                if (Object.keys(updateFields).length > 0) {
                     await Appointment.updateOne({ _id: appt._id }, { $set: updateFields });
-                    console.log(`Synced Appointment #${appt._id}:`, updateFields);
-                    syncedCount++;
+                    console.log(`Updated Appt #${appt._id}:`, updateFields);
                 }
             }
         }
 
-        console.log(`Synchronization complete. Updated ${syncedCount} appointments.`);
+        // 2. Free appointments should have NotRequired paymentStatus
+        const freeRes = await Appointment.updateMany(
+            {
+                $or: [
+                    { consultationFee: { $lte: 0 } },
+                    { consultationFee: { $exists: false } },
+                    { paymentRequired: false },
+                ],
+                paymentStatus: { $nin: ["Paid", "Refunded"] },
+            },
+            { $set: { paymentStatus: "NotRequired" } }
+        );
+        console.log(`Updated free appointments to NotRequired: ${freeRes.modifiedCount}`);
+
+        console.log("Sync finished successfully.");
         process.exit(0);
     } catch (err) {
         console.error("Sync error:", err.message);

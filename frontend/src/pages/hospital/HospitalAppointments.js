@@ -441,9 +441,25 @@ export default function HospitalAppointments() {
                                                                     size="small"
                                                                     sx={{ fontWeight: 800 }}
                                                                 />
-                                                                <Typography fontSize={11.5} fontWeight={750} color={appt.paymentStatus === "Paid" ? "#065F46" : colors.slate}>
-                                                                    ₹{appt.consultationFee || 0} • {appt.paymentStatus || "Free"}
-                                                                </Typography>
+                                                                <Typography
+    fontSize={11.5}
+    fontWeight={750}
+    color={
+        (appt.paymentId?.paymentStatus === "Paid" || appt.paymentStatus === "Paid")
+            ? "#065F46"
+            : (appt.paymentId?.paymentStatus === "Refunded" || appt.paymentStatus === "Refunded")
+            ? "#1D4ED8"
+            : (Number(appt.consultationFee || 0) === 0 || appt.paymentStatus === "NotRequired")
+            ? colors.slate
+            : "#B45309"
+    }
+>
+    ₹{appt.consultationFee || 0} • {
+        (Number(appt.consultationFee || 0) === 0 || appt.paymentStatus === "NotRequired")
+            ? "Free"
+            : (appt.paymentId?.paymentStatus || appt.paymentStatus || "Pending")
+    }
+</Typography>
                                                             </Stack>
                                                         );
                                                     })()}
