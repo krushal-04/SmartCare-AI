@@ -87,6 +87,16 @@ const hospitalOnly = (req, res, next) => {
     next();
 };
 
+const doctorOnly = (req, res, next) => {
+    if (!req.user || req.user.role !== "doctor") {
+        return res.status(403).json({
+            success: false,
+            message: "Access restricted to doctors only.",
+        });
+    }
+    next();
+};
+
 const adminOnly = (req, res, next) => {
     if (!req.user || req.user.role !== "admin") {
         return res.status(403).json({
@@ -115,10 +125,27 @@ const hospitalOrAdmin = (req, res, next) => {
     next();
 };
 
+const doctorOrHospitalOrAdmin = (req, res, next) => {
+    if (
+        !req.user ||
+        (req.user.role !== "doctor" &&
+            req.user.role !== "hospital" &&
+            req.user.role !== "admin")
+    ) {
+        return res.status(403).json({
+            success: false,
+            message: "Access restricted to medical personnel, hospitals, and administrators.",
+        });
+    }
+    next();
+};
+
 module.exports = {
     protect,
     patientOnly,
     hospitalOnly,
+    doctorOnly,
     adminOnly,
     hospitalOrAdmin,
+    doctorOrHospitalOrAdmin,
 };

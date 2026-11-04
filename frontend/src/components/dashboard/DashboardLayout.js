@@ -24,6 +24,7 @@ import {
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import {
+    AccountBalanceWalletOutlined,
     AnalyticsOutlined,
     CalendarMonthOutlined,
     CloseOutlined,
@@ -37,9 +38,11 @@ import {
     MedicalServicesOutlined,
     MenuOutlined,
     NotificationsOutlined,
+    PaymentOutlined,
     PersonOutlined,
     PsychologyOutlined,
     RateReviewOutlined,
+    ReceiptLongOutlined,
     ScheduleOutlined,
     TimeToLeaveOutlined,
 } from "@mui/icons-material";
@@ -75,6 +78,7 @@ const menuConfig = {
             group: "ACCOUNT",
             items: [
                 { label: "My Profile", path: "/patient/profile", icon: <PersonOutlined /> },
+                { label: "Payment History", path: "/patient/payments", icon: <ReceiptLongOutlined /> },
                 { label: "Reviews & Feedback", path: "/patient/reviews", icon: <RateReviewOutlined /> },
                 { label: "Notifications", path: "/patient/notifications", icon: <NotificationsOutlined /> },
             ],
@@ -90,6 +94,7 @@ const menuConfig = {
                 { label: "Duty Schedules", path: "/hospital/schedules", icon: <ScheduleOutlined /> },
                 { label: "Appointments", path: "/hospital/appointments", icon: <CalendarMonthOutlined /> },
                 { label: "Patients", path: "/hospital/patients", icon: <GroupOutlined /> },
+                { label: "Revenue & Payments", path: "/hospital/payments", icon: <AccountBalanceWalletOutlined /> },
             ],
         },
         {
@@ -108,7 +113,22 @@ const menuConfig = {
             ],
         },
     ],
-
+    doctor: [
+        {
+            group: "CONSULTATION",
+            items: [
+                { label: "Dashboard Hub", path: "/doctor", icon: <DashboardOutlined /> },
+                { label: "Fees & Collections", path: "/doctor", icon: <AccountBalanceWalletOutlined /> },
+            ],
+        },
+        {
+            group: "ACCOUNT",
+            items: [
+                { label: "My Profile", path: "/patient/profile", icon: <PersonOutlined /> },
+                { label: "Notifications", path: "/patient/notifications", icon: <NotificationsOutlined /> },
+            ],
+        },
+    ],
     admin: [
         {
             group: "OVERVIEW",
@@ -133,6 +153,7 @@ const menuConfig = {
             items: [
                 { label: "Audit Reports", path: "/admin/reports", icon: <DescriptionOutlined /> },
                 { label: "System Alerts", path: "/admin/notifications", icon: <NotificationsOutlined /> },
+                { label: "Platform Payments", path: "/admin/payments", icon: <PaymentOutlined /> },
             ],
         },
     ],
@@ -156,6 +177,15 @@ const roleMeta = {
         avatarBg: colors.info,
         homeRoute: "/hospital",
         notifRoute: "/hospital/notifications",
+    },
+    doctor: {
+        title: "Doctor Portal",
+        badge: "Medical Specialist",
+        badgeBg: "rgba(13,148,136,0.18)",
+        badgeColor: "#5EEAD4",
+        avatarBg: colors.pine,
+        homeRoute: "/doctor",
+        notifRoute: "/patient/notifications",
     },
     admin: {
         title: "Admin Console",

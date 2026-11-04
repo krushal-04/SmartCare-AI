@@ -34,12 +34,15 @@ export default function ProtectedRoute({ children, role }) {
     }
 
     // Role verification
-    if (role && user.role !== role) {
+    const allowedRoles = Array.isArray(role) ? role : role ? [role] : null;
+    if (allowedRoles && !allowedRoles.includes(user.role)) {
         const dashboard =
             user.role === "admin"
                 ? "/admin"
                 : user.role === "hospital"
                 ? "/hospital"
+                : user.role === "doctor"
+                ? "/doctor"
                 : "/patient";
 
         return <Navigate to={dashboard} replace />;

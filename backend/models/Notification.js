@@ -31,6 +31,8 @@ const notificationSchema = new mongoose.Schema(
                 "Review",
                 "Hospital",
                 "Admin",
+                "Payment",
+                "Refund",
             ],
             default: "System",
         },

@@ -593,6 +593,201 @@ SmartCare AI Emergency Response`;
     return sendEmail({ to: patient.email, subject, text, html });
 };
 
+// 10. Payment Receipt and Booking Confirmation Email to Patient
+const sendPaymentSuccessEmail = async ({ payment, appointment, patient, doctor, hospital }) => {
+    if (!patient?.email) return;
+    const pName = patient?.fullName || "Patient";
+    const docName = doctor?.doctorName || "Doctor";
+    const hospName = hospital?.hospitalName || "Hospital";
+    const apptDate = new Date(appointment.appointmentDate).toLocaleDateString(undefined, {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+    });
+
+    const subject = `SmartCare AI - Payment Receipt & Appointment Confirmed (₹${payment.amount})`;
+    const text = `Dear ${pName},
+
+Thank you for your payment. Your appointment is confirmed!
+
+Payment Details:
+- Transaction ID: ${payment.gatewayPaymentId || payment.transactionReference || "N/A"}
+- Amount Paid: ₹${payment.amount}
+- Payment Method: ${payment.paymentMethod || "Online"}
+- Date & Time: ${new Date(payment.paidAt || Date.now()).toLocaleString()}
+
+Appointment Details:
+- Doctor: Dr. ${docName} (${doctor?.specialization || "Specialist"})
+- Hospital: ${hospName}
+- Date: ${apptDate}
+- Time Slot: ${appointment.appointmentTime}
+
+Best regards,
+SmartCare AI Billing & Clinical Team`;
+
+    const html = buildHtmlEmail({
+        title: "Payment Successful & Appointment Confirmed",
+        subtitle: `Transaction Reference: ${payment.gatewayPaymentId || payment.transactionReference || "Confirmed"}`,
+        statusText: "Paid & Confirmed",
+        statusColor: "success",
+        contentHtml: `
+          <p>Dear <strong>${pName}</strong>,</p>
+          <p>We have received your online consultation fee. Your appointment has been <strong>confirmed</strong> with <strong>Dr. ${docName}</strong> at <strong>${hospName}</strong>.</p>
+
+          <div style="background-color: #ECFDF5; border-radius: 12px; padding: 20px; border: 1px solid #A7F3D0; margin: 20px 0;">
+            <p style="margin: 0 0 10px 0; color: #065F46; font-size: 15px; font-weight: 700;">Payment Summary:</p>
+            <table width="100%" cellpadding="6" cellspacing="0" style="font-size: 14px;">
+              <tr>
+                <td width="40%" style="color: #047857; font-weight: 600;">Amount Paid:</td>
+                <td style="color: #065F46; font-weight: 800; font-size: 16px;">₹${payment.amount}</td>
+              </tr>
+              <tr>
+                <td style="color: #047857; font-weight: 600;">Transaction ID:</td>
+                <td style="color: #065F46; font-family: monospace;">${payment.gatewayPaymentId || payment.transactionReference || "Verified"}</td>
+              </tr>
+              <tr>
+                <td style="color: #047857; font-weight: 600;">Payment Gateway:</td>
+                <td style="color: #065F46;">Razorpay Secure Gateway</td>
+              </tr>
+              <tr>
+                <td style="color: #047857; font-weight: 600;">Payment Method:</td>
+                <td style="color: #065F46; text-transform: uppercase;">${payment.paymentMethod || "Online"}</td>
+              </tr>
+            </table>
+          </div>
+
+          <div style="background-color: #F8FAFC; border-radius: 12px; padding: 20px; border: 1px solid #E2E8F0; margin: 20px 0;">
+            <p style="margin: 0 0 10px 0; color: #0F172A; font-size: 15px; font-weight: 700;">Appointment Schedule:</p>
+            <table width="100%" cellpadding="6" cellspacing="0" style="font-size: 14px;">
+              <tr>
+                <td width="40%" style="color: #64748B; font-weight: 600;">Consulting Doctor:</td>
+                <td style="color: #0F172A; font-weight: 700;">Dr. ${docName} (${doctor?.specialization || "General"})</td>
+              </tr>
+              <tr>
+                <td width="40%" style="color: #64748B; font-weight: 600;">Medical Facility:</td>
+                <td style="color: #0F172A;">${hospName}</td>
+              </tr>
+              <tr>
+                <td width="40%" style="color: #64748B; font-weight: 600;">Date:</td>
+                <td style="color: #0F172A; font-weight: 700;">${apptDate}</td>
+              </tr>
+              <tr>
+                <td width="40%" style="color: #64748B; font-weight: 600;">Time Slot:</td>
+                <td style="color: #0F172A; font-weight: 700;">${appointment.appointmentTime}</td>
+              </tr>
+            </table>
+          </div>
+
+          <p>Please arrive 15 minutes prior to your appointment time. You can view or manage your appointment directly in your patient portal.</p>
+        `,
+        actionButton: {
+            label: "View Appointment & Receipt",
+            url: "http://localhost:3000/patient/appointments",
+        },
+    });
+
+    return sendEmail({ to: patient.email, subject, text, html });
+};
+
+// 11. Refund Initiated Email to Patient
+const sendRefundInitiatedEmail = async ({ payment, appointment, patient, refundAmount, policyDescription }) => {
+    if (!patient?.email) return;
+    const pName = patient?.fullName || "Patient";
+
+    const subject = `SmartCare AI - Refund Initiated (₹${refundAmount})`;
+    const text = `Dear ${pName},
+
+Your appointment cancellation has been processed and a refund of ₹${refundAmount} has been initiated to your original payment method.
+
+Refund Details:
+- Refund Amount: ₹${refundAmount}
+- Original Paid: ₹${payment?.amount || refundAmount}
+- Refund ID: ${payment?.gatewayRefundId || "Processing"}
+- Policy Applied: ${policyDescription || "Standard Cancellation Policy"}
+- Estimated Credited Time: 5-7 business days per bank / UPI processing cycles.
+
+SmartCare AI Billing Support`;
+
+    const html = buildHtmlEmail({
+        title: "Refund Initiated",
+        subtitle: `Refund Amount: ₹${refundAmount}`,
+        statusText: "Refund Processing",
+        statusColor: "info",
+        contentHtml: `
+          <p>Dear <strong>${pName}</strong>,</p>
+          <p>Your appointment cancellation has been accepted and a refund has been initiated to your original payment method through Razorpay.</p>
+
+          <div style="background-color: #F0FDF4; border-radius: 12px; padding: 20px; border: 1px solid #BBF7D0; margin: 20px 0;">
+            <table width="100%" cellpadding="6" cellspacing="0" style="font-size: 14px;">
+              <tr>
+                <td width="40%" style="color: #166534; font-weight: 600;">Refund Amount:</td>
+                <td style="color: #166534; font-weight: 800; font-size: 18px;">₹${refundAmount}</td>
+              </tr>
+              <tr>
+                <td width="40%" style="color: #166534; font-weight: 600;">Refund ID:</td>
+                <td style="color: #166534; font-family: monospace;">${payment?.gatewayRefundId || "Processing"}</td>
+              </tr>
+              <tr>
+                <td style="color: #166534; font-weight: 600;">Original Payment:</td>
+                <td style="color: #166534;">₹${payment?.amount || refundAmount}</td>
+              </tr>
+              ${policyDescription ? `<tr><td style="color: #166534; font-weight: 600;">Policy Tier:</td><td style="color: #166534;">${policyDescription}</td></tr>` : ""}
+            </table>
+          </div>
+
+          <p><strong>When will you receive the money?</strong></p>
+          <p style="color: #475569; font-size: 14px;">Refunds processed via Razorpay are credited back to the original source within <strong>5-7 business days</strong> depending on your issuing bank.</p>
+        `,
+        actionButton: {
+            label: "View Payment History",
+            url: "http://localhost:3000/patient/payments",
+        },
+    });
+
+    return sendEmail({ to: patient.email, subject, text, html });
+};
+
+// 12. Refund Completed Email to Patient
+const sendRefundCompletedEmail = async ({ payment, appointment, patient, refundAmount }) => {
+    if (!patient?.email) return;
+    const pName = patient?.fullName || "Patient";
+
+    const subject = `SmartCare AI - Refund Completed (₹${refundAmount})`;
+    const text = `Dear ${pName},
+
+We are pleased to inform you that the refund of ₹${refundAmount} for your cancelled appointment has been successfully completed by Razorpay.
+
+The funds should now reflect in your bank account or payment method statement.
+
+Warm regards,
+SmartCare AI Billing Team`;
+
+    const html = buildHtmlEmail({
+        title: "Refund Completed",
+        subtitle: `₹${refundAmount} settled`,
+        statusText: "Refund Completed",
+        statusColor: "success",
+        contentHtml: `
+          <p>Dear <strong>${pName}</strong>,</p>
+          <p>Your refund of <strong>₹${refundAmount}</strong> has been successfully settled by the payment processor to your original payment account.</p>
+
+          <div style="background-color: #ECFDF5; border-radius: 12px; padding: 20px; border: 1px solid #A7F3D0; margin: 20px 0;">
+            <p style="margin: 0; color: #065F46; font-size: 14px;"><strong>Settled Amount:</strong> ₹${refundAmount}</p>
+            <p style="margin: 6px 0 0 0; color: #065F46; font-size: 14px;"><strong>Refund Reference:</strong> ${payment?.gatewayRefundId || "Completed"}</p>
+          </div>
+
+          <p>If you do not see the credited amount within 24 hours, please contact your bank with the refund reference above.</p>
+        `,
+        actionButton: {
+            label: "Open Patient Portal",
+            url: "http://localhost:3000/patient/payments",
+        },
+    });
+
+    return sendEmail({ to: patient.email, subject, text, html });
+};
+
 module.exports = {
     sendEmail,
     sendHospitalRegistrationEmail,
@@ -604,4 +799,7 @@ module.exports = {
     sendAppointmentStatusEmail,
     sendEmergencyAlertEmail,
     sendEmergencyStatusEmail,
+    sendPaymentSuccessEmail,
+    sendRefundInitiatedEmail,
+    sendRefundCompletedEmail,
 };

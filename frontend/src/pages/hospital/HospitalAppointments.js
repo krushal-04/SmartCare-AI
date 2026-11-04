@@ -29,9 +29,7 @@ import {
     Alert,
 } from "@mui/material";
 import {
-    CheckCircleOutlineRounded,
     CancelOutlined,
-    DoneAllRounded,
     InfoOutlined,
     SearchRounded,
     CalendarMonthOutlined,
@@ -40,6 +38,33 @@ import {
 import DashboardLayout from "../../components/dashboard/DashboardLayout";
 import PageHeader from "../../components/dashboard/PageHeader";
 import api from "../../services/api";
+import { colors } from "../../theme/colors";
+
+const isAppointmentPassed = (date, time) => {
+    if (!date) return false;
+    const now = new Date();
+    const apptDate = new Date(date);
+    apptDate.setHours(0, 0, 0, 0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (apptDate < today) return true;
+    if (apptDate > today) return false;
+
+    if (time && time.includes(":")) {
+        const parts = time.split(":");
+        let h = parseInt(parts[0], 10);
+        const isPM = /pm/i.test(time);
+        const isAM = /am/i.test(time);
+        let min = parseInt(parts[1], 10);
+        if (isPM && h < 12) h += 12;
+        if (isAM && h === 12) h = 0;
+        if (!isNaN(h) && !isNaN(min)) {
+            return (h * 60 + min) <= (now.getHours() * 60 + now.getMinutes());
+        }
+    }
+    return false;
+};
 
 const STATUS_COLORS = {
     Pending: "warning",
@@ -101,30 +126,56 @@ export default function HospitalAppointments() {
         setActionSubmitting(true);
         setAlert({ type: "", message: "" });
 
-        let targetStatus = selectedAppointment.status;
-        if (actionType === "confirm") targetStatus = "Confirmed";
-        if (actionType === "reject") targetStatus = "Rejected";
-        if (actionType === "complete") targetStatus = "Completed";
-        if (actionType === "cancel") targetStatus = "Cancelled";
-
         try {
-            const res = await api.put(`/appointment/${selectedAppointment._id}/status`, {
-                status: targetStatus,
-                notes,
-            });
-
-            if (res.data.success) {
-                setAlert({
-                    type: "success",
-                    message: `Appointment successfully marked as ${targetStatus}. Patient notified via email and in-app message.`,
+            if (actionType === "cancel") {
+                if (selectedAppointment.paymentStatus === "Paid") {
+                    const refundRes = await api.post(`/payment/cancel-and-refund/${selectedAppointment._id}`, {
+                        reason: notes || "Cancelled by hospital administration",
+                    });
+                    if (refundRes.data.success) {
+                        setAlert({
+                            type: "success",
+                            message: `Appointment cancelled and 100% refund of ₹${selectedAppointment.consultationFee || 0} initiated via Razorpay.`,
+                        });
+                        setSelectedAppointment(null);
+                        fetchAppointments();
+                        return;
+                    }
+                } else {
+                    const res = await api.put(`/appointment/${selectedAppointment._id}/status`, {
+                        status: "Cancelled",
+                        notes,
+                    });
+                    if (res.data.success) {
+                        setAlert({
+                            type: "success",
+                            message: "Appointment cancelled successfully.",
+                        });
+                        setSelectedAppointment(null);
+                        fetchAppointments();
+                        return;
+                    }
+                }
+            } else if (actionType === "view") {
+                // Save / Update Clinical Notes
+                const res = await api.put(`/appointment/${selectedAppointment._id}/status`, {
+                    status: selectedAppointment.status,
+                    notes,
                 });
-                setSelectedAppointment(null);
-                fetchAppointments();
+                if (res.data.success) {
+                    setAlert({
+                        type: "success",
+                        message: "Clinical notes updated successfully.",
+                    });
+                    setSelectedAppointment(null);
+                    fetchAppointments();
+                    return;
+                }
             }
         } catch (err) {
             setAlert({
                 type: "error",
-                message: err.response?.data?.message || "Failed to update appointment.",
+                message: err.response?.data?.message || "Failed to process request.",
             });
         } finally {
             setActionSubmitting(false);
@@ -329,73 +380,61 @@ export default function HospitalAppointments() {
                                                 </TableCell>
 
                                                 <TableCell>
-                                                    <Chip
-                                                        label={appt.status}
-                                                        color={STATUS_COLORS[appt.status] || "default"}
-                                                        size="small"
-                                                        sx={{ fontWeight: 800 }}
-                                                    />
+                                                    {(() => {
+                                                        const isPassed = isAppointmentPassed(appt.appointmentDate, appt.appointmentTime);
+                                                        const effectiveStatus = (appt.status === "Cancelled" || appt.status === "Rejected")
+                                                            ? appt.status
+                                                            : isPassed
+                                                            ? "Completed"
+                                                            : (appt.status === "Pending" ? "Confirmed" : appt.status);
+
+                                                        return (
+                                                            <Stack spacing={0.5} alignItems="flex-start">
+                                                                <Chip
+                                                                    label={effectiveStatus}
+                                                                    color={STATUS_COLORS[effectiveStatus] || "default"}
+                                                                    size="small"
+                                                                    sx={{ fontWeight: 800 }}
+                                                                />
+                                                                <Typography fontSize={11.5} fontWeight={750} color={appt.paymentStatus === "Paid" ? "#065F46" : colors.slate}>
+                                                                    ₹{appt.consultationFee || 0} • {appt.paymentStatus || "Free"}
+                                                                </Typography>
+                                                            </Stack>
+                                                        );
+                                                    })()}
                                                 </TableCell>
 
                                                 <TableCell align="right">
-                                                    <Stack direction="row" spacing={0.5} justifyContent="flex-end">
-                                                        {appt.status === "Pending" && (
-                                                            <>
-                                                                <Tooltip title="Confirm Appointment">
+                                                    {(() => {
+                                                        const isPassed = isAppointmentPassed(appt.appointmentDate, appt.appointmentTime);
+                                                        const canCancel = (appt.status === "Confirmed" || appt.status === "Pending") && !isPassed;
+
+                                                        return (
+                                                            <Stack direction="row" spacing={0.5} justifyContent="flex-end">
+                                                                {canCancel && (
+                                                                    <Tooltip title="Cancel Appointment">
+                                                                        <IconButton
+                                                                            size="small"
+                                                                            color="error"
+                                                                            onClick={() => handleOpenAction(appt, "cancel")}
+                                                                        >
+                                                                            <CancelOutlined fontSize="small" />
+                                                                        </IconButton>
+                                                                    </Tooltip>
+                                                                )}
+
+                                                                <Tooltip title="View Details & Notes">
                                                                     <IconButton
                                                                         size="small"
-                                                                        color="success"
-                                                                        onClick={() => handleOpenAction(appt, "confirm")}
+                                                                        color="info"
+                                                                        onClick={() => handleOpenAction(appt, "view")}
                                                                     >
-                                                                        <CheckCircleOutlineRounded fontSize="small" />
+                                                                        <InfoOutlined fontSize="small" />
                                                                     </IconButton>
                                                                 </Tooltip>
-                                                                <Tooltip title="Reject Appointment">
-                                                                    <IconButton
-                                                                        size="small"
-                                                                        color="error"
-                                                                        onClick={() => handleOpenAction(appt, "reject")}
-                                                                    >
-                                                                        <CancelOutlined fontSize="small" />
-                                                                    </IconButton>
-                                                                </Tooltip>
-                                                            </>
-                                                        )}
-
-                                                        {appt.status === "Confirmed" && (
-                                                            <Tooltip title="Mark Consultation Completed">
-                                                                <IconButton
-                                                                    size="small"
-                                                                    color="primary"
-                                                                    onClick={() => handleOpenAction(appt, "complete")}
-                                                                >
-                                                                    <DoneAllRounded fontSize="small" />
-                                                                </IconButton>
-                                                            </Tooltip>
-                                                        )}
-
-                                                        {["Pending", "Confirmed"].includes(appt.status) && (
-                                                            <Tooltip title="Cancel Appointment">
-                                                                <IconButton
-                                                                    size="small"
-                                                                    color="warning"
-                                                                    onClick={() => handleOpenAction(appt, "cancel")}
-                                                                >
-                                                                    <CancelOutlined fontSize="small" />
-                                                                </IconButton>
-                                                            </Tooltip>
-                                                        )}
-
-                                                        <Tooltip title="View Details & Notes">
-                                                            <IconButton
-                                                                size="small"
-                                                                color="info"
-                                                                onClick={() => handleOpenAction(appt, "view")}
-                                                            >
-                                                                <InfoOutlined fontSize="small" />
-                                                            </IconButton>
-                                                        </Tooltip>
-                                                    </Stack>
+                                                            </Stack>
+                                                        );
+                                                    })()}
                                                 </TableCell>
                                             </TableRow>
                                         );
@@ -410,74 +449,69 @@ export default function HospitalAppointments() {
             {/* Action Confirmation & Notes Dialog */}
             <Dialog open={Boolean(selectedAppointment)} onClose={() => setSelectedAppointment(null)} maxWidth="sm" fullWidth>
                 <DialogTitle sx={{ fontWeight: 800 }}>
-                    {actionType === "confirm" && "Confirm Appointment"}
-                    {actionType === "reject" && "Reject Appointment"}
-                    {actionType === "complete" && "Mark Appointment as Completed"}
-                    {actionType === "cancel" && "Cancel Appointment"}
-                    {actionType === "view" && "Appointment Details"}
+                    {actionType === "cancel" ? "Cancel Appointment" : "Appointment Details & Clinical Notes"}
                 </DialogTitle>
                 <DialogContent dividers>
                     {selectedAppointment && (
                         <Stack spacing={2.5}>
                             <Box sx={{ p: 2, bgcolor: "#F8FAFC", borderRadius: 3, border: "1px solid #E2E8F0" }}>
-                                <Typography fontWeight={700} fontSize={14}>
-                                    Patient: {selectedAppointment.patientId?.fullName}
+                                <Typography fontWeight={750} fontSize={14.5}>
+                                    Patient: {selectedAppointment.patientId?.fullName || "Patient"}
                                 </Typography>
-                                <Typography variant="body2" color="text.secondary">
+                                <Typography variant="body2" color="text.secondary" mt={0.3}>
                                     Doctor: Dr. {selectedAppointment.doctorId?.doctorName} • {selectedAppointment.appointmentTime}
                                 </Typography>
                                 <Typography variant="body2" color="text.secondary">
-                                    Reason: {selectedAppointment.reason || "General"}
+                                    Fee: ₹{selectedAppointment.consultationFee || 0} ({selectedAppointment.paymentStatus || "Free"})
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary">
+                                    Reason: {selectedAppointment.reason || "General Consultation"}
                                 </Typography>
                             </Box>
 
-                            {actionType !== "view" ? (
+                            {actionType === "cancel" ? (
                                 <TextField
                                     fullWidth
                                     multiline
                                     rows={3}
-                                    label="Clinical Notes / Reason for Status Change"
-                                    placeholder="Enter instructions for the patient or reason for this status change..."
+                                    label="Reason for Cancellation"
+                                    placeholder="Explain why this appointment is being cancelled..."
                                     value={notes}
                                     onChange={(e) => setNotes(e.target.value)}
-                                    helperText="This note will be saved and visible to the patient in their notification."
+                                    helperText={selectedAppointment.paymentStatus === "Paid" ? "100% refund will be initiated to the patient per hospital cancellation policy." : ""}
                                 />
                             ) : (
-                                <Box>
-                                    <Typography fontWeight={700} fontSize={14} gutterBottom>
-                                        Hospital Notes:
-                                    </Typography>
-                                    <Typography variant="body2" color="text.secondary">
-                                        {selectedAppointment.notes || "No notes entered for this appointment."}
-                                    </Typography>
-                                </Box>
+                                <TextField
+                                    fullWidth
+                                    multiline
+                                    rows={3}
+                                    label="Clinical Notes / Doctor Instructions"
+                                    placeholder="Add clinical instructions or diagnosis notes for this patient..."
+                                    value={notes}
+                                    onChange={(e) => setNotes(e.target.value)}
+                                    helperText="Changes saved here will be stored in the patient's medical consultation record."
+                                />
                             )}
                         </Stack>
                     )}
                 </DialogContent>
-                <DialogActions sx={{ p: 2.5 }}>
+                <DialogActions sx={{ p: 2.5, justifyContent: "space-between" }}>
                     <Button onClick={() => setSelectedAppointment(null)} color="inherit" sx={{ fontWeight: 600 }}>
-                        {actionType === "view" ? "Close" : "Cancel"}
+                        Close
                     </Button>
-                    {actionType !== "view" && (
-                        <Button
-                            variant="contained"
-                            disabled={actionSubmitting}
-                            color={
-                                actionType === "confirm"
-                                    ? "success"
-                                    : actionType === "reject"
-                                        ? "error"
-                                        : actionType === "complete"
-                                            ? "primary"
-                                            : "warning"
-                            }
-                            onClick={handleExecuteAction}
-                            sx={{ fontWeight: 800, textTransform: "none", px: 3 }}
-                        >
-                            {actionSubmitting ? "Processing..." : `Confirm ${actionType.toUpperCase()}`}
-                        </Button>
-                    )}
+                    <Button
+                        variant="contained"
+                        disabled={actionSubmitting}
+                        color={actionType === "cancel" ? "error" : "primary"}
+                        onClick={handleExecuteAction}
+                        sx={{ fontWeight: 800, textTransform: "none", px: 3, borderRadius: 2 }}
+                    >
+                        {actionSubmitting
+                            ? "Processing..."
+                            : actionType === "cancel"
+                            ? "Confirm Cancellation"
+                            : "Save Clinical Notes"}
+                    </Button>
                 </DialogActions>
             </Dialog>
         </DashboardLayout>

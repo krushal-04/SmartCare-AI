@@ -55,17 +55,59 @@ const getTodayString = () => {
     return `${y}-${m}-${d}`;
 };
 
-// Appointments scheduled before today are no longer actionable.  Keeping this
-// at the API boundary means the patient, hospital and admin screens all agree.
+// Appointments scheduled in the past (prior dates or passed time slots today)
+// transition automatically to Completed status time-and-date-wise.
 const completePastAppointments = async (patientId) => {
-    const today = getTodayString();
-    const { start } = getDateRange(today);
-    const query = {
-        appointmentDate: { $lt: start },
-        status: { $in: ["Pending", "Confirmed"] },
-    };
-    if (patientId) query.patientId = patientId;
-    await Appointment.updateMany(query, { $set: { status: "Completed" } });
+    try {
+        const today = getTodayString();
+        const { start, end } = getDateRange(today);
+
+        // 1. All appointments prior to today
+        const pastDatesQuery = {
+            appointmentDate: { $lt: start },
+            status: { $in: ["Pending", "Confirmed"] },
+        };
+        if (patientId) pastDatesQuery.patientId = patientId;
+        await Appointment.updateMany(pastDatesQuery, { $set: { status: "Completed" } });
+
+        // 2. Today's appointments whose scheduled time slot has elapsed
+        const todayQuery = {
+            appointmentDate: { $gte: start, $lte: end },
+            status: { $in: ["Pending", "Confirmed"] },
+        };
+        if (patientId) todayQuery.patientId = patientId;
+        const todayAppointments = await Appointment.find(todayQuery).select("_id appointmentTime").lean();
+
+        if (todayAppointments && todayAppointments.length > 0) {
+            const now = new Date();
+            const currentTotalMinutes = now.getHours() * 60 + now.getMinutes();
+            const passedIds = [];
+
+            for (const appt of todayAppointments) {
+                if (appt.appointmentTime) {
+                    const raw = String(appt.appointmentTime);
+                    const parts = raw.split(":");
+                    let h = parseInt(parts[0], 10);
+                    let min = parseInt(parts[1], 10);
+                    const isPM = /pm/i.test(raw);
+                    const isAM = /am/i.test(raw);
+                    if (isPM && h < 12) h += 12;
+                    if (isAM && h === 12) h = 0;
+                    if (!isNaN(h) && !isNaN(min)) {
+                        if ((h * 60 + min) <= currentTotalMinutes) {
+                            passedIds.push(appt._id);
+                        }
+                    }
+                }
+            }
+
+            if (passedIds.length > 0) {
+                await Appointment.updateMany({ _id: { $in: passedIds } }, { $set: { status: "Completed" } });
+            }
+        }
+    } catch (err) {
+        console.error("Auto completePastAppointments failed non-critically:", err.message);
+    }
 };
 
 exports.getAvailableSlots = async (

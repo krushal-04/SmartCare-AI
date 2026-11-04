@@ -43,6 +43,9 @@ const getDashboardPath = (role) => {
         case "hospital":
             return "/hospital";
 
+        case "doctor":
+            return "/doctor";
+
         case "patient":
         default:
             return "/patient";

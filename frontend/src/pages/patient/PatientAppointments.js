@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
 import {
     Alert,
     Box,
@@ -9,26 +8,41 @@ import {
     CardContent,
     Chip,
     CircularProgress,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    Divider,
     FormControl,
+    IconButton,
     InputLabel,
     MenuItem,
     Select,
     Stack,
+    TextField,
     Typography,
 } from "@mui/material";
-
 import {
     CalendarMonthOutlined,
+    CheckCircleOutlined,
+    CloseOutlined,
     EventAvailableOutlined,
+    ReplayOutlined,
+    WarningAmberOutlined,
 } from "@mui/icons-material";
 
 import DashboardLayout from "../../components/dashboard/DashboardLayout";
-import ConfirmDialog from "../../components/common/ConfirmDialog";
 import api from "../../services/api";
+import { colors } from "../../theme/colors";
 
-const formatAppointmentDate = (value) => value
-    ? new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(value))
-    : "—";
+const formatAppointmentDate = (value) =>
+    value
+        ? new Intl.DateTimeFormat("en-GB", {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+          }).format(new Date(value))
+        : "—";
 
 const isPastDate = (value) => {
     if (!value) return false;
@@ -40,190 +54,131 @@ const isPastDate = (value) => {
 };
 
 export default function PatientAppointments() {
-    const navigate =
-        useNavigate();
+    const navigate = useNavigate();
 
-    const [
-        appointments,
-        setAppointments,
-    ] = useState([]);
+    const [appointments, setAppointments] = useState([]);
+    const [statusFilter, setStatusFilter] = useState("All");
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
+    const [successMessage, setSuccessMessage] = useState("");
 
-    const [statusFilter, setStatusFilter] =
-        useState("All");
-
-    const [loading, setLoading] =
-        useState(true);
-
-    const [error, setError] =
-        useState("");
-
-    const [appointmentToCancel, setAppointmentToCancel] = useState(null);
+    // Cancellation & Refund Preview state
+    const [selectedCancelAppt, setSelectedCancelAppt] = useState(null);
+    const [refundPreview, setRefundPreview] = useState(null);
+    const [previewLoading, setPreviewLoading] = useState(false);
+    const [cancelReason, setCancelReason] = useState("");
     const [cancelling, setCancelling] = useState(false);
 
-    const loadAppointments =
-        async () => {
-            try {
-                setLoading(true);
-                setError("");
-
-                const response =
-                    await api.get(
-                        "/appointment/my"
-                    );
-
-                setAppointments(
-                    response.data
-                        .appointments || []
-                );
-            } catch (err) {
-                setError(
-                    err.response?.data
-                        ?.message ||
-                        "Unable to load appointments."
-                );
-            } finally {
-                setLoading(false);
-            }
-        };
+    const loadAppointments = async () => {
+        try {
+            setLoading(true);
+            setError("");
+            const response = await api.get("/appointment/my");
+            setAppointments(response.data.appointments || []);
+        } catch (err) {
+            setError(err.response?.data?.message || "Unable to load appointments.");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
         loadAppointments();
     }, []);
 
-    const filtered =
-        useMemo(() => {
-            if (
-                statusFilter ===
-                "All"
-            ) {
-                return appointments;
-            }
+    const filtered = useMemo(() => {
+        if (statusFilter === "All") return appointments;
+        return appointments.filter((item) => item.status === statusFilter);
+    }, [appointments, statusFilter]);
 
-            return appointments.filter(
-                (item) =>
-                    item.status ===
-                    statusFilter
-            );
-        }, [
-            appointments,
-            statusFilter,
-        ]);
+    // Open cancellation modal and load real refund preview
+    const handleOpenCancelDialog = async (appointment) => {
+        setSelectedCancelAppt(appointment);
+        setCancelReason("");
+        setRefundPreview(null);
 
-    const cancelAppointment = async () => {
-            if (!appointmentToCancel) return;
+        if (appointment.paymentStatus === "Paid") {
             try {
-                setCancelling(true);
-                await api.put(
-                    `/appointment/${appointmentToCancel._id}/status`,
-                    {
-                        status:
-                            "Cancelled",
-                    }
-                );
-                setAppointmentToCancel(null);
-                loadAppointments();
+                setPreviewLoading(true);
+                const res = await api.get(`/payment/refund-preview/${appointment._id}`);
+                setRefundPreview(res.data.refundDetails);
             } catch (err) {
-                setError(
-                    err.response?.data
-                        ?.message ||
-                        "Unable to cancel appointment."
-                );
-            } finally { setCancelling(false); }
-        };
+                console.error("Refund preview err:", err);
+            } finally {
+                setPreviewLoading(false);
+            }
+        }
+    };
+
+    // Execute cancellation & refund
+    const executeCancelAndRefund = async () => {
+        if (!selectedCancelAppt) return;
+        try {
+            setCancelling(true);
+            setError("");
+            const res = await api.post(`/payment/cancel-and-refund/${selectedCancelAppt._id}`, {
+                reason: cancelReason || "Patient requested cancellation",
+            });
+
+            setSuccessMessage(res.data?.message || "Appointment cancelled successfully.");
+            setSelectedCancelAppt(null);
+            loadAppointments();
+        } catch (err) {
+            setError(err.response?.data?.message || "Failed to cancel appointment and process refund.");
+        } finally {
+            setCancelling(false);
+        }
+    };
 
     return (
         <DashboardLayout
             role="patient"
             title="My Appointments"
-            subtitle="Book, track and manage appointments"
+            subtitle="Book, track, manage consultations and instant cancellation refunds"
         >
             <Stack
-                direction={{
-                    xs: "column",
-                    sm: "row",
-                }}
+                direction={{ xs: "column", sm: "row" }}
                 justifyContent="space-between"
-                alignItems={{
-                    xs: "stretch",
-                    sm: "center",
-                }}
+                alignItems={{ xs: "stretch", sm: "center" }}
                 spacing={2}
                 mb={3}
             >
                 <Box>
-                    <Typography
-                        fontSize={26}
-                        fontWeight={900}
-                    >
-                        Appointments
+                    <Typography fontSize={24} fontWeight={850} color={colors.ink}>
+                        My Consultations
                     </Typography>
-
-                    <Typography
-                        color="text.secondary"
-                    >
-                        {appointments.length}{" "}
-                        total appointments
+                    <Typography fontSize={13.5} color={colors.slate}>
+                        {appointments.length} total scheduled appointments
                     </Typography>
                 </Box>
 
-                <Stack
-                    direction="row"
-                    spacing={1.5}
-                >
-                    <FormControl
-                        size="small"
-                        sx={{
-                            minWidth: 160,
-                        }}
-                    >
-                        <InputLabel>
-                            Status
-                        </InputLabel>
-
+                <Stack direction="row" spacing={1.5}>
+                    <FormControl size="small" sx={{ minWidth: 160 }}>
+                        <InputLabel>Status</InputLabel>
                         <Select
-                            value={
-                                statusFilter
-                            }
+                            value={statusFilter}
                             label="Status"
-                            onChange={(e) =>
-                                setStatusFilter(
-                                    e.target.value
-                                )
-                            }
+                            onChange={(e) => setStatusFilter(e.target.value)}
+                            sx={{ borderRadius: 2 }}
                         >
-                            <MenuItem value="All">
-                                All
-                            </MenuItem>
-
-                            <MenuItem value="Pending">
-                                Pending
-                            </MenuItem>
-
-                            <MenuItem value="Confirmed">
-                                Confirmed
-                            </MenuItem>
-
-                            <MenuItem value="Completed">
-                                Completed
-                            </MenuItem>
-
-                            <MenuItem value="Cancelled">
-                                Cancelled
-                            </MenuItem>
-
-                            <MenuItem value="Rejected">
-                                Rejected
-                            </MenuItem>
+                            <MenuItem value="All">All Statuses</MenuItem>
+                            <MenuItem value="Pending">Pending</MenuItem>
+                            <MenuItem value="Confirmed">Confirmed</MenuItem>
+                            <MenuItem value="Completed">Completed</MenuItem>
+                            <MenuItem value="Cancelled">Cancelled</MenuItem>
+                            <MenuItem value="Rejected">Rejected</MenuItem>
                         </Select>
                     </FormControl>
 
                     <Button
                         variant="contained"
-                        onClick={() =>
-                            navigate(
-                                "/book-appointment"
-                            )
-                        }
+                        onClick={() => navigate("/book-appointment")}
+                        sx={{
+                            borderRadius: 2.2,
+                            fontWeight: 700,
+                            bgcolor: colors.secondary,
+                            "&:hover": { bgcolor: colors.secondaryDark },
+                        }}
                     >
                         Book Appointment
                     </Button>
@@ -231,277 +186,419 @@ export default function PatientAppointments() {
             </Stack>
 
             {error && (
-                <Alert
-                    severity="error"
-                    sx={{ mb: 2 }}
-                >
+                <Alert severity="error" sx={{ mb: 3, borderRadius: 2.5 }} onClose={() => setError("")}>
                     {error}
                 </Alert>
             )}
 
+            {successMessage && (
+                <Alert severity="success" sx={{ mb: 3, borderRadius: 2.5 }} onClose={() => setSuccessMessage("")}>
+                    {successMessage}
+                </Alert>
+            )}
+
             {loading ? (
-                <Box
-                    textAlign="center"
-                    py={8}
-                >
-                    <CircularProgress />
+                <Box textAlign="center" py={8}>
+                    <CircularProgress sx={{ color: colors.pine }} />
+                    <Typography mt={2} color={colors.slate} fontSize={14}>
+                        Loading your appointment history...
+                    </Typography>
                 </Box>
-            ) : filtered.length ===
-              0 ? (
+            ) : filtered.length === 0 ? (
                 <Card
                     elevation={0}
                     sx={{
-                        border:
-                            "1px solid #E3EBEE",
-                        borderRadius: 4,
+                        border: `1px solid ${colors.hairline}`,
+                        borderRadius: 3.5,
+                        bgcolor: colors.white,
                     }}
                 >
-                    <CardContent
-                        sx={{
-                            py: 8,
-                            textAlign:
-                                "center",
-                        }}
-                    >
-                        <CalendarMonthOutlined
-                            sx={{
-                                fontSize: 55,
-                                color:
-                                    "#0B8793",
-                            }}
-                        />
-
-                        <Typography
-                            fontWeight={900}
-                            mt={1}
-                        >
+                    <CardContent sx={{ py: 8, textAlign: "center" }}>
+                        <CalendarMonthOutlined sx={{ fontSize: 55, color: colors.pine }} />
+                        <Typography fontWeight={800} fontSize={16} color={colors.ink} mt={1.5}>
                             No appointments found
                         </Typography>
-
+                        <Typography fontSize={13.5} color={colors.slate} mt={0.5}>
+                            You have no {statusFilter === "All" ? "" : statusFilter.toLowerCase()} appointments scheduled.
+                        </Typography>
                         <Button
+                            variant="contained"
                             sx={{
-                                mt: 1,
+                                mt: 2.5,
+                                borderRadius: 2,
+                                bgcolor: colors.pine,
+                                "&:hover": { bgcolor: colors.pineDeep },
                             }}
-                            onClick={() =>
-                                navigate(
-                                    "/book-appointment"
-                                )
-                            }
+                            onClick={() => navigate("/book-appointment")}
                         >
-                            Book your first
-                            appointment
+                            Book a Doctor Now
                         </Button>
                     </CardContent>
                 </Card>
             ) : (
-                filtered.map(
-                    (appointment) => {
-                        const canCancel =
-                            !isPastDate(appointment.appointmentDate) && [
-                                "Pending",
-                                "Confirmed",
-                            ].includes(
-                                appointment.status
-                            );
+                filtered.map((appointment) => {
+                    const canCancel =
+                        !isPastDate(appointment.appointmentDate) &&
+                        ["Pending", "Confirmed"].includes(appointment.status);
 
-                        return (
-                            <Card
-                                key={
-                                    appointment._id
-                                }
-                                elevation={
-                                    0
-                                }
-                                sx={{
-                                    mb: 2,
-                                    border:
-                                        "1px solid #E3EBEE",
-                                    borderRadius: 4,
-                                }}
-                            >
-                                <CardContent
-                                    sx={{
-                                        p: 3,
-                                    }}
+                    const fee = appointment.consultationFee || appointment.doctorId?.consultationFee || 0;
+                    const paymentStatus = appointment.paymentStatus || "NotRequired";
+
+                    return (
+                        <Card
+                            key={appointment._id}
+                            elevation={0}
+                            sx={{
+                                mb: 2.5,
+                                border: `1px solid ${colors.hairline}`,
+                                borderRadius: 3.5,
+                                bgcolor: colors.white,
+                                transition: "all 0.2s ease-in-out",
+                                "&:hover": {
+                                    boxShadow: "0 6px 20px rgba(16,42,67,0.06)",
+                                    borderColor: colors.pine,
+                                },
+                            }}
+                        >
+                            <CardContent sx={{ p: { xs: 2.5, sm: 3 } }}>
+                                <Stack
+                                    direction={{ xs: "column", md: "row" }}
+                                    justifyContent="space-between"
+                                    alignItems={{ xs: "flex-start", md: "center" }}
+                                    gap={2}
                                 >
-                                    <Stack
-                                        direction={{
-                                            xs: "column",
-                                            md: "row",
-                                        }}
-                                        justifyContent="space-between"
-                                        gap={2}
-                                    >
-                                        <Box>
-                                            <Stack
-                                                direction="row"
-                                                spacing={
-                                                    1
-                                                }
-                                                alignItems="center"
-                                            >
-                                                <EventAvailableOutlined
-                                                    sx={{
-                                                        color:
-                                                            "#0B8793",
-                                                    }}
-                                                />
-
-                                                <Typography
-                                                    fontSize={
-                                                        19
-                                                    }
-                                                    fontWeight={
-                                                        900
-                                                    }
-                                                >
-                                                    {
-                                                        appointment
-                                                            .doctorId
-                                                            ?.doctorName
-                                                    }
-                                                </Typography>
-                                            </Stack>
-
-                                            <Typography
-                                                color="text.secondary"
-                                                mt={
-                                                    0.5
-                                                }
-                                            >
-                                                {
-                                                    appointment
-                                                        .doctorId
-                                                        ?.specialization
-                                                }
+                                    <Box sx={{ flex: 1 }}>
+                                        <Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap" gap={1}>
+                                            <EventAvailableOutlined sx={{ color: colors.pine }} />
+                                            <Typography fontSize={18} fontWeight={850} color={colors.ink}>
+                                                Dr. {appointment.doctorId?.doctorName?.replace(/^dr\.?\s+/i, "") || "Specialist"}
                                             </Typography>
+                                            <Typography fontSize={13} color={colors.pine} fontWeight={700}>
+                                                • {appointment.doctorId?.specialization || "Clinical Consultation"}
+                                            </Typography>
+                                        </Stack>
 
-                                            <Typography
-                                                fontSize={
-                                                    14
-                                                }
-                                                mt={
-                                                    1.2
-                                                }
-                                            >
+                                        <Box
+                                            sx={{
+                                                display: "flex",
+                                                flexWrap: "wrap",
+                                                gap: { xs: 1.5, sm: 3 },
+                                                mt: 1.5,
+                                                fontSize: 13.5,
+                                                color: colors.slate,
+                                            }}
+                                        >
+                                            <Typography fontSize={13.5}>
                                                 Hospital:{" "}
-                                                <strong>
-                                                    {
-                                                        appointment
-                                                            .hospitalId
-                                                            ?.hospitalName
-                                                    }
+                                                <strong style={{ color: colors.ink }}>
+                                                    {appointment.hospitalId?.hospitalName || "Medical Center"}
                                                 </strong>
                                             </Typography>
 
-                                            <Typography
-                                                fontSize={
-                                                    14
-                                                }
-                                            >
-                                                Department:{" "}
-                                                <strong>
-                                                    {
-                                                        appointment
-                                                            .departmentId
-                                                            ?.departmentName
-                                                    }
-                                                </strong>
-                                            </Typography>
-
-                                            <Typography
-                                                fontSize={
-                                                    14
-                                                }
-                                                mt={
-                                                    1
-                                                }
-                                            >
+                                            <Typography fontSize={13.5}>
                                                 Date:{" "}
-                                                {formatAppointmentDate(appointment.appointmentDate)}
+                                                <strong style={{ color: colors.ink }}>
+                                                    {formatAppointmentDate(appointment.appointmentDate)}
+                                                </strong>
                                             </Typography>
 
-                                            <Typography
-                                                fontSize={
-                                                    14
-                                                }
-                                            >
-                                                Time:{" "}
-                                                {
-                                                    appointment.appointmentTime
-                                                }
+                                            <Typography fontSize={13.5}>
+                                                Time Slot:{" "}
+                                                <strong style={{ color: colors.pine }}>
+                                                    {appointment.appointmentTime}
+                                                </strong>
                                             </Typography>
-
-                                            {appointment.reason && (
-                                                <Typography
-                                                    mt={
-                                                        1
-                                                    }
-                                                    color="text.secondary"
-                                                    fontSize={
-                                                        13
-                                                    }
-                                                >
-                                                    Reason:{" "}
-                                                    {
-                                                        appointment.reason
-                                                    }
-                                                </Typography>
-                                            )}
                                         </Box>
 
-                                        <Stack
-                                            alignItems={{
-                                                xs: "flex-start",
-                                                md: "flex-end",
-                                            }}
-                                            gap={1}
-                                        >
-                                            <Chip
-                                                label={
-                                                    appointment.status
-                                                }
-                                                color={
-                                                    appointment.status ===
-                                                    "Confirmed"
-                                                        ? "success"
-                                                        : appointment.status ===
-                                                          "Rejected"
-                                                        ? "error"
-                                                        : appointment.status ===
-                                                          "Completed"
-                                                        ? "info"
-                                                        : "default"
-                                                }
-                                            />
+                                        {appointment.reason && (
+                                            <Typography mt={1} color={colors.slate} fontSize={13}>
+                                                Reason: {appointment.reason}
+                                            </Typography>
+                                        )}
 
-                                            {canCancel && (
-                                                <Button
-                                                    color="error"
-                                                    onClick={() =>
-                                                        setAppointmentToCancel(appointment)
-                                                    }
-                                                >
-                                                    Cancel
-                                                </Button>
+                                        {/* PAYMENT & REFUND SUMMARY LINE */}
+                                        <Stack direction="row" spacing={1.5} alignItems="center" mt={1.5} flexWrap="wrap" gap={1}>
+                                            <Typography fontSize={13} fontWeight={700} color={colors.ink}>
+                                                Fee: ₹{fee}
+                                            </Typography>
+
+                                            {/* PAYMENT STATUS CHIP */}
+                                            {paymentStatus === "Paid" && (
+                                                <Chip
+                                                    size="small"
+                                                    icon={<CheckCircleOutlined fontSize="small" />}
+                                                    label="Fee Paid (Online)"
+                                                    sx={{
+                                                        bgcolor: "#ECFDF5",
+                                                        color: "#065F46",
+                                                        border: "1px solid #A7F3D0",
+                                                        fontWeight: 750,
+                                                        fontSize: 11.5,
+                                                    }}
+                                                />
+                                            )}
+
+                                            {paymentStatus === "Pending" && (
+                                                <Chip
+                                                    size="small"
+                                                    label="Payment Pending"
+                                                    sx={{
+                                                        bgcolor: "#FFFBEB",
+                                                        color: "#B45309",
+                                                        border: "1px solid #FDE68A",
+                                                        fontWeight: 750,
+                                                        fontSize: 11.5,
+                                                    }}
+                                                />
+                                            )}
+
+                                            {paymentStatus === "Refunded" && (
+                                                <Chip
+                                                    size="small"
+                                                    icon={<ReplayOutlined fontSize="small" />}
+                                                    label={`Refunded ₹${appointment.refundAmount || fee}`}
+                                                    sx={{
+                                                        bgcolor: "#EFF6FF",
+                                                        color: "#1D4ED8",
+                                                        border: "1px solid #BFDBFE",
+                                                        fontWeight: 750,
+                                                        fontSize: 11.5,
+                                                    }}
+                                                />
+                                            )}
+
+                                            {paymentStatus === "PartiallyRefunded" && (
+                                                <Chip
+                                                    size="small"
+                                                    icon={<ReplayOutlined fontSize="small" />}
+                                                    label={`Partially Refunded ₹${appointment.refundAmount}`}
+                                                    sx={{
+                                                        bgcolor: "#F0FDF4",
+                                                        color: "#15803D",
+                                                        border: "1px solid #BBF7D0",
+                                                        fontWeight: 750,
+                                                        fontSize: 11.5,
+                                                    }}
+                                                />
+                                            )}
+
+                                            {paymentStatus === "NotRequired" && (
+                                                <Chip
+                                                    size="small"
+                                                    label="Free Consultation"
+                                                    sx={{
+                                                        bgcolor: "#F1F5F9",
+                                                        color: "#475569",
+                                                        fontWeight: 700,
+                                                        fontSize: 11.5,
+                                                    }}
+                                                />
+                                            )}
+
+                                            {appointment.gatewayRefundId && (
+                                                <Typography fontSize={11.5} fontFamily="monospace" color={colors.slate}>
+                                                    Ref: {appointment.gatewayRefundId}
+                                                </Typography>
                                             )}
                                         </Stack>
+                                    </Box>
+
+                                    {/* STATUS & ACTIONS */}
+                                    <Stack
+                                        alignItems={{ xs: "flex-start", md: "flex-end" }}
+                                        spacing={1.2}
+                                        minWidth={140}
+                                    >
+                                        <Chip
+                                            label={appointment.status}
+                                            sx={{
+                                                fontWeight: 800,
+                                                fontSize: 12,
+                                                bgcolor:
+                                                    appointment.status === "Confirmed"
+                                                        ? "#ECFDF5"
+                                                        : appointment.status === "Completed"
+                                                        ? "#EFF6FF"
+                                                        : appointment.status === "Cancelled" || appointment.status === "Rejected"
+                                                        ? "#FEF2F2"
+                                                        : "#FFFBEB",
+                                                color:
+                                                    appointment.status === "Confirmed"
+                                                        ? "#065F46"
+                                                        : appointment.status === "Completed"
+                                                        ? "#1D4ED8"
+                                                        : appointment.status === "Cancelled" || appointment.status === "Rejected"
+                                                        ? "#B91C1C"
+                                                        : "#B45309",
+                                                border: "1px solid",
+                                                borderColor:
+                                                    appointment.status === "Confirmed"
+                                                        ? "#A7F3D0"
+                                                        : appointment.status === "Completed"
+                                                        ? "#BFDBFE"
+                                                        : appointment.status === "Cancelled" || appointment.status === "Rejected"
+                                                        ? "#FECACA"
+                                                        : "#FDE68A",
+                                            }}
+                                        />
+
+                                        {canCancel && (
+                                            <Button
+                                                variant="outlined"
+                                                color="error"
+                                                size="small"
+                                                onClick={() => handleOpenCancelDialog(appointment)}
+                                                sx={{
+                                                    borderRadius: 2,
+                                                    fontWeight: 700,
+                                                    fontSize: 12,
+                                                }}
+                                            >
+                                                Cancel & Refund
+                                            </Button>
+                                        )}
                                     </Stack>
-                                </CardContent>
-                            </Card>
-                        );
-                    }
-                )
+                                </Stack>
+                            </CardContent>
+                        </Card>
+                    );
+                })
             )}
-            <ConfirmDialog
-                open={Boolean(appointmentToCancel)}
-                title="Cancel appointment?"
-                description={appointmentToCancel ? `Your appointment with ${appointmentToCancel.doctorId?.doctorName || "this doctor"} will be cancelled.` : ""}
-                confirmLabel="Cancel appointment"
-                loading={cancelling}
-                onClose={() => setAppointmentToCancel(null)}
-                onConfirm={cancelAppointment}
-            />
+
+            {/* CANCELLATION & REFUND POLICY MODAL */}
+            {selectedCancelAppt && (
+                <Dialog
+                    open={Boolean(selectedCancelAppt)}
+                    onClose={() => setSelectedCancelAppt(null)}
+                    maxWidth="sm"
+                    fullWidth
+                    PaperProps={{
+                        sx: { borderRadius: 3.5, p: 1 },
+                    }}
+                >
+                    <DialogTitle sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <Stack direction="row" spacing={1.5} alignItems="center">
+                            <WarningAmberOutlined color="warning" />
+                            <Typography fontWeight={850} fontSize={17} color={colors.ink}>
+                                Cancel Appointment & Review Refund
+                            </Typography>
+                        </Stack>
+                        <IconButton onClick={() => setSelectedCancelAppt(null)} size="small">
+                            <CloseOutlined />
+                        </IconButton>
+                    </DialogTitle>
+
+                    <Divider />
+
+                    <DialogContent sx={{ py: 2.5 }}>
+                        <Typography fontSize={14} color={colors.ink} mb={2}>
+                            You are requesting cancellation for consultation with{" "}
+                            <strong>
+                                Dr. {selectedCancelAppt.doctorId?.doctorName?.replace(/^dr\.?\s+/i, "")}
+                            </strong>{" "}
+                            on {formatAppointmentDate(selectedCancelAppt.appointmentDate)} at{" "}
+                            {selectedCancelAppt.appointmentTime}.
+                        </Typography>
+
+                        {/* REFUND PREVIEW BOX */}
+                        {previewLoading ? (
+                            <Box py={3} textAlign="center">
+                                <CircularProgress size={24} sx={{ color: colors.pine }} />
+                                <Typography fontSize={13} color={colors.slate} mt={1}>
+                                    Checking cancellation policy and calculating refund...
+                                </Typography>
+                            </Box>
+                        ) : selectedCancelAppt.paymentStatus === "Paid" && refundPreview ? (
+                            <Box
+                                sx={{
+                                    p: 2.5,
+                                    mb: 2.5,
+                                    borderRadius: 3,
+                                    bgcolor: refundPreview.refundAmount > 0 ? "#F0FDF4" : "#FEF2F2",
+                                    border: `1px solid ${refundPreview.refundAmount > 0 ? "#BBF7D0" : "#FECACA"}`,
+                                }}
+                            >
+                                <Typography
+                                    fontWeight={800}
+                                    fontSize={14.5}
+                                    color={refundPreview.refundAmount > 0 ? "#166534" : "#991B1B"}
+                                    mb={1}
+                                >
+                                    Refund Breakdown ({refundPreview.tierApplied})
+                                </Typography>
+
+                                <Stack spacing={1}>
+                                    <Stack direction="row" justifyContent="space-between">
+                                        <Typography fontSize={13} color={colors.slate}>
+                                            Consultation Fee Paid:
+                                        </Typography>
+                                        <Typography fontSize={13} fontWeight={700}>
+                                            ₹{selectedCancelAppt.consultationFee || 0}
+                                        </Typography>
+                                    </Stack>
+
+                                    <Stack direction="row" justifyContent="space-between">
+                                        <Typography fontSize={13} color={colors.slate}>
+                                            Refund Rate:
+                                        </Typography>
+                                        <Typography fontSize={13} fontWeight={700} color={refundPreview.refundPercentage > 0 ? "#166534" : "#991B1B"}>
+                                            {refundPreview.refundPercentage}%
+                                        </Typography>
+                                    </Stack>
+
+                                    <Divider />
+
+                                    <Stack direction="row" justifyContent="space-between">
+                                        <Typography fontSize={14} fontWeight={800} color={refundPreview.refundAmount > 0 ? "#166534" : "#991B1B"}>
+                                            Total Refundable Amount:
+                                        </Typography>
+                                        <Typography fontSize={16} fontWeight={900} color={refundPreview.refundAmount > 0 ? "#166534" : "#991B1B"}>
+                                            ₹{refundPreview.refundAmount}
+                                        </Typography>
+                                    </Stack>
+                                </Stack>
+
+                                <Typography fontSize={12} color={colors.slate} mt={1.5}>
+                                    Policy: {refundPreview.policyDescription}
+                                </Typography>
+                            </Box>
+                        ) : (
+                            <Alert severity="info" sx={{ mb: 2.5, borderRadius: 2 }}>
+                                This appointment does not have an online payment fee or is free of charge.
+                            </Alert>
+                        )}
+
+                        <TextField
+                            fullWidth
+                            multiline
+                            minRows={2}
+                            label="Reason for cancellation (optional)"
+                            placeholder="e.g. Schedule conflict, feeling better, doctor requested change..."
+                            value={cancelReason}
+                            onChange={(e) => setCancelReason(e.target.value)}
+                        />
+                    </DialogContent>
+
+                    <DialogActions sx={{ p: 2.5, pt: 0, justifyContent: "space-between" }}>
+                        <Button
+                            variant="outlined"
+                            onClick={() => setSelectedCancelAppt(null)}
+                            sx={{ borderRadius: 2, fontWeight: 700 }}
+                        >
+                            Keep Appointment
+                        </Button>
+                        <Button
+                            variant="contained"
+                            color="error"
+                            disabled={cancelling}
+                            onClick={executeCancelAndRefund}
+                            sx={{ borderRadius: 2, fontWeight: 800, px: 3 }}
+                        >
+                            {cancelling ? "Processing Refund..." : "Confirm Cancellation"}
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+            )}
         </DashboardLayout>
     );
 }

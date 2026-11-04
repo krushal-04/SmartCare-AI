@@ -58,6 +58,7 @@ import PatientEmergency from "./pages/patient/PatientEmergency";
 import PatientAI from "./pages/patient/PatientAI";
 import PatientReviews from "./pages/patient/PatientReviews";
 import PatientNotifications from "./pages/patient/PatientNotifications";
+import PatientPayments from "./pages/patient/PatientPayments";
 
 /* =========================
    HOSPITAL PAGES
@@ -73,6 +74,7 @@ import HospitalPatients from "./pages/hospital/HospitalPatients";
 import HospitalEmergency from "./pages/hospital/HospitalEmergency";
 import HospitalReports from "./pages/hospital/HospitalReports";
 import HospitalNotifications from "./pages/hospital/HospitalNotifications";
+import HospitalPayments from "./pages/hospital/HospitalPayments";
 
 /* =========================
    ADMIN PAGES
@@ -88,6 +90,12 @@ import AdminAmbulances from "./pages/admin/AdminAmbulances";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import AdminReports from "./pages/admin/AdminReports";
 import AdminNotifications from "./pages/admin/AdminNotifications";
+import AdminPayments from "./pages/admin/AdminPayments";
+
+/* =========================
+   DOCTOR PAGES
+========================= */
+import DoctorDashboard from "./pages/doctor/DoctorDashboard";
 
 
 function App() {
@@ -247,6 +255,15 @@ function App() {
                         }
                     />
 
+                    <Route
+                        path="/patient/payments"
+                        element={
+                            <ProtectedRoute role="patient">
+                                <PatientPayments />
+                            </ProtectedRoute>
+                        }
+                    />
+
                     {/* =================================================
                         HOSPITAL MODULE
                     ================================================= */}
@@ -337,6 +354,15 @@ function App() {
                         element={
                             <ProtectedRoute role="hospital">
                                 <HospitalNotifications />
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    <Route
+                        path="/hospital/payments"
+                        element={
+                            <ProtectedRoute role="hospital">
+                                <HospitalPayments />
                             </ProtectedRoute>
                         }
                     />
@@ -433,6 +459,36 @@ function App() {
                         element={
                             <ProtectedRoute role="admin">
                                 <AdminNotifications />
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    <Route
+                        path="/admin/payments"
+                        element={
+                            <ProtectedRoute role="admin">
+                                <AdminPayments />
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    {/* =================================================
+                        DOCTOR MODULE
+                    ================================================= */}
+                    <Route
+                        path="/doctor"
+                        element={
+                            <ProtectedRoute role={["doctor", "hospital", "admin"]}>
+                                <DoctorDashboard />
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    <Route
+                        path="/doctor/payments"
+                        element={
+                            <ProtectedRoute role={["doctor", "hospital", "admin"]}>
+                                <DoctorDashboard />
                             </ProtectedRoute>
                         }
                     />
