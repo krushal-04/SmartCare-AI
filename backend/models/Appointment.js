@@ -94,14 +94,36 @@ const appointmentSchema = new mongoose.Schema(
         bookingStatus: {
             type: String,
             enum: [
+                "Pending",
                 "PendingPayment",
                 "Confirmed",
                 "Completed",
                 "Cancelled",
                 "Rejected",
             ],
-            default: "PendingPayment",
+            default: "Pending",
             index: true,
+        },
+
+        // HOSPITAL APPROVAL & REJECTION AUDIT
+        approvedAt: {
+            type: Date,
+        },
+        approvedBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+        },
+        rejectionReason: {
+            type: String,
+            trim: true,
+            default: "",
+        },
+        rejectedAt: {
+            type: Date,
+        },
+        rejectedBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
         },
 
         // CANCELLATION & REFUND TRACKING
@@ -149,6 +171,36 @@ const appointmentSchema = new mongoose.Schema(
         timestamps: true,
     }
 );
+
+appointmentSchema.pre("validate", function () {
+    if (this.status) {
+        const s = String(this.status).trim().toLowerCase();
+        if (s === "pending") this.status = "Pending";
+        else if (s === "confirmed") this.status = "Confirmed";
+        else if (s === "completed") this.status = "Completed";
+        else if (s === "cancelled") this.status = "Cancelled";
+        else if (s === "rejected") this.status = "Rejected";
+    }
+    if (this.bookingStatus) {
+        const b = String(this.bookingStatus).trim().toLowerCase();
+        if (b === "pending" || b === "pendingpayment") this.bookingStatus = "Pending";
+        else if (b === "confirmed") this.bookingStatus = "Confirmed";
+        else if (b === "completed") this.bookingStatus = "Completed";
+        else if (b === "cancelled") this.bookingStatus = "Cancelled";
+        else if (b === "rejected") this.bookingStatus = "Rejected";
+    }
+    if (this.paymentStatus) {
+        const p = String(this.paymentStatus).trim().toLowerCase();
+        if (p === "pending") this.paymentStatus = "Pending";
+        else if (p === "paid") this.paymentStatus = "Paid";
+        else if (p === "failed") this.paymentStatus = "Failed";
+        else if (p === "refunded") this.paymentStatus = "Refunded";
+        else if (p === "partiallyrefunded") this.paymentStatus = "PartiallyRefunded";
+        else if (p === "refund initiated" || p === "refund_initiated") this.paymentStatus = "Refund Initiated";
+        else if (p === "notrequired" || p === "free") this.paymentStatus = "NotRequired";
+        else if (p === "notapplicable") this.paymentStatus = "NotApplicable";
+    }
+});
 
 appointmentSchema.index({
     patientId: 1,

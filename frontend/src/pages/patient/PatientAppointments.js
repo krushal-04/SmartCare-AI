@@ -27,6 +27,7 @@ import {
     CheckCircleOutlined,
     CloseOutlined,
     EventAvailableOutlined,
+    HourglassEmptyOutlined,
     ReplayOutlined,
     WarningAmberOutlined,
 } from "@mui/icons-material";
@@ -438,11 +439,30 @@ export default function PatientAppointments() {
                                     {/* STATUS & ACTIONS */}
                                     <Stack
                                         alignItems={{ xs: "flex-start", md: "flex-end" }}
-                                        spacing={1.2}
-                                        minWidth={140}
+                                        spacing={0.8}
+                                        minWidth={160}
                                     >
                                         <Chip
-                                            label={effectiveStatus}
+                                            icon={
+                                                effectiveStatus === "Pending" ? (
+                                                    <HourglassEmptyOutlined sx={{ fontSize: 16 }} />
+                                                ) : effectiveStatus === "Confirmed" ? (
+                                                    <CheckCircleOutlined sx={{ fontSize: 16 }} />
+                                                ) : undefined
+                                            }
+                                            label={
+                                                effectiveStatus === "Pending"
+                                                    ? "Pending Hospital Approval"
+                                                    : effectiveStatus === "Confirmed"
+                                                    ? "Confirmed"
+                                                    : effectiveStatus === "Completed"
+                                                    ? "Completed"
+                                                    : effectiveStatus === "Cancelled"
+                                                    ? "Cancelled"
+                                                    : effectiveStatus === "Rejected"
+                                                    ? "Rejected by Hospital"
+                                                    : effectiveStatus
+                                            }
                                             sx={{
                                                 fontWeight: 800,
                                                 fontSize: 12,
@@ -473,6 +493,25 @@ export default function PatientAppointments() {
                                                         : "#FDE68A",
                                             }}
                                         />
+
+                                        {/* Status Explanatory Context Subtext */}
+                                        <Typography fontSize={11.5} fontWeight={650} color={colors.slate} textAlign={{ xs: "left", md: "right" }}>
+                                            {effectiveStatus === "Pending" && paymentStatus === "Paid"
+                                                ? "Payment successful • Awaiting hospital review"
+                                                : effectiveStatus === "Pending" && paymentStatus !== "Paid"
+                                                ? "Awaiting hospital confirmation"
+                                                : effectiveStatus === "Confirmed" && paymentStatus === "Paid"
+                                                ? "Approved by hospital"
+                                                : effectiveStatus === "Confirmed" && paymentStatus === "NotRequired"
+                                                ? "Free consultation approved"
+                                                : effectiveStatus === "Rejected" && paymentStatus === "Paid"
+                                                ? "Rejected • 100% Refund processing"
+                                                : effectiveStatus === "Cancelled" && (paymentStatus === "Refunded" || paymentStatus === "PartiallyRefunded")
+                                                ? "Cancelled & refunded"
+                                                : effectiveStatus === "Completed"
+                                                ? "Consultation completed"
+                                                : ""}
+                                        </Typography>
 
                                         {canCancel && (
                                             <Button

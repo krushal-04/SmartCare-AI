@@ -667,19 +667,28 @@ exports.cancelAndRefund = async (req, res) => {
             });
         }
 
-        // If not paid, simply cancel without gateway refund
+        const isRejection = req.body.action === "reject" || (reason && /reject/i.test(reason));
+        const targetStatus = isRejection ? "Rejected" : "Cancelled";
+
+        // If not paid, simply cancel or reject without gateway refund
         if (appointment.paymentStatus !== "Paid") {
-            appointment.status = "Cancelled";
-            appointment.bookingStatus = "Cancelled";
-            appointment.cancellationReason = reason || "Cancelled before payment";
-            appointment.cancelledAt = new Date();
-            appointment.cancelledBy = userRole;
+            appointment.status = targetStatus;
+            appointment.bookingStatus = targetStatus;
+            if (isRejection) {
+                appointment.rejectionReason = reason || "Rejected by hospital administration";
+                appointment.rejectedAt = new Date();
+                appointment.rejectedBy = req.user._id;
+            } else {
+                appointment.cancellationReason = reason || "Cancelled before payment";
+                appointment.cancelledAt = new Date();
+                appointment.cancelledBy = userRole;
+            }
             appointment.refundStatus = "NotApplicable";
             await appointment.save();
 
             return res.status(200).json({
                 success: true,
-                message: "Unpaid appointment cancelled successfully.",
+                message: isRejection ? "Appointment rejected successfully." : "Unpaid appointment cancelled successfully.",
                 appointment,
             });
         }
@@ -1084,11 +1093,15 @@ exports.handleWebhook = async (req, res) => {
                 paymentRecord.metadata = { ...paymentRecord.metadata, webhookCaptured: paymentEntity };
                 await paymentRecord.save();
 
-                await Appointment.findByIdAndUpdate(paymentRecord.appointmentId, {
-                    paymentStatus: "Paid",
-                    status: "Confirmed",
-                    bookingStatus: "Confirmed",
-                });
+                const capturedAppt = await Appointment.findById(paymentRecord.appointmentId);
+                if (capturedAppt) {
+                    capturedAppt.paymentStatus = "Paid";
+                    if (capturedAppt.bookingStatus === "PendingPayment") {
+                        capturedAppt.status = "Pending";
+                        capturedAppt.bookingStatus = "Pending";
+                    }
+                    await capturedAppt.save();
+                }
             }
         } else if (event === "payment.failed") {
             const paymentEntity = payload.payment.entity;

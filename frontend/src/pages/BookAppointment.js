@@ -7,6 +7,7 @@ import {
     Button,
     Card,
     CardContent,
+    Chip,
     CircularProgress,
     Container,
     Divider,
@@ -500,10 +501,24 @@ export default function BookAppointment() {
                     <Box textAlign="center" mb={3}>
                         <CheckCircle sx={{ fontSize: 64, color: colors.pine, mb: 1.5 }} />
                         <Typography variant="h4" fontWeight={850} color={colors.ink}>
-                            Appointment Confirmed!
+                            Payment Successful!
                         </Typography>
-                        <Typography color={colors.slate} mt={0.5} fontSize={14.5}>
-                            Your appointment and online payment have been verified and confirmed.
+                        <Box sx={{ mt: 1, mb: 1 }}>
+                            <Chip
+                                label="Pending Hospital Approval"
+                                sx={{
+                                    bgcolor: "#FFFBEB",
+                                    color: "#B45309",
+                                    border: "1px solid #FDE68A",
+                                    fontWeight: 800,
+                                    fontSize: 13,
+                                    px: 1,
+                                    py: 1.8,
+                                }}
+                            />
+                        </Box>
+                        <Typography color={colors.slate} mt={1} fontSize={14.5}>
+                            Your consultation fee was received via Razorpay. Your appointment request has been submitted to the hospital and is awaiting administrative confirmation.
                         </Typography>
                     </Box>
 
