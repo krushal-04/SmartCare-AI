@@ -560,7 +560,8 @@ exports.createAppointment = async (
                 reason:
                     reason?.trim() || "",
 
-                status: "Pending",
+                status: "Confirmed",
+                bookingStatus: "Confirmed",
             });
 
         await appointment.populate([

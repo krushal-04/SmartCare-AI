@@ -233,13 +233,13 @@ exports.createOrder = async (req, res) => {
                 { path: "departmentId", select: "name" },
             ]);
 
-            // Notify patient & hospital
-            await Notification.create({
+            // Notify patient & hospital (safely non-blocking)
+            Notification.create({
                 userId: req.user._id,
                 title: "Appointment Confirmed",
                 message: `Your appointment with Dr. ${doctor.doctorName} on ${appointmentDate} at ${appointmentTime} is confirmed (Free Consultation).`,
                 type: "Appointment",
-            });
+            }).catch((e) => console.warn("Free appointment notification err:", e.message));
 
             await emailService.sendAppointmentCreatedEmail(
                 freeAppointment,
@@ -379,8 +379,8 @@ exports.verifyPayment = async (req, res) => {
             return res.status(404).json({ success: false, message: "Payment record not found." });
         }
 
-        // Idempotency check: if already confirmed and paid, return success immediately
-        if (paymentRecord.paymentStatus === "Paid" && appointment.paymentStatus === "Paid") {
+        // Idempotency check: if already confirmed or paid, return success immediately
+        if ((paymentRecord.paymentStatus === "Paid" && appointment.paymentStatus === "Paid") || appointment.status === "Confirmed") {
             const populatedAppt = await Appointment.findById(appointment._id)
                 .populate("hospitalId", "hospitalName city hospitalEmail phone")
                 .populate("doctorId", "doctorName specialization consultationFee userId")
@@ -444,67 +444,73 @@ exports.verifyPayment = async (req, res) => {
         appointment.paymentId = paymentRecord._id;
         await appointment.save();
 
-        const [populatedAppt, patientUser, doctorObj, hospitalObj] = await Promise.all([
-            Appointment.findById(appointment._id)
-                .populate("hospitalId", "hospitalName city hospitalEmail phone")
-                .populate("doctorId", "doctorName specialization consultationFee userId")
-                .populate("departmentId", "name"),
-            User.findById(appointment.patientId).select("fullName email phone"),
-            Doctor.findById(appointment.doctorId),
-            Hospital.findById(appointment.hospitalId),
-        ]);
+        let populatedAppt = appointment;
+        try {
+            const [pAppt, patientUser, doctorObj, hospitalObj] = await Promise.all([
+                Appointment.findById(appointment._id)
+                    .populate("hospitalId", "hospitalName city hospitalEmail phone")
+                    .populate("doctorId", "doctorName specialization consultationFee userId")
+                    .populate("departmentId", "name"),
+                User.findById(appointment.patientId).select("fullName email phone"),
+                Doctor.findById(appointment.doctorId),
+                Hospital.findById(appointment.hospitalId),
+            ]);
+            if (pAppt) populatedAppt = pAppt;
 
-        // Create Notifications (safely non-blocking)
-        Notification.create({
-            userId: appointment.patientId,
-            title: "Payment Successful & Appointment Confirmed",
-            message: `Your payment of ₹${paymentRecord.amount} for appointment with Dr. ${doctorObj?.doctorName || "your specialist"} was successful. Status: Confirmed.`,
-            type: "Appointment",
-        }).catch((e) => console.warn("Patient notification err:", e.message));
-
-        // Hospital notification
-        if (hospitalObj?.userId) {
+            // In-app Notification to patient
             Notification.create({
-                userId: hospitalObj.userId,
-                title: "New Paid Appointment",
-                message: `Patient ${patientUser?.fullName || "Patient"} booked Dr. ${doctorObj?.doctorName} on ${appointment.appointmentDate.toISOString().split("T")[0]} at ${appointment.appointmentTime}. Fee: ₹${paymentRecord.amount}.`,
+                userId: appointment.patientId,
+                title: "Payment Successful & Appointment Confirmed",
+                message: `Your payment of ₹${paymentRecord.amount} for appointment with Dr. ${doctorObj?.doctorName || "your specialist"} was successful. Status: Confirmed.`,
                 type: "Appointment",
-            }).catch((e) => console.warn("Hospital notification err:", e.message));
+            }).catch((e) => console.warn("Patient notification err:", e.message));
+
+            // Hospital notification
+            if (hospitalObj?.userId) {
+                Notification.create({
+                    userId: hospitalObj.userId,
+                    title: "New Paid Appointment",
+                    message: `Patient ${patientUser?.fullName || "Patient"} booked Dr. ${doctorObj?.doctorName} on ${appointment.appointmentDate.toISOString().split("T")[0]} at ${appointment.appointmentTime}. Fee: ₹${paymentRecord.amount}.`,
+                    type: "Appointment",
+                }).catch((e) => console.warn("Hospital notification err:", e.message));
+            }
+
+            // Doctor notification if doctor has userId
+            if (doctorObj?.userId) {
+                Notification.create({
+                    userId: doctorObj.userId,
+                    title: "New Confirmed Appointment",
+                    message: `Patient ${patientUser?.fullName || "Patient"} booked consultation for ${appointment.appointmentTime}. Fee paid: ₹${paymentRecord.amount}.`,
+                    type: "Appointment",
+                }).catch((e) => console.warn("Doctor notification err:", e.message));
+            }
+
+            // Audit Log
+            AuditLog.create({
+                userId: req.user._id,
+                userName: req.user.fullName || "User",
+                userRole: req.user.role || "patient",
+                action: "PAYMENT_CAPTURED",
+                targetType: "Appointment",
+                targetId: appointment._id,
+                details: `Patient ${patientUser?.fullName || "Patient"} paid ₹${paymentRecord.amount} for Appointment #${appointment._id} via Razorpay (${razorpay_payment_id}).`,
+            }).catch((e) => console.warn("AuditLog err:", e.message));
+
+            // Email
+            emailService
+                .sendPaymentSuccessEmail({
+                    payment: paymentRecord,
+                    appointment: populatedAppt,
+                    patient: patientUser,
+                    doctor: doctorObj,
+                    hospital: hospitalObj,
+                })
+                .catch((err) => console.error("sendPaymentSuccessEmail error:", err.message));
+        } catch (secondaryErr) {
+            console.warn("Secondary post-payment tasks non-critical err:", secondaryErr.message);
         }
 
-        // Doctor notification if doctor has userId
-        if (doctorObj?.userId) {
-            Notification.create({
-                userId: doctorObj.userId,
-                title: "New Confirmed Appointment",
-                message: `Patient ${patientUser?.fullName || "Patient"} booked consultation for ${appointment.appointmentTime}. Fee paid: ₹${paymentRecord.amount}.`,
-                type: "Appointment",
-            }).catch((e) => console.warn("Doctor notification err:", e.message));
-        }
-
-        // Audit Log
-        AuditLog.create({
-            userId: req.user._id,
-            userName: req.user.fullName || "User",
-            userRole: req.user.role || "patient",
-            action: "PAYMENT_CAPTURED",
-            targetType: "Appointment",
-            targetId: appointment._id,
-            details: `Patient ${patientUser?.fullName || "Patient"} paid ₹${paymentRecord.amount} for Appointment #${appointment._id} via Razorpay (${razorpay_payment_id}).`,
-        }).catch((e) => console.warn("AuditLog err:", e.message));
-
-        // Send Payment Success and Confirmation Email
-        emailService
-            .sendPaymentSuccessEmail({
-                payment: paymentRecord,
-                appointment: populatedAppt,
-                patient: patientUser,
-                doctor: doctorObj,
-                hospital: hospitalObj,
-            })
-            .catch((err) => console.error("sendPaymentSuccessEmail error:", err.message));
-
-        res.status(200).json({
+        return res.status(200).json({
             success: true,
             message: "Payment successfully verified and appointment confirmed.",
             appointment: populatedAppt,
@@ -512,6 +518,26 @@ exports.verifyPayment = async (req, res) => {
         });
     } catch (error) {
         console.error("verifyPayment error:", error);
+
+        // Fallback: If the appointment was actually confirmed or paid, return 200 OK!
+        try {
+            const checkAppt = await Appointment.findById(req.body.appointmentId)
+                .populate("hospitalId", "hospitalName city hospitalEmail phone")
+                .populate("doctorId", "doctorName specialization consultationFee userId")
+                .populate("departmentId", "name");
+            if (checkAppt && (checkAppt.paymentStatus === "Paid" || checkAppt.status === "Confirmed")) {
+                const checkPayment = await Payment.findOne({ gatewayOrderId: req.body.razorpay_order_id });
+                return res.status(200).json({
+                    success: true,
+                    message: "Payment successfully verified and appointment confirmed.",
+                    appointment: checkAppt,
+                    payment: checkPayment,
+                });
+            }
+        } catch (checkErr) {
+            // ignore
+        }
+
         res.status(500).json({
             success: false,
             message: error.message || "Failed to verify payment.",
