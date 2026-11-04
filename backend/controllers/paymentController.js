@@ -448,7 +448,7 @@ exports.verifyPayment = async (req, res) => {
             userId: appointment.patientId,
             title: "Payment Successful & Appointment Confirmed",
             message: `Your payment of ₹${paymentRecord.amount} for appointment with Dr. ${doctorObj?.doctorName || "your specialist"} was successful. Status: Confirmed.`,
-            type: "Payment",
+            type: "Appointment",
         }).catch((e) => console.warn("Patient notification err:", e.message));
 
         // Hospital notification
@@ -750,7 +750,7 @@ exports.cancelAndRefund = async (req, res) => {
             userId: appointment.patientId?._id || appointment.patientId,
             title: "Appointment Cancelled & Refund Initiated",
             message: `Your appointment with Dr. ${appointment.doctorId?.doctorName || "your doctor"} was cancelled. Refund of ₹${refundAmount} has been initiated to your original payment method.`,
-            type: "Refund",
+            type: "Appointment",
         }).catch((e) => console.warn("Notification err:", e.message));
 
         // Email to patient

@@ -51,6 +51,24 @@ const notificationSchema = new mongoose.Schema(
     }
 );
 
+notificationSchema.pre("validate", function () {
+    const validEnums = [
+        "Appointment",
+        "Emergency",
+        "Report",
+        "System",
+        "AI",
+        "Review",
+        "Hospital",
+        "Admin",
+        "Payment",
+        "Refund",
+    ];
+    if (this.type && !validEnums.includes(this.type)) {
+        this.type = "System";
+    }
+});
+
 notificationSchema.index({
     userId: 1,
     isRead: 1,
