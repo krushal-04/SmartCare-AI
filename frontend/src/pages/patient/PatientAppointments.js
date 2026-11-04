@@ -276,7 +276,10 @@ export default function PatientAppointments() {
                         ["Pending", "Confirmed"].includes(rawStatus);
 
                     const fee = appointment.consultationFee || appointment.doctorId?.consultationFee || 0;
-                    const paymentStatus = appointment.paymentStatus || "NotRequired";
+                    const paymentStatus =
+                        (appointment.paymentId && typeof appointment.paymentId === "object" && appointment.paymentId.paymentStatus)
+                            ? appointment.paymentId.paymentStatus
+                            : (appointment.paymentStatus || "NotRequired");
 
                     return (
                         <Card

@@ -667,7 +667,18 @@ exports.getMyAppointments = async (
                     "departmentId",
                     "departmentName"
                 )
+                .populate(
+                    "paymentId",
+                    "paymentStatus amount gatewayPaymentId refundStatus"
+                )
                 .lean();
+
+        for (const appt of appointments) {
+            if (appt.paymentId && appt.paymentId.paymentStatus === "Paid" && appt.paymentStatus !== "Paid") {
+                appt.paymentStatus = "Paid";
+                Appointment.updateOne({ _id: appt._id }, { $set: { paymentStatus: "Paid" } }).catch(() => {});
+            }
+        }
 
         res.status(200).json({
             success: true,
@@ -745,7 +756,18 @@ exports.getHospitalAppointments = async (
                     "departmentId",
                     "departmentName"
                 )
+                .populate(
+                    "paymentId",
+                    "paymentStatus amount gatewayPaymentId refundStatus"
+                )
                 .lean();
+
+        for (const appt of appointments) {
+            if (appt.paymentId && appt.paymentId.paymentStatus === "Paid" && appt.paymentStatus !== "Paid") {
+                appt.paymentStatus = "Paid";
+                Appointment.updateOne({ _id: appt._id }, { $set: { paymentStatus: "Paid" } }).catch(() => {});
+            }
+        }
 
         res.status(200).json({
             success: true,
@@ -990,8 +1012,22 @@ exports.getAllAppointments = async (req, res) => {
             .populate("patientId", "fullName email phone")
             .populate("hospitalId", "hospitalName city")
             .populate("doctorId", "doctorName specialization")
-            .populate("departmentId", "departmentName")
-            .lean();
+            .populate(
+                    "departmentId",
+                    "departmentName"
+                )
+                .populate(
+                    "paymentId",
+                    "paymentStatus amount gatewayPaymentId refundStatus"
+                )
+                .lean();
+
+        for (const appt of appointments) {
+            if (appt.paymentId && appt.paymentId.paymentStatus === "Paid" && appt.paymentStatus !== "Paid") {
+                appt.paymentStatus = "Paid";
+                Appointment.updateOne({ _id: appt._id }, { $set: { paymentStatus: "Paid" } }).catch(() => {});
+            }
+        }
 
         res.status(200).json({
             success: true,
