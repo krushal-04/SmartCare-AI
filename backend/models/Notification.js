@@ -64,7 +64,12 @@ notificationSchema.pre("validate", function () {
         "Payment",
         "Refund",
     ];
-    if (this.type && !validEnums.includes(this.type)) {
+    if (this.type) {
+        const found = validEnums.find(
+            (v) => v.toLowerCase() === String(this.type).trim().toLowerCase()
+        );
+        this.type = found || "System";
+    } else {
         this.type = "System";
     }
 });

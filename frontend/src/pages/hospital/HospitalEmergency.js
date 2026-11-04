@@ -121,10 +121,15 @@ export default function HospitalEmergency() {
                 fetchData();
             }
         } catch (err) {
-            setAlert({
-                type: "error",
-                message: err.response?.data?.message || "Failed to update emergency status.",
-            });
+            const message = err.response?.data?.message || "Failed to update emergency status.";
+            setAlert({ type: "error", message });
+
+            // A conflict usually means another dispatcher claimed the ambulance
+            // after this screen was loaded. Reload the fleet immediately so a
+            // stale vehicle is not offered again.
+            if (err.response?.status === 409) {
+                fetchData();
+            }
         } finally {
             setSubmitting(false);
         }
@@ -142,9 +147,18 @@ export default function HospitalEmergency() {
         ["Requested", "Assigned", "On The Way", "Arrived"].includes(e.status)
     ).length;
 
-    const selectableAmbulances = ambulances.filter((ambulance) =>
-        ambulance.availability || String(ambulance._id) === String(selectedAmbulanceId)
-    );
+    // `availability` alone is not sufficient: legacy/admin-edited records may
+    // still carry an emergency assignment.  Keep the current emergency's vehicle
+    // visible so its status can be updated, but never offer another held vehicle.
+    const selectableAmbulances = ambulances.filter((ambulance) => {
+        const isCurrentEmergencyAmbulance = String(ambulance._id) === String(selectedAmbulanceId);
+        const hasActiveAssignment = Boolean(ambulance.assignedEmergencyId);
+        return isCurrentEmergencyAmbulance || (
+            ambulance.availability === true &&
+            ambulance.status === "Available" &&
+            !hasActiveAssignment
+        );
+    });
 
     return (
         <DashboardLayout

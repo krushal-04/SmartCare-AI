@@ -123,15 +123,17 @@ const verifyWebhookSignature = (rawBody, signature) => {
  * Calculates refund eligibility and amount according to the CancellationPolicy
  */
 const calculateRefundDetails = async (appointment, cancelledBy = "patient") => {
-    // 1. If hospital or doctor cancels, always 100% refund
-    if (["hospital", "doctor", "admin"].includes(cancelledBy)) {
+    // 1. If hospital or doctor cancels, or if appointment is pending hospital approval, always 100% full refund
+    if (["hospital", "doctor", "admin"].includes(cancelledBy) || appointment.status === "Pending" || appointment.bookingStatus === "Pending") {
         return {
             refundPercentage: 100,
             refundAmount: appointment.consultationFee,
             nonRefundableAmount: 0,
             policyDescription:
-                "100% full refund because cancellation was initiated by the healthcare facility or doctor.",
-            tierApplied: "Hospital/Doctor/Admin Cancellation",
+                appointment.status === "Pending" || appointment.bookingStatus === "Pending"
+                    ? "100% full refund because appointment was awaiting hospital approval."
+                    : "100% full refund because cancellation was initiated by the healthcare facility or doctor.",
+            tierApplied: appointment.status === "Pending" || appointment.bookingStatus === "Pending" ? "Pending Approval Cancellation" : "Hospital/Doctor/Admin Cancellation",
             eligibleForAutoRefund: true,
         };
     }

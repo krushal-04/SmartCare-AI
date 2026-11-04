@@ -264,15 +264,16 @@ export default function PatientAppointments() {
             ) : (
                 filtered.map((appointment) => {
                     const isPassed = isAppointmentPassed(appointment.appointmentDate, appointment.appointmentTime);
-                    const effectiveStatus = (appointment.status === "Cancelled" || appointment.status === "Rejected")
-                        ? appointment.status
+                    const rawStatus = appointment.status || appointment.bookingStatus || "Pending";
+                    const effectiveStatus = (rawStatus === "Cancelled" || rawStatus === "Rejected")
+                        ? rawStatus
                         : isPassed
                         ? "Completed"
-                        : appointment.status;
+                        : rawStatus;
 
                     const canCancel =
                         !isPassed &&
-                        ["Pending", "Confirmed"].includes(appointment.status);
+                        ["Pending", "Confirmed"].includes(rawStatus);
 
                     const fee = appointment.consultationFee || appointment.doctorId?.consultationFee || 0;
                     const paymentStatus = appointment.paymentStatus || "NotRequired";

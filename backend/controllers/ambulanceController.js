@@ -204,6 +204,28 @@ const updateAmbulance = async (req, res) => {
         if (driverPhone) ambulance.driverPhone = driverPhone.trim();
         if (hospitalId !== undefined) ambulance.hospitalId = hospitalId || null;
 
+        // An ambulance must never be shown as available while it is still held by
+        // an active emergency.  This used to allow an admin edit to create a
+        // contradictory record: `availability: true` with `assignedEmergencyId`.
+        const isBeingMarkedAvailable = status === "Available" || availability === true;
+        if (isBeingMarkedAvailable && ambulance.assignedEmergencyId) {
+            const linkedEmergency = await EmergencyRequest.findById(ambulance.assignedEmergencyId)
+                .select("status")
+                .lean();
+            const activeStatuses = ["Requested", "Assigned", "On The Way", "Arrived"];
+
+            if (linkedEmergency && activeStatuses.includes(linkedEmergency.status)) {
+                return res.status(409).json({
+                    success: false,
+                    message: "This ambulance is assigned to an active emergency and cannot be marked available.",
+                });
+            }
+
+            // The linked emergency is no longer active (or was deleted), so clean
+            // up the stale assignment before returning the ambulance to the fleet.
+            ambulance.assignedEmergencyId = null;
+        }
+
         if (status) {
             ambulance.status = status;
             ambulance.availability = status === "Available";

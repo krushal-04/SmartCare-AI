@@ -352,7 +352,7 @@ exports.updateHospitalEmergencyStatus = async (req, res) => {
 
         // Assigning ambulance
         if (ambulanceId) {
-            const ambulance = await Ambulance.findById(ambulanceId);
+            const ambulance = await Ambulance.findById(ambulanceId).lean();
             if (!ambulance) {
                 return res.status(404).json({
                     success: false,
@@ -379,16 +379,69 @@ exports.updateHospitalEmergencyStatus = async (req, res) => {
                 });
             }
 
-            emergency.ambulanceId = ambulance._id;
             if (!status) {
                 emergency.status = "Assigned";
             }
 
-            ambulance.status = ["On The Way", "Arrived"].includes(emergency.status) ? "Busy" : "Assigned";
-            ambulance.availability = false;
-            ambulance.assignedEmergencyId = emergency._id;
-            await ambulance.save();
-            assignedAmbulance = ambulance;
+            // Claim the ambulance atomically.  Checking availability in JavaScript
+            // alone allows two hospitals to dispatch the same vehicle concurrently.
+            // An ambulance already assigned to this emergency is allowed for status
+            // transitions; otherwise it must be truly free.
+            const ambulanceStatus = ["On The Way", "Arrived"].includes(emergency.status)
+                ? "Busy"
+                : "Assigned";
+            const claimQuery = {
+                _id: ambulance._id,
+                $or: [
+                    { assignedEmergencyId: emergency._id },
+                    {
+                        assignedEmergencyId: null,
+                        availability: true,
+                        status: "Available",
+                    },
+                    {
+                        assignedEmergencyId: { $exists: false },
+                        availability: true,
+                        status: "Available",
+                    },
+                ],
+            };
+            const claimedAmbulance = await Ambulance.findOneAndUpdate(
+                claimQuery,
+                {
+                    $set: {
+                        status: ambulanceStatus,
+                        availability: false,
+                        assignedEmergencyId: emergency._id,
+                    },
+                },
+                { new: true }
+            );
+
+            if (!claimedAmbulance) {
+                return res.status(409).json({
+                    success: false,
+                    message: "This ambulance is no longer available or is assigned to another active emergency. Please refresh and select another vehicle.",
+                });
+            }
+
+            // When a dispatch is reassigned, release the previous vehicle only if
+            // it was held by this emergency.  This prevents stale fleet locks.
+            if (emergency.ambulanceId && String(emergency.ambulanceId) !== String(claimedAmbulance._id)) {
+                await Ambulance.updateOne(
+                    { _id: emergency.ambulanceId, assignedEmergencyId: emergency._id },
+                    {
+                        $set: {
+                            status: "Available",
+                            availability: true,
+                            assignedEmergencyId: null,
+                        },
+                    }
+                );
+            }
+
+            emergency.ambulanceId = claimedAmbulance._id;
+            assignedAmbulance = claimedAmbulance;
         } else if (emergency.ambulanceId) {
             // Existing ambulance status transition
             const amb = await Ambulance.findById(emergency.ambulanceId);
@@ -495,19 +548,78 @@ exports.adminUpdateEmergency = async (req, res) => {
             });
         }
 
+        const previousAmbulanceId = emergency.ambulanceId;
         if (hospitalId) emergency.hospitalId = hospitalId;
         if (status) emergency.status = status;
         if (hospitalNotes !== undefined) emergency.hospitalNotes = hospitalNotes.trim();
 
         if (ambulanceId) {
-            const amb = await Ambulance.findById(ambulanceId);
-            if (amb) {
-                emergency.ambulanceId = amb._id;
-                amb.status = emergency.status === "On The Way" ? "Busy" : "Assigned";
-                amb.availability = false;
-                amb.assignedEmergencyId = emergency._id;
-                await amb.save();
+            const candidate = await Ambulance.findById(ambulanceId).lean();
+            if (!candidate) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Selected ambulance not found.",
+                });
             }
+
+            const candidateStatus = ["On The Way", "Arrived"].includes(emergency.status)
+                ? "Busy"
+                : "Assigned";
+            const claimedAmbulance = await Ambulance.findOneAndUpdate(
+                {
+                    _id: candidate._id,
+                    $or: [
+                        { assignedEmergencyId: emergency._id },
+                        { assignedEmergencyId: null, availability: true, status: "Available" },
+                        { assignedEmergencyId: { $exists: false }, availability: true, status: "Available" },
+                    ],
+                },
+                {
+                    $set: {
+                        status: candidateStatus,
+                        availability: false,
+                        assignedEmergencyId: emergency._id,
+                    },
+                },
+                { new: true }
+            );
+
+            if (!claimedAmbulance) {
+                return res.status(409).json({
+                    success: false,
+                    message: "This ambulance is no longer available or is assigned to another active emergency.",
+                });
+            }
+
+            emergency.ambulanceId = claimedAmbulance._id;
+
+            if (previousAmbulanceId && String(previousAmbulanceId) !== String(claimedAmbulance._id)) {
+                await Ambulance.updateOne(
+                    { _id: previousAmbulanceId, assignedEmergencyId: emergency._id },
+                    {
+                        $set: {
+                            status: "Available",
+                            availability: true,
+                            assignedEmergencyId: null,
+                        },
+                    }
+                );
+            }
+        }
+
+        // Admin status updates must release the vehicle too; previously only the
+        // hospital workflow did this, leaving central-fleet ambulances locked.
+        if (["Completed", "Cancelled"].includes(emergency.status) && emergency.ambulanceId) {
+            await Ambulance.updateOne(
+                { _id: emergency.ambulanceId, assignedEmergencyId: emergency._id },
+                {
+                    $set: {
+                        status: "Available",
+                        availability: true,
+                        assignedEmergencyId: null,
+                    },
+                }
+            );
         }
 
         await emergency.save();

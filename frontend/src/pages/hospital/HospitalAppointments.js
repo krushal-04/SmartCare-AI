@@ -426,11 +426,12 @@ export default function HospitalAppointments() {
                                                 <TableCell>
                                                     {(() => {
                                                         const isPassed = isAppointmentPassed(appt.appointmentDate, appt.appointmentTime);
-                                                        const effectiveStatus = (appt.status === "Cancelled" || appt.status === "Rejected")
-                                                            ? appt.status
+                                                        const currentStatus = appt.status || appt.bookingStatus || "Pending";
+                                                        const effectiveStatus = (currentStatus === "Cancelled" || currentStatus === "Rejected")
+                                                            ? currentStatus
                                                             : isPassed
                                                             ? "Completed"
-                                                            : appt.status;
+                                                            : currentStatus;
 
                                                         return (
                                                             <Stack spacing={0.5} alignItems="flex-start">
@@ -451,8 +452,9 @@ export default function HospitalAppointments() {
                                                 <TableCell align="right">
                                                     {(() => {
                                                         const isPassed = isAppointmentPassed(appt.appointmentDate, appt.appointmentTime);
-                                                        const isPending = appt.status === "Pending" && !isPassed;
-                                                        const isConfirmed = appt.status === "Confirmed" && !isPassed;
+                                                        const currentStatus = appt.status || appt.bookingStatus || "Pending";
+                                                        const isPending = currentStatus === "Pending" && !isPassed;
+                                                        const isConfirmed = currentStatus === "Confirmed" && !isPassed;
 
                                                         return (
                                                             <Stack direction="row" spacing={0.5} justifyContent="flex-end">

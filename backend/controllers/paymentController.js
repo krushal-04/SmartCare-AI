@@ -388,7 +388,7 @@ exports.verifyPayment = async (req, res) => {
 
             return res.status(200).json({
                 success: true,
-                message: "Payment successfully verified and appointment confirmed.",
+                message: "Payment successfully verified and awaiting hospital approval.",
                 appointment: populatedAppt,
                 payment: paymentRecord,
             });
@@ -460,8 +460,8 @@ exports.verifyPayment = async (req, res) => {
             // In-app Notification to patient
             Notification.create({
                 userId: appointment.patientId,
-                title: "Payment Successful & Appointment Confirmed",
-                message: `Your payment of ₹${paymentRecord.amount} for appointment with Dr. ${doctorObj?.doctorName || "your specialist"} was successful. Status: Confirmed.`,
+                title: "Payment Received - Pending Hospital Approval",
+                message: `Your payment of ₹${paymentRecord.amount} for appointment with Dr. ${doctorObj?.doctorName || "your specialist"} was successful. The appointment is awaiting approval by ${hospitalObj?.hospitalName || "the hospital"}.`,
                 type: "Appointment",
             }).catch((e) => console.warn("Patient notification err:", e.message));
 
@@ -469,8 +469,8 @@ exports.verifyPayment = async (req, res) => {
             if (hospitalObj?.userId) {
                 Notification.create({
                     userId: hospitalObj.userId,
-                    title: "New Paid Appointment",
-                    message: `Patient ${patientUser?.fullName || "Patient"} booked Dr. ${doctorObj?.doctorName} on ${appointment.appointmentDate.toISOString().split("T")[0]} at ${appointment.appointmentTime}. Fee: ₹${paymentRecord.amount}.`,
+                    title: "New Appointment Awaiting Approval",
+                    message: `Patient ${patientUser?.fullName || "Patient"} booked Dr. ${doctorObj?.doctorName} for ${appointment.appointmentDate.toISOString().split("T")[0]} at ${appointment.appointmentTime}. Fee paid: ₹${paymentRecord.amount}. Please review and approve.`,
                     type: "Appointment",
                 }).catch((e) => console.warn("Hospital notification err:", e.message));
             }
@@ -479,8 +479,8 @@ exports.verifyPayment = async (req, res) => {
             if (doctorObj?.userId) {
                 Notification.create({
                     userId: doctorObj.userId,
-                    title: "New Confirmed Appointment",
-                    message: `Patient ${patientUser?.fullName || "Patient"} booked consultation for ${appointment.appointmentTime}. Fee paid: ₹${paymentRecord.amount}.`,
+                    title: "New Appointment Request",
+                    message: `Patient ${patientUser?.fullName || "Patient"} booked consultation for ${appointment.appointmentTime}. Fee paid: ₹${paymentRecord.amount}. Awaiting hospital approval.`,
                     type: "Appointment",
                 }).catch((e) => console.warn("Doctor notification err:", e.message));
             }
@@ -512,7 +512,7 @@ exports.verifyPayment = async (req, res) => {
 
         return res.status(200).json({
             success: true,
-            message: "Payment successfully verified and appointment confirmed.",
+            message: "Payment successfully verified. Appointment is awaiting hospital approval.",
             appointment: populatedAppt,
             payment: paymentRecord,
         });
@@ -525,11 +525,11 @@ exports.verifyPayment = async (req, res) => {
                 .populate("hospitalId", "hospitalName city hospitalEmail phone")
                 .populate("doctorId", "doctorName specialization consultationFee userId")
                 .populate("departmentId", "name");
-            if (checkAppt && (checkAppt.paymentStatus === "Paid" || checkAppt.status === "Confirmed")) {
+            if (checkAppt && (checkAppt.paymentStatus === "Paid" || checkAppt.status === "Confirmed" || checkAppt.bookingStatus === "Pending")) {
                 const checkPayment = await Payment.findOne({ gatewayOrderId: req.body.razorpay_order_id });
                 return res.status(200).json({
                     success: true,
-                    message: "Payment successfully verified and appointment confirmed.",
+                    message: "Payment successfully verified. Appointment is awaiting hospital approval.",
                     appointment: checkAppt,
                     payment: checkPayment,
                 });

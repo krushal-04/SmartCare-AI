@@ -354,20 +354,20 @@ export default function BookAppointment() {
                             amount,
                             razorpay_payment_id: response.razorpay_payment_id,
                         });
-                        setMessage("Payment verified! Appointment confirmed successfully.");
+                        setMessage("Payment verified! Appointment submitted for hospital approval.");
                     } catch (verifyErr) {
                         // Resilient Fallback: check if the appointment was booked/confirmed despite verification error
                         try {
                             const checkRes = await api.get(`/appointment/${appointmentId}`);
                             const savedAppt = checkRes.data?.appointment;
-                            if (savedAppt && (savedAppt.status === "Confirmed" || savedAppt.paymentStatus === "Paid")) {
+                            if (savedAppt && (savedAppt.status === "Confirmed" || savedAppt.paymentStatus === "Paid" || savedAppt.bookingStatus === "Pending")) {
                                 setBookingSuccess({
                                     appointment: savedAppt,
                                     payment: { gatewayPaymentId: response.razorpay_payment_id },
                                     amount,
                                     razorpay_payment_id: response.razorpay_payment_id,
                                 });
-                                setMessage("Payment verified! Appointment confirmed successfully.");
+                                setMessage("Payment verified! Appointment submitted for hospital approval.");
                                 setError("");
                                 return;
                             }
@@ -375,7 +375,7 @@ export default function BookAppointment() {
                             // ignore fallback error
                         }
 
-                        // If error mentions Notification validation failed, the appointment IS already confirmed in database:
+                        // If error mentions Notification validation failed, the appointment IS already saved in database:
                         if (verifyErr.response?.data?.message?.includes("Notification validation failed")) {
                             setBookingSuccess({
                                 appointment: {
@@ -385,14 +385,15 @@ export default function BookAppointment() {
                                     departmentId: departments.find((d) => String(d._id) === String(form.departmentId)) || { name: "General" },
                                     appointmentDate: form.appointmentDate,
                                     appointmentTime: form.appointmentTime,
-                                    status: "Confirmed",
+                                    status: "Pending",
+                                    bookingStatus: "Pending",
                                     paymentStatus: "Paid",
                                 },
                                 payment: { gatewayPaymentId: response.razorpay_payment_id },
                                 amount,
                                 razorpay_payment_id: response.razorpay_payment_id,
                             });
-                            setMessage("Payment verified! Appointment confirmed successfully.");
+                            setMessage("Payment verified! Appointment submitted for hospital approval.");
                             setError("");
                             return;
                         }
