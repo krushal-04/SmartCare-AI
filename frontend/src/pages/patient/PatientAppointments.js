@@ -44,13 +44,30 @@ const formatAppointmentDate = (value) =>
           }).format(new Date(value))
         : "—";
 
-const isPastDate = (value) => {
-    if (!value) return false;
-    const appointmentDate = new Date(value);
-    appointmentDate.setHours(0, 0, 0, 0);
+const isAppointmentPassed = (date, time) => {
+    if (!date) return false;
+    const now = new Date();
+    const apptDate = new Date(date);
+    apptDate.setHours(0, 0, 0, 0);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    return appointmentDate < today;
+
+    if (apptDate < today) return true;
+    if (apptDate > today) return false;
+
+    if (time && time.includes(":")) {
+        const parts = time.split(":");
+        let h = parseInt(parts[0], 10);
+        const isPM = /pm/i.test(time);
+        const isAM = /am/i.test(time);
+        let min = parseInt(parts[1], 10);
+        if (isPM && h < 12) h += 12;
+        if (isAM && h === 12) h = 0;
+        if (!isNaN(h) && !isNaN(min)) {
+            return (h * 60 + min) <= (now.getHours() * 60 + now.getMinutes());
+        }
+    }
+    return false;
 };
 
 export default function PatientAppointments() {
@@ -88,7 +105,15 @@ export default function PatientAppointments() {
 
     const filtered = useMemo(() => {
         if (statusFilter === "All") return appointments;
-        return appointments.filter((item) => item.status === statusFilter);
+        return appointments.filter((item) => {
+            const isPassed = isAppointmentPassed(item.appointmentDate, item.appointmentTime);
+            const effStatus = (item.status === "Cancelled" || item.status === "Rejected")
+                ? item.status
+                : isPassed
+                ? "Completed"
+                : (item.status === "Pending" ? "Confirmed" : item.status);
+            return effStatus === statusFilter;
+        });
     }, [appointments, statusFilter]);
 
     // Open cancellation modal and load real refund preview
@@ -237,8 +262,15 @@ export default function PatientAppointments() {
                 </Card>
             ) : (
                 filtered.map((appointment) => {
+                    const isPassed = isAppointmentPassed(appointment.appointmentDate, appointment.appointmentTime);
+                    const effectiveStatus = (appointment.status === "Cancelled" || appointment.status === "Rejected")
+                        ? appointment.status
+                        : isPassed
+                        ? "Completed"
+                        : (appointment.status === "Pending" ? "Confirmed" : appointment.status);
+
                     const canCancel =
-                        !isPastDate(appointment.appointmentDate) &&
+                        !isPassed &&
                         ["Pending", "Confirmed"].includes(appointment.status);
 
                     const fee = appointment.consultationFee || appointment.doctorId?.consultationFee || 0;
@@ -410,33 +442,33 @@ export default function PatientAppointments() {
                                         minWidth={140}
                                     >
                                         <Chip
-                                            label={appointment.status}
+                                            label={effectiveStatus}
                                             sx={{
                                                 fontWeight: 800,
                                                 fontSize: 12,
                                                 bgcolor:
-                                                    appointment.status === "Confirmed"
+                                                    effectiveStatus === "Confirmed"
                                                         ? "#ECFDF5"
-                                                        : appointment.status === "Completed"
+                                                        : effectiveStatus === "Completed"
                                                         ? "#EFF6FF"
-                                                        : appointment.status === "Cancelled" || appointment.status === "Rejected"
+                                                        : effectiveStatus === "Cancelled" || effectiveStatus === "Rejected"
                                                         ? "#FEF2F2"
                                                         : "#FFFBEB",
                                                 color:
-                                                    appointment.status === "Confirmed"
+                                                    effectiveStatus === "Confirmed"
                                                         ? "#065F46"
-                                                        : appointment.status === "Completed"
+                                                        : effectiveStatus === "Completed"
                                                         ? "#1D4ED8"
-                                                        : appointment.status === "Cancelled" || appointment.status === "Rejected"
+                                                        : effectiveStatus === "Cancelled" || effectiveStatus === "Rejected"
                                                         ? "#B91C1C"
                                                         : "#B45309",
                                                 border: "1px solid",
                                                 borderColor:
-                                                    appointment.status === "Confirmed"
+                                                    effectiveStatus === "Confirmed"
                                                         ? "#A7F3D0"
-                                                        : appointment.status === "Completed"
+                                                        : effectiveStatus === "Completed"
                                                         ? "#BFDBFE"
-                                                        : appointment.status === "Cancelled" || appointment.status === "Rejected"
+                                                        : effectiveStatus === "Cancelled" || effectiveStatus === "Rejected"
                                                         ? "#FECACA"
                                                         : "#FDE68A",
                                             }}

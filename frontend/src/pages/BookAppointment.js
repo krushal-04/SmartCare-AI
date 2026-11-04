@@ -764,40 +764,55 @@ export default function BookAppointment() {
                                                     "No slots available on this date for the selected doctor. Please select another date."}
                                             </Alert>
                                         ) : (
-                                            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-                                                {slots.map((slot) => {
-                                                    const isSelected = form.appointmentTime === slot.time;
-                                                    return (
-                                                        <Button
-                                                            key={slot.time}
-                                                            variant={isSelected ? "contained" : "outlined"}
-                                                            disabled={!slot.available}
-                                                            onClick={() =>
-                                                                setForm((prev) => ({
-                                                                    ...prev,
-                                                                    appointmentTime: slot.time,
-                                                                }))
-                                                            }
-                                                            startIcon={<AccessTimeOutlined fontSize="small" />}
-                                                            sx={{
-                                                                borderRadius: 2.2,
-                                                                px: 2,
-                                                                py: 1,
-                                                                fontSize: 13,
-                                                                fontWeight: isSelected ? 800 : 600,
-                                                                bgcolor: isSelected ? colors.amber : "transparent",
-                                                                color: isSelected ? colors.ink : colors.pine,
-                                                                borderColor: isSelected ? colors.amber : colors.hairline,
-                                                                "&:hover": {
-                                                                    bgcolor: isSelected ? colors.amberDeep : colors.pineSoft,
-                                                                    borderColor: colors.pine,
-                                                                },
-                                                            }}
-                                                        >
-                                                            {slot.time}
-                                                        </Button>
-                                                    );
-                                                })}
+                                            <Box>
+                                                {slotNotice && (
+                                                    <Alert severity="warning" sx={{ borderRadius: 2, mb: 1.5, fontWeight: 650 }}>
+                                                        {slotNotice}
+                                                    </Alert>
+                                                )}
+                                                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+                                                    {slots.map((slot) => {
+                                                        const isSelected = form.appointmentTime === slot.time;
+                                                        return (
+                                                            <Button
+                                                                key={slot.time}
+                                                                variant={isSelected ? "contained" : "outlined"}
+                                                                disabled={!slot.available}
+                                                                onClick={() =>
+                                                                    setForm((prev) => ({
+                                                                        ...prev,
+                                                                        appointmentTime: slot.time,
+                                                                    }))
+                                                                }
+                                                                startIcon={<AccessTimeOutlined fontSize="small" />}
+                                                                sx={{
+                                                                    borderRadius: 2.2,
+                                                                    px: 2,
+                                                                    py: 1,
+                                                                    fontSize: 13,
+                                                                    fontWeight: isSelected ? 800 : 600,
+                                                                    bgcolor: isSelected
+                                                                        ? colors.amber
+                                                                        : !slot.available
+                                                                        ? "#F1F5F9"
+                                                                        : "transparent",
+                                                                    color: isSelected
+                                                                        ? colors.ink
+                                                                        : !slot.available
+                                                                        ? "#94A3B8"
+                                                                        : colors.pine,
+                                                                    borderColor: isSelected ? colors.amber : colors.hairline,
+                                                                    "&:hover": {
+                                                                        bgcolor: isSelected ? colors.amberDeep : colors.pineSoft,
+                                                                        borderColor: colors.pine,
+                                                                    },
+                                                                }}
+                                                            >
+                                                                {slot.time} {slot.isPast ? "(Passed)" : !slot.available ? "(Booked)" : ""}
+                                                            </Button>
+                                                        );
+                                                    })}
+                                                </Box>
                                             </Box>
                                         )}
                                     </Box>

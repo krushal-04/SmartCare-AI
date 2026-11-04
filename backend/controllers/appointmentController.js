@@ -254,6 +254,10 @@ exports.getAvailableSlots = async (
             )
         );
 
+        const isToday = date === todayString;
+        const now = new Date();
+        const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
         const slots = [];
 
         for (
@@ -261,19 +265,27 @@ exports.getAvailableSlots = async (
             current + duration <= endMinutes;
             current += duration
         ) {
-            const time =
-                toTimeString(current);
+            const time = toTimeString(current);
+            const isPassedTime = isToday && current <= currentMinutes;
+            const isBooked = bookedTimes.has(time);
 
             slots.push({
                 time,
-                available:
-                    !bookedTimes.has(time),
+                available: !isBooked && !isPassedTime,
+                isPast: isPassedTime,
             });
+        }
+
+        const availableCount = slots.filter((s) => s.available).length;
+        let noticeMsg = "";
+        if (isToday && availableCount === 0) {
+            noticeMsg = "All consultation slots for today have already passed. Please select tomorrow or a future date.";
         }
 
         res.status(200).json({
             success: true,
             slots,
+            message: noticeMsg,
         });
     } catch (error) {
         console.error(

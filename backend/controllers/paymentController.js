@@ -175,6 +175,17 @@ exports.createOrder = async (req, res) => {
             });
         }
 
+        if (appointmentDate === todayString) {
+            const now = new Date();
+            const currentMinutes = now.getHours() * 60 + now.getMinutes();
+            if (requestedMinutes <= currentMinutes) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Cannot book an appointment for a time slot that has already passed today.",
+                });
+            }
+        }
+
         // Slot conflict check (excluding Cancelled or Rejected)
         const { start, end } = getDateRange(appointmentDate);
         const existing = await Appointment.findOne({
