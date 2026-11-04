@@ -111,7 +111,7 @@ export default function PatientAppointments() {
                 ? item.status
                 : isPassed
                 ? "Completed"
-                : (item.status === "Pending" ? "Confirmed" : item.status);
+                : item.status;
             return effStatus === statusFilter;
         });
     }, [appointments, statusFilter]);
@@ -267,7 +267,7 @@ export default function PatientAppointments() {
                         ? appointment.status
                         : isPassed
                         ? "Completed"
-                        : (appointment.status === "Pending" ? "Confirmed" : appointment.status);
+                        : appointment.status;
 
                     const canCancel =
                         !isPassed &&

@@ -29,6 +29,7 @@ import {
     Alert,
 } from "@mui/material";
 import {
+    CheckCircleOutlined,
     CancelOutlined,
     InfoOutlined,
     SearchRounded,
@@ -127,7 +128,50 @@ export default function HospitalAppointments() {
         setAlert({ type: "", message: "" });
 
         try {
-            if (actionType === "cancel") {
+            if (actionType === "confirm") {
+                const res = await api.put(`/appointment/${selectedAppointment._id}/status`, {
+                    status: "Confirmed",
+                    notes,
+                });
+                if (res.data.success) {
+                    setAlert({
+                        type: "success",
+                        message: "Appointment successfully confirmed! Patient notified via email and in-app alert.",
+                    });
+                    setSelectedAppointment(null);
+                    fetchAppointments();
+                    return;
+                }
+            } else if (actionType === "reject") {
+                if (selectedAppointment.paymentStatus === "Paid") {
+                    const refundRes = await api.post(`/payment/cancel-and-refund/${selectedAppointment._id}`, {
+                        reason: notes || "Rejected by hospital administration",
+                    });
+                    if (refundRes.data.success) {
+                        setAlert({
+                            type: "success",
+                            message: `Appointment rejected and 100% refund of ₹${selectedAppointment.consultationFee || 0} initiated via Razorpay.`,
+                        });
+                        setSelectedAppointment(null);
+                        fetchAppointments();
+                        return;
+                    }
+                } else {
+                    const res = await api.put(`/appointment/${selectedAppointment._id}/status`, {
+                        status: "Rejected",
+                        notes,
+                    });
+                    if (res.data.success) {
+                        setAlert({
+                            type: "success",
+                            message: "Appointment rejected successfully.",
+                        });
+                        setSelectedAppointment(null);
+                        fetchAppointments();
+                        return;
+                    }
+                }
+            } else if (actionType === "cancel") {
                 if (selectedAppointment.paymentStatus === "Paid") {
                     const refundRes = await api.post(`/payment/cancel-and-refund/${selectedAppointment._id}`, {
                         reason: notes || "Cancelled by hospital administration",
@@ -386,7 +430,7 @@ export default function HospitalAppointments() {
                                                             ? appt.status
                                                             : isPassed
                                                             ? "Completed"
-                                                            : (appt.status === "Pending" ? "Confirmed" : appt.status);
+                                                            : appt.status;
 
                                                         return (
                                                             <Stack spacing={0.5} alignItems="flex-start">
@@ -407,11 +451,35 @@ export default function HospitalAppointments() {
                                                 <TableCell align="right">
                                                     {(() => {
                                                         const isPassed = isAppointmentPassed(appt.appointmentDate, appt.appointmentTime);
-                                                        const canCancel = (appt.status === "Confirmed" || appt.status === "Pending") && !isPassed;
+                                                        const isPending = appt.status === "Pending" && !isPassed;
+                                                        const isConfirmed = appt.status === "Confirmed" && !isPassed;
 
                                                         return (
                                                             <Stack direction="row" spacing={0.5} justifyContent="flex-end">
-                                                                {canCancel && (
+                                                                {isPending && (
+                                                                    <>
+                                                                        <Tooltip title="Confirm & Approve Appointment">
+                                                                            <IconButton
+                                                                                size="small"
+                                                                                color="success"
+                                                                                onClick={() => handleOpenAction(appt, "confirm")}
+                                                                            >
+                                                                                <CheckCircleOutlined fontSize="small" />
+                                                                            </IconButton>
+                                                                        </Tooltip>
+                                                                        <Tooltip title="Reject Appointment">
+                                                                            <IconButton
+                                                                                size="small"
+                                                                                color="error"
+                                                                                onClick={() => handleOpenAction(appt, "reject")}
+                                                                            >
+                                                                                <CancelOutlined fontSize="small" />
+                                                                            </IconButton>
+                                                                        </Tooltip>
+                                                                    </>
+                                                                )}
+
+                                                                {isConfirmed && (
                                                                     <Tooltip title="Cancel Appointment">
                                                                         <IconButton
                                                                             size="small"
@@ -449,7 +517,13 @@ export default function HospitalAppointments() {
             {/* Action Confirmation & Notes Dialog */}
             <Dialog open={Boolean(selectedAppointment)} onClose={() => setSelectedAppointment(null)} maxWidth="sm" fullWidth>
                 <DialogTitle sx={{ fontWeight: 800 }}>
-                    {actionType === "cancel" ? "Cancel Appointment" : "Appointment Details & Clinical Notes"}
+                    {actionType === "confirm"
+                        ? "Confirm & Approve Appointment"
+                        : actionType === "reject"
+                        ? "Reject Appointment"
+                        : actionType === "cancel"
+                        ? "Cancel Appointment"
+                        : "Appointment Details & Clinical Notes"}
                 </DialogTitle>
                 <DialogContent dividers>
                     {selectedAppointment && (
@@ -469,16 +543,27 @@ export default function HospitalAppointments() {
                                 </Typography>
                             </Box>
 
-                            {actionType === "cancel" ? (
+                            {(actionType === "cancel" || actionType === "reject") ? (
                                 <TextField
                                     fullWidth
                                     multiline
                                     rows={3}
-                                    label="Reason for Cancellation"
-                                    placeholder="Explain why this appointment is being cancelled..."
+                                    label={actionType === "reject" ? "Reason for Rejection" : "Reason for Cancellation"}
+                                    placeholder="Explain why this appointment cannot be accepted..."
                                     value={notes}
                                     onChange={(e) => setNotes(e.target.value)}
-                                    helperText={selectedAppointment.paymentStatus === "Paid" ? "100% refund will be initiated to the patient per hospital cancellation policy." : ""}
+                                    helperText={selectedAppointment.paymentStatus === "Paid" ? "100% refund will be initiated to the patient." : ""}
+                                />
+                            ) : actionType === "confirm" ? (
+                                <TextField
+                                    fullWidth
+                                    multiline
+                                    rows={3}
+                                    label="Instructions for Patient (Optional)"
+                                    placeholder="e.g. Please bring prior medical reports, arrive 10 minutes early..."
+                                    value={notes}
+                                    onChange={(e) => setNotes(e.target.value)}
+                                    helperText="These instructions will be visible to the patient upon confirmation."
                                 />
                             ) : (
                                 <TextField
@@ -502,12 +587,22 @@ export default function HospitalAppointments() {
                     <Button
                         variant="contained"
                         disabled={actionSubmitting}
-                        color={actionType === "cancel" ? "error" : "primary"}
+                        color={
+                            actionType === "confirm"
+                                ? "success"
+                                : actionType === "reject" || actionType === "cancel"
+                                ? "error"
+                                : "primary"
+                        }
                         onClick={handleExecuteAction}
                         sx={{ fontWeight: 800, textTransform: "none", px: 3, borderRadius: 2 }}
                     >
                         {actionSubmitting
                             ? "Processing..."
+                            : actionType === "confirm"
+                            ? "Confirm Appointment"
+                            : actionType === "reject"
+                            ? "Confirm Rejection"
                             : actionType === "cancel"
                             ? "Confirm Cancellation"
                             : "Save Clinical Notes"}

@@ -220,8 +220,8 @@ exports.createOrder = async (req, res) => {
                 appointmentDate: parseAppointmentDate(appointmentDate),
                 appointmentTime,
                 reason: reason?.trim() || "",
-                status: "Confirmed",
-                bookingStatus: "Confirmed",
+                status: "Pending",
+                bookingStatus: "Pending",
                 paymentStatus: "NotRequired",
                 paymentRequired: false,
                 consultationFee: 0,
@@ -437,10 +437,10 @@ exports.verifyPayment = async (req, res) => {
         }
         await paymentRecord.save();
 
-        // Update Appointment record
+        // Update Appointment record (Paid but Pending Hospital Approval)
         appointment.paymentStatus = "Paid";
-        appointment.status = "Confirmed";
-        appointment.bookingStatus = "Confirmed";
+        appointment.status = "Pending";
+        appointment.bookingStatus = "Pending";
         appointment.paymentId = paymentRecord._id;
         await appointment.save();
 
