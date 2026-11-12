@@ -184,8 +184,8 @@ export default function Hospitals() {
                         />
                     </Box>
 
-                    <Box sx={{ display: "flex", justifyContent: { xs: "flex-start", md: "flex-end" } }}>
-                        <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" gap={1}>
+                    <Box sx={{ display: "flex", justifyContent: { xs: "flex-start", md: "flex-end" }, minWidth: 0 }}>
+                        <Stack direction={{ xs: "column", sm: "row" }} spacing={1} alignItems={{ xs: "stretch", sm: "center" }} flexWrap="wrap" gap={1} sx={{ width: { xs: "100%", md: "auto" } }}>
                             <Button
                                 variant={userLocation ? "contained" : "outlined"}
                                 color={userLocation ? "success" : "primary"}
@@ -198,6 +198,7 @@ export default function Hospitals() {
                                     py: 0.9,
                                     fontWeight: 700,
                                     flexShrink: 0,
+                                    width: { xs: "100%", sm: "auto" },
                                 }}
                             >
                                 {geoLoading
@@ -213,7 +214,7 @@ export default function Hospitals() {
                                 color={filterEmergency ? "error" : "default"}
                                 variant={filterEmergency ? "filled" : "outlined"}
                                 onClick={() => setFilterEmergency((prev) => !prev)}
-                                sx={{ fontWeight: 700, borderRadius: 2 }}
+                                sx={{ fontWeight: 700, borderRadius: 2, width: { xs: "100%", sm: "auto" } }}
                             />
                         </Stack>
                     </Box>
@@ -252,7 +253,7 @@ export default function Hospitals() {
                 >
                     {/* LEFT / TOP: INTERACTIVE MAP */}
                     <Box sx={{ width: "100%", position: { lg: "sticky" }, top: { lg: 88 } }}>
-                        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1.5 }}>
+                        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: { xs: "flex-start", sm: "center" }, flexDirection: { xs: "column", sm: "row" }, gap: 0.5, mb: 1.5 }}>
                             <Typography fontSize={17} fontWeight={800} color="#0F172A">
                                 Interactive Hospital Locator
                             </Typography>
@@ -336,9 +337,9 @@ export default function Hospitals() {
                                                 }}
                                             />
 
-                                            <CardContent sx={{ p: 2.5, flex: 1, display: "flex", flexDirection: "column" }}>
+                                            <CardContent sx={{ p: { xs: 2, sm: 2.5 }, minWidth: 0, flex: 1, display: "flex", flexDirection: "column" }}>
                                                 <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 1 }}>
-                                                    <Box>
+                                                    <Box sx={{ minWidth: 0 }}>
                                                         <Typography fontSize={18} fontWeight={800} color="#0F172A">
                                                             {hospital.hospitalName}
                                                         </Typography>
@@ -361,7 +362,7 @@ export default function Hospitals() {
                                                 </Box>
 
                                                 {hospital.address && (
-                                                    <Typography fontSize={12.5} color="text.secondary" mt={1} noWrap>
+                                                    <Typography fontSize={12.5} color="text.secondary" mt={1}>
                                                         {hospital.address}
                                                     </Typography>
                                                 )}

@@ -529,34 +529,36 @@ const sendAppointmentRescheduledEmail = async ({
     const docName = doctor?.doctorName || "Doctor";
     const hospName = hospital?.hospitalName || "Medical Facility";
 
-    const subject = `SmartCare AI - Appointment Rescheduled with Dr. ${docName}`;
+    const subject = `SmartCare AI - Rescheduling Requested with Dr. ${docName} (Pending Approval)`;
     const text = `Dear ${pName},
 
-Your appointment with Dr. ${docName} at ${hospName} has been successfully rescheduled.
+Your request to reschedule your consultation with Dr. ${docName} at ${hospName} has been submitted and is currently PENDING HOSPITAL APPROVAL.
 
 Previous Slot: ${oldDateStr} at ${oldTimeStr}
-New Confirmed Slot: ${newDateStr} at ${newTimeStr}
+New Requested Slot: ${newDateStr} at ${newTimeStr}
 ${reason ? `Reason: ${reason}` : ""}
 
-Please arrive 15 minutes prior to your newly scheduled consultation slot.
+Your consultation fee remains fully paid and applied to this booking. No extra payment is required.
 
-View your updated appointments anytime at http://localhost:3000/patient/appointments
+Once the hospital reviews and confirms your updated time slot, you will receive an official confirmation notification.
+
+View your appointments anytime at http://localhost:3000/patient/appointments
 
 Best regards,
 SmartCare AI Team`;
 
     const html = buildHtmlEmail({
-        title: "Appointment Rescheduled",
+        title: "Appointment Rescheduling Requested",
         subtitle: `Dr. ${docName} • ${hospName}`,
-        statusText: "Rescheduled",
-        statusColor: "teal",
+        statusText: "Pending Hospital Approval",
+        statusColor: "amber",
         contentHtml: `
           <p>Dear <strong>${pName}</strong>,</p>
-          <p>Your appointment with <strong>Dr. ${docName}</strong> at <strong>${hospName}</strong> has been successfully rescheduled.</p>
+          <p>Your request to reschedule your consultation with <strong>Dr. ${docName}</strong> at <strong>${hospName}</strong> has been received and is currently <strong>Pending Hospital Approval</strong>.</p>
 
-          <div style="background-color: #F0FDF4; border-radius: 12px; padding: 20px; border: 1px solid #BBF7D0; margin: 20px 0;">
-            <p style="margin: 0 0 10px 0; font-size: 14px; color: #166534;">
-              <strong>New Confirmed Slot:</strong> <span style="font-size: 16px; font-weight: 800; color: #0D9488;">${newDateStr} at ${newTimeStr}</span>
+          <div style="background-color: #FFFBEB; border-radius: 12px; padding: 20px; border: 1px solid #FDE68A; margin: 20px 0;">
+            <p style="margin: 0 0 10px 0; font-size: 14px; color: #92400E;">
+              <strong>New Requested Slot:</strong> <span style="font-size: 16px; font-weight: 800; color: #D97706;">${newDateStr} at ${newTimeStr}</span>
             </p>
             <p style="margin: 0 0 8px 0; font-size: 13px; color: #64748B;">
               <strong>Previous Slot:</strong> <span style="text-decoration: line-through;">${oldDateStr} at ${oldTimeStr}</span>
@@ -564,8 +566,8 @@ SmartCare AI Team`;
             ${reason ? `<p style="margin: 0; font-size: 13px; color: #475569;"><strong>Reason:</strong> ${reason}</p>` : ""}
           </div>
 
-          <p>Your existing consultation payment remains fully applied to this new appointment slot. No extra payment is required.</p>
-          <p>Please arrive 15 minutes prior to your allocated slot.</p>
+          <p>Your existing consultation payment remains fully applied to this new appointment slot. No additional payment is required.</p>
+          <p>The hospital administration will review your slot shortly. You will receive an immediate confirmation update once approved.</p>
         `,
         actionButton: {
             label: "View My Appointments",

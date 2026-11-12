@@ -929,20 +929,25 @@ exports.updateAppointmentStatus = async (
             }
         }
 
-                appointment.status = status;
+                        appointment.status = status;
         appointment.bookingStatus = status;
 
         if (status === "Confirmed") {
             appointment.approvedAt = new Date();
             appointment.approvedBy = req.user._id;
+            scheduleRemindersForAppointment(appointment).catch((e) =>
+                console.warn("[ReminderService] Approval reminder error:", e.message)
+            );
         } else if (status === "Rejected") {
             appointment.rejectedAt = new Date();
             appointment.rejectedBy = req.user._id;
             if (notes) appointment.rejectionReason = notes.trim();
+            cancelRemindersForAppointment(appointment._id, "Appointment rejected by hospital").catch(() => {});
         } else if (status === "Cancelled") {
             appointment.cancelledAt = new Date();
             appointment.cancelledBy = req.user.role;
             if (notes) appointment.cancellationReason = notes.trim();
+            cancelRemindersForAppointment(appointment._id, "Appointment cancelled").catch(() => {});
         }
 
         if (notes !== undefined) {
@@ -1549,13 +1554,17 @@ exports.rescheduleAppointment = async (req, res) => {
             rescheduledByRole: "patient",
             reason: reason?.trim() || "Patient requested rescheduling",
             previousStatus: appointment.status,
-            updatedStatus: appointment.status,
+            updatedStatus: "Pending",
             rescheduledAt: new Date(),
         };
 
-        // Update appointment atomically: old slot is released, new slot is booked
+        // Update appointment atomically: slot updated and set to Pending for hospital approval
         appointment.appointmentDate = parseAppointmentDate(newDate);
         appointment.appointmentTime = newTime;
+        appointment.status = "Pending";
+        appointment.bookingStatus = "Pending";
+        appointment.approvedAt = undefined;
+        appointment.approvedBy = undefined;
         appointment.isRescheduled = true;
         appointment.rescheduledAt = new Date();
         appointment.rescheduleCount = (appointment.rescheduleCount || 0) + 1;
@@ -1563,13 +1572,8 @@ exports.rescheduleAppointment = async (req, res) => {
 
         await appointment.save();
 
-        // Cancel old reminders and schedule new reminders for the updated date/time
-        await cancelRemindersForAppointment(appointment._id, "Rescheduled to new date/time").catch(() => {});
-        if (appointment.status === "Confirmed" || appointment.bookingStatus === "Confirmed") {
-            await scheduleRemindersForAppointment(appointment).catch((e) =>
-                console.warn("[ReminderService] Reschedule reminder err:", e.message)
-            );
-        }
+        // Cancel previous reminders for the old slot; new reminders schedule after hospital approves
+        await cancelRemindersForAppointment(appointment._id, "Rescheduled to new slot - awaiting hospital confirmation").catch(() => {});
 
         // Populate updated appointment for response and notification
         const populatedAppt = await Appointment.findById(appointment._id)
@@ -1597,8 +1601,8 @@ exports.rescheduleAppointment = async (req, res) => {
         // 1. In-app notification to Patient
         Notification.create({
             userId: req.user._id,
-            title: "Appointment Rescheduled",
-            message: `Your appointment with Dr. ${docName} at ${hospName} has been rescheduled to ${newDateFormatted} at ${newStartTime}.`,
+            title: "Appointment Rescheduled - Awaiting Hospital Approval",
+            message: `Your appointment with Dr. ${docName} at ${hospName} has been rescheduled to ${newDateFormatted} at ${newStartTime} and is currently pending hospital approval.`,
             type: "Appointment",
             relatedId: appointment._id,
         }).catch((e) => console.warn("Patient reschedule notification err:", e.message));
@@ -1607,8 +1611,8 @@ exports.rescheduleAppointment = async (req, res) => {
         if (populatedAppt.hospitalId?.userId) {
             Notification.create({
                 userId: populatedAppt.hospitalId.userId,
-                title: "Appointment Rescheduled by Patient",
-                message: `Patient ${patientName} rescheduled consultation with Dr. ${docName} from ${oldDateFormatted} (${oldStartTime}) to ${newDateFormatted} (${newStartTime}).`,
+                title: "Rescheduled Appointment Pending Approval",
+                message: `Patient ${patientName} requested to reschedule consultation with Dr. ${docName} to ${newDateFormatted} (${newStartTime}). Please review and approve in appointment operations.`,
                 type: "Appointment",
                 relatedId: appointment._id,
             }).catch((e) => console.warn("Hospital reschedule notification err:", e.message));
@@ -1618,8 +1622,8 @@ exports.rescheduleAppointment = async (req, res) => {
         if (populatedAppt.doctorId?.userId) {
             Notification.create({
                 userId: populatedAppt.doctorId.userId,
-                title: "Appointment Rescheduled by Patient",
-                message: `Patient ${patientName} rescheduled consultation to ${newDateFormatted} at ${newStartTime}.`,
+                title: "Appointment Rescheduled - Pending Hospital Approval",
+                message: `Patient ${patientName} requested rescheduling consultation with you to ${newDateFormatted} at ${newStartTime} (Pending Hospital Confirmation).`,
                 type: "Appointment",
                 relatedId: appointment._id,
             }).catch((e) => console.warn("Doctor reschedule notification err:", e.message));
@@ -1653,7 +1657,7 @@ exports.rescheduleAppointment = async (req, res) => {
 
         return res.status(200).json({
             success: true,
-            message: "Your appointment has been successfully rescheduled.",
+            message: "Your appointment has been successfully rescheduled and is now pending hospital approval.",
             appointment: populatedAppt,
         });
     } catch (error) {

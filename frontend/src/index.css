@@ -30,13 +30,58 @@ body,
 
 img, svg { max-width: 100%; }
 
+/* Keep flexible MUI children from forcing their parent wider than the viewport. */
+#root, main, .MuiBox-root, .MuiStack-root, .MuiGrid-root { min-width: 0; }
+
+/* Long identifiers, clinical notes and generated AI responses must wrap instead of
+   creating an accidental horizontal scroll area. */
+.MuiTypography-root,
+.MuiListItemText-primary,
+.MuiListItemText-secondary,
+.MuiAlert-message {
+    overflow-wrap: anywhere;
+}
+
+/* Tables stay usable on small screens without expanding the page itself. */
+.MuiTableContainer-root {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.MuiTableContainer-root .MuiTable-root { min-width: max-content; }
+
+/* Dialog content scrolls internally on short mobile viewports. */
+.MuiDialog-paper {
+    max-height: calc(100dvh - 32px);
+}
+
+.MuiDialogContent-root {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+/* A number of management pages use compact filter controls. On phones those
+   controls must yield to the available column rather than preserve desktop
+   minimum widths. */
+@media (max-width: 599.95px) {
+    .MuiFormControl-root { min-width: 0 !important; }
+    .MuiPagination-ul { justify-content: center; flex-wrap: wrap; }
+    .MuiCardContent-root { padding: 16px; }
+    .MuiMenu-paper { max-width: calc(100vw - 32px); }
+    .leaflet-popup { max-width: calc(100vw - 28px) !important; }
+    .medical-map-popup { padding: 12px 14px; }
+    .popup-actions { flex-wrap: wrap; }
+    .popup-btn { min-width: 0; }
+}
+
 @media (max-width: 600px) {
     body { font-size: 14px; }
     .MuiTableContainer-root { max-width: 100%; }
 }
 
 body {
-    overflow-x: hidden;
     background: #F5F7FA;
     color: #172B4D;
     font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;

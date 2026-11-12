@@ -687,7 +687,7 @@ export default function BookAppointment() {
                                         >
                                             <MedicalServicesOutlined />
                                         </Avatar>
-                                        <Box sx={{ flex: 1, minWidth: 200 }}>
+                                        <Box sx={{ flex: 1, minWidth: 0 }}>
                                             <Typography fontWeight={800} fontSize={16} color={colors.ink}>
                                                 {getCleanDoctorName(selectedDoctor.doctorName)}
                                             </Typography>

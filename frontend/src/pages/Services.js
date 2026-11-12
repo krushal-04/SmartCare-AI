@@ -238,7 +238,7 @@ export default function Services() {
                 }}
             >
                 <Container maxWidth="lg">
-                    <Box sx={{ display: "grid", gridTemplateColumns: { xs: "repeat(2, 1fr)", md: "repeat(4, 1fr)" }, gap: 2 }}>
+                    <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))", md: "repeat(4, minmax(0, 1fr))" }, gap: 2 }}>
                         <Box>
                             <Stack direction="row" spacing={1.5} alignItems="center">
                                 <SpeedOutlined sx={{ color: "#DC2626", fontSize: 26 }} />

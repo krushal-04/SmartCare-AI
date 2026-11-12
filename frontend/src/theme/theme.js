@@ -97,6 +97,16 @@ const theme = createTheme({
                 },
             },
         },
+        MuiContainer: {
+            styleOverrides: {
+                root: {
+                    "@media (max-width:599.95px)": {
+                        paddingLeft: 16,
+                        paddingRight: 16,
+                    },
+                },
+            },
+        },
         MuiCard: {
             styleOverrides: {
                 root: {
@@ -114,12 +124,57 @@ const theme = createTheme({
         },
         MuiDialog: {
             styleOverrides: {
-                paper: { margin: 16, borderRadius: 16 },
+                paper: {
+                    margin: 16,
+                    borderRadius: 16,
+                    width: "calc(100% - 32px)",
+                    maxHeight: "calc(100dvh - 32px)",
+                    display: "flex",
+                    flexDirection: "column",
+                },
             },
         },
-        MuiDialogTitle: { styleOverrides: { root: { padding: "20px 24px 12px", fontWeight: 700, fontSize: "1.125rem" } } },
-        MuiDialogContent: { styleOverrides: { root: { padding: "12px 24px 20px" } } },
-        MuiDialogActions: { styleOverrides: { root: { padding: "12px 24px 20px", gap: 8 } } },
+        MuiDialogTitle: { styleOverrides: { root: { padding: "20px 24px 12px", fontWeight: 700, fontSize: "1.125rem", "@media (max-width:599.95px)": { padding: "16px 18px 10px", fontSize: "1rem" } } } },
+        MuiDialogContent: { styleOverrides: { root: { padding: "12px 24px 20px", overflowY: "auto", "@media (max-width:599.95px)": { padding: "10px 18px 16px" } } } },
+        MuiDialogActions: { styleOverrides: { root: { padding: "12px 24px 20px", gap: 8, flexWrap: "wrap", "@media (max-width:599.95px)": { padding: "10px 18px 16px", "& .MuiButton-root": { flex: "1 1 auto" } } } } },
+        MuiDrawer: {
+            styleOverrides: {
+                paper: {
+                    "@media (max-width:599.95px)": {
+                        maxWidth: "calc(100vw - 24px)",
+                    },
+                },
+            },
+        },
+        MuiMenu: {
+            styleOverrides: {
+                paper: {
+                    "@media (max-width:599.95px)": {
+                        maxWidth: "calc(100vw - 24px)",
+                    },
+                },
+            },
+        },
+        MuiTabs: {
+            styleOverrides: {
+                root: {
+                    maxWidth: "100%",
+                    "@media (max-width:599.95px)": { minHeight: 42 },
+                },
+            },
+        },
+        MuiTab: {
+            styleOverrides: {
+                root: {
+                    "@media (max-width:599.95px)": {
+                        minHeight: 42,
+                        minWidth: "auto",
+                        padding: "8px 12px",
+                        fontSize: "0.75rem",
+                    },
+                },
+            },
+        },
         MuiChip: {
             styleOverrides: {
                 root: {
@@ -147,11 +202,11 @@ const theme = createTheme({
             },
         },
         MuiInputLabel: { styleOverrides: { root: { fontSize: "0.875rem", fontWeight: 600, color: colors.inkSoft } } },
-        MuiTableContainer: { styleOverrides: { root: { border: `1px solid ${colors.hairline}`, borderRadius: 12 } } },
+        MuiTableContainer: { styleOverrides: { root: { border: `1px solid ${colors.hairline}`, borderRadius: 12, maxWidth: "100%", overflowX: "auto", WebkitOverflowScrolling: "touch" } } },
         MuiTableHead: { styleOverrides: { root: { backgroundColor: "#F1F5F9" } } },
         MuiTableCell: {
             styleOverrides: {
-                root: { borderColor: colors.hairline, padding: "12px 16px", fontSize: "0.875rem", color: colors.ink },
+                root: { borderColor: colors.hairline, padding: "12px 16px", fontSize: "0.875rem", color: colors.ink, whiteSpace: "normal", "@media (max-width:599.95px)": { padding: "10px 12px", fontSize: "0.8125rem" } },
                 head: { fontWeight: 700, color: colors.ink, fontSize: "0.75rem", letterSpacing: "0.03em", textTransform: "uppercase" },
             },
         },

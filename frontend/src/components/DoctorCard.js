@@ -57,7 +57,7 @@ export default function DoctorCard({ doctor }) {
             elevation={0}
             sx={{
                 width: "100%",
-                height: 472,
+                minHeight: 0,
                 borderRadius: 3,
                 border: "1px solid #E2E8F0",
                 display: "flex",
@@ -76,7 +76,7 @@ export default function DoctorCard({ doctor }) {
             <Box
                 sx={{
                     position: "relative",
-                    height: 168,
+                    height: { xs: 150, sm: 168 },
                     bgcolor: "#F1F5F9",
                     display: "flex",
                     alignItems: "center",

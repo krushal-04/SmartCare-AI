@@ -17,7 +17,7 @@ export default function ConfirmDialog({
     return (
         <Dialog open={open} onClose={loading ? undefined : onClose} fullWidth maxWidth="xs">
             <DialogTitle sx={{ pb: 1 }}>
-                <Stack direction="row" spacing={1.25} alignItems="center">
+                <Stack direction="row" spacing={1.25} alignItems="flex-start">
                     <WarningAmberRounded color={isDanger ? "error" : "warning"} />
                     <Typography component="span" variant="h6">{title}</Typography>
                 </Stack>
@@ -30,7 +30,7 @@ export default function ConfirmDialog({
                     </Alert>
                 )}
             </DialogContent>
-            <DialogActions sx={{ px: 3, pb: 2.5, gap: 1 }}>
+            <DialogActions sx={{ px: { xs: 2, sm: 3 }, pb: { xs: 2, sm: 2.5 }, gap: 1 }}>
                 <Button onClick={onClose} disabled={loading} variant="outlined">Keep</Button>
                 <Button onClick={onConfirm} disabled={loading} color={severity} variant="contained">
                     {loading ? "Please wait…" : confirmLabel}

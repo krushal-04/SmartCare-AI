@@ -311,8 +311,8 @@ export default function PatientAppointments() {
                     </Typography>
                 </Box>
 
-                <Stack direction="row" spacing={1.5}>
-                    <FormControl size="small" sx={{ minWidth: 160 }}>
+                <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} sx={{ width: { xs: "100%", sm: "auto" } }}>
+                    <FormControl size="small" sx={{ minWidth: { xs: 0, sm: 160 }, width: { xs: "100%", sm: "auto" } }}>
                         <InputLabel>Status</InputLabel>
                         <Select
                             value={statusFilter}
@@ -627,7 +627,9 @@ export default function PatientAppointments() {
 
                                         {/* Status Explanatory Context Subtext */}
                                         <Typography fontSize={11.5} fontWeight={650} color={colors.slate} textAlign={{ xs: "left", md: "right" }}>
-                                            {effectiveStatus === "Pending" && paymentStatus === "Paid"
+                                            {effectiveStatus === "Pending" && appointment.isRescheduled
+                                                ? "Rescheduled slot requested • Awaiting hospital approval"
+                                                : effectiveStatus === "Pending" && paymentStatus === "Paid"
                                                 ? "Payment successful • Awaiting hospital review"
                                                 : effectiveStatus === "Pending" && paymentStatus !== "Paid"
                                                 ? "Awaiting hospital confirmation"
@@ -946,6 +948,10 @@ export default function PatientAppointments() {
                                         </Typography>
                                     </Box>
                                 </Stack>
+
+                                <Typography fontSize={11.5} color="#15803D" mt={1.5} sx={{ fontStyle: "italic" }}>
+                                    * Note: Rescheduled consultation slots require hospital confirmation before being finalized. Your payment remains 100% credited.
+                                </Typography>
                             </Box>
                         )}
                     </DialogContent>
@@ -971,7 +977,7 @@ export default function PatientAppointments() {
                                 "&:hover": { bgcolor: colors.pineDeep },
                             }}
                         >
-                            {rescheduling ? "Securing Slot..." : "Confirm Reschedule"}
+                            {rescheduling ? "Submitting Request..." : "Submit for Hospital Approval"}
                         </Button>
                     </DialogActions>
                 </Dialog>

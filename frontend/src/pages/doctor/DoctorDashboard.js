@@ -286,20 +286,20 @@ export default function DoctorDashboard() {
                         </Typography>
                     </Stack>
 
-                    <Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap">
+                    <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} alignItems={{ xs: "stretch", sm: "center" }} flexWrap="wrap" sx={{ width: { xs: "100%", sm: "auto" } }}>
                         <TextField
                             size="small"
                             placeholder="Search patient or transaction..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            sx={{ width: 220 }}
+                            sx={{ width: { xs: "100%", sm: 220 } }}
                         />
 
                         <Select
                             size="small"
                             value={filterStatus}
                             onChange={(e) => setFilterStatus(e.target.value)}
-                            sx={{ minWidth: 140, borderRadius: 2, fontSize: 13 }}
+                            sx={{ minWidth: { xs: 0, sm: 140 }, width: { xs: "100%", sm: "auto" }, borderRadius: 2, fontSize: 13 }}
                         >
                             <MenuItem value="All">All Statuses</MenuItem>
                             <MenuItem value="Paid">Paid</MenuItem>

@@ -500,7 +500,7 @@ export default function DashboardLayout({ role, children, title, subtitle }) {
     );
 
     return (
-        <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: colors.canvas }}>
+        <Box sx={{ display: "flex", minHeight: "100dvh", width: "100%", overflow: "clip", bgcolor: colors.canvas }}>
             {/* DESKTOP FIXED SIDEBAR */}
             <Box
                 component="nav"
@@ -532,7 +532,7 @@ export default function DashboardLayout({ role, children, title, subtitle }) {
                 ModalProps={{ keepMounted: true }}
                 PaperProps={{
                     sx: {
-                        width: { xs: "85%", sm: SIDEBAR_WIDTH + 20 },
+                    width: { xs: "min(88vw, 340px)", sm: SIDEBAR_WIDTH + 20 },
                         bgcolor: colors.navy,
                         boxShadow: "0 10px 40px rgba(0,0,0,0.3)",
                     },
@@ -583,7 +583,7 @@ export default function DashboardLayout({ role, children, title, subtitle }) {
                                 </IconButton>
                             )}
 
-                            <Box>
+                            <Box sx={{ minWidth: 0 }}>
                                 <Typography
                                     variant="h5"
                                     sx={{
@@ -609,7 +609,7 @@ export default function DashboardLayout({ role, children, title, subtitle }) {
                         </Stack>
 
                         {/* RIGHT: ACTIONS & USER PROFILE */}
-                        <Stack direction="row" spacing={1.5} alignItems="center">
+                        <Stack direction="row" spacing={{ xs: 0.5, sm: 1.5 }} alignItems="center" sx={{ flexShrink: 0 }}>
                             {/* QUICK BOOK APPOINTMENT BUTTON FOR PATIENT */}
                             {activeRole === "patient" && (
                                 <Button
@@ -674,7 +674,7 @@ export default function DashboardLayout({ role, children, title, subtitle }) {
                                         alignItems: "center",
                                         gap: 1.2,
                                         p: 0.5,
-                                        pr: 1.5,
+                                        pr: { xs: 0.5, md: 1.5 },
                                         borderRadius: 3,
                                         border: `1px solid ${colors.hairline}`,
                                         bgcolor: "transparent",
@@ -712,7 +712,8 @@ export default function DashboardLayout({ role, children, title, subtitle }) {
                                 PaperProps={{
                                     sx: {
                                         mt: 1.5,
-                                        minWidth: 230,
+                                        minWidth: { xs: "calc(100vw - 32px)", sm: 230 },
+                                        maxWidth: "calc(100vw - 32px)",
                                         borderRadius: 3,
                                         p: 1,
                                         boxShadow: "0 12px 36px rgba(0,0,0,0.12)",
@@ -772,6 +773,7 @@ export default function DashboardLayout({ role, children, title, subtitle }) {
                         p: { xs: 2, sm: 2.5, md: 3 },
                         maxWidth: 1360,
                         width: "100%",
+                        minWidth: 0,
                         mx: "auto",
                     }}
                 >

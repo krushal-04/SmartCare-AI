@@ -101,7 +101,7 @@ function Footer() {
                         borderBottom: "1px solid rgba(255,255,255,.12)",
                     }}
                 >
-                    <Stack direction="row" spacing={1.25} alignItems="center">
+                    <Stack direction="row" spacing={1.25} alignItems="center" sx={{ minWidth: 0 }}>
                         <Box sx={{ display: "grid", placeItems: "center", width: 34, height: 34, borderRadius: "50%", bgcolor: "rgba(13,148,136,.22)", color: "#5EEAD4" }}>
                             <EmergencyOutlined sx={{ fontSize: 19 }} />
                         </Box>
@@ -113,7 +113,7 @@ function Footer() {
                     <Button
                         onClick={() => go("/emergency")}
                         startIcon={<EmergencyOutlined />}
-                        sx={{ px: 2.2, py: 0.85, borderRadius: 2, bgcolor: colors.brick, color: colors.white, fontSize: 12.5, fontWeight: 800, textTransform: "none", whiteSpace: "nowrap", "&:hover": { bgcolor: colors.brickDeep } }}
+                        sx={{ px: 2.2, py: 0.85, borderRadius: 2, bgcolor: colors.brick, color: colors.white, fontSize: 12.5, fontWeight: 800, textTransform: "none", whiteSpace: "nowrap", width: { xs: "100%", sm: "auto" }, "&:hover": { bgcolor: colors.brickDeep } }}
                     >
                         Get emergency help
                     </Button>
@@ -209,7 +209,7 @@ function Footer() {
                     }}
                 >
                     <Typography fontSize={12} color="rgba(255,255,255,.54)">© {new Date().getFullYear()} SmartCare AI. All rights reserved.</Typography>
-                    <Stack direction="row" spacing={1.3} alignItems="center">
+                    <Stack direction="row" spacing={1.3} alignItems="center" sx={{ width: { xs: "100%", sm: "auto" }, justifyContent: { xs: "space-between", sm: "flex-start" } }}>
                         <Typography fontSize={12} color="rgba(255,255,255,.54)">Healthcare, connected better.</Typography>
                         <IconButton
                             aria-label="Back to top"

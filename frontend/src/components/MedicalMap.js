@@ -335,6 +335,8 @@ export default function MedicalMap({
                     alignItems: "center",
                     gap: 1,
                     flexWrap: "wrap",
+                    right: { xs: 52, sm: "auto" },
+                    maxWidth: { xs: "calc(100% - 66px)", sm: "calc(100% - 28px)" },
                 }}
             >
                 {showLocateButton && (
@@ -354,6 +356,7 @@ export default function MedicalMap({
                             py: 0.8,
                             boxShadow: "0 4px 12px rgba(13,148,136,0.3)",
                             "&:hover": { bgcolor: "#0F766E" },
+                            whiteSpace: "nowrap",
                         }}
                     >
                         {geoLoading ? "Detecting GPS..." : "Find My Location"}
@@ -373,6 +376,8 @@ export default function MedicalMap({
                                 fontWeight: 700,
                                 color: "#065F46",
                                 boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                                maxWidth: { xs: "100%", sm: "none" },
+                                "& .MuiChip-label": { overflow: "hidden", textOverflow: "ellipsis" },
                             }}
                         />
 
@@ -459,7 +464,7 @@ export default function MedicalMap({
                 ref={mapContainerRef}
                 sx={{
                     width: "100%",
-                    height: height,
+                    height: { xs: Math.min(Number(height) || 420, 360), sm: height },
                     bgcolor: "#EDF2F7",
                 }}
             />

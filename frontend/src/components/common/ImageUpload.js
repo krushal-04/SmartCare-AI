@@ -140,6 +140,7 @@ export default function ImageUpload({
                         bgcolor: "#F8FAFC",
                         position: "relative",
                         display: "flex",
+                        flexDirection: { xs: "column", sm: "row" },
                         alignItems: "center",
                         gap: 2,
                     }}
@@ -153,15 +154,15 @@ export default function ImageUpload({
                             e.currentTarget.src = "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=400&q=80";
                         }}
                         sx={{
-                            width: circle ? 100 : 130,
-                            height: circle ? 100 : height * 0.75,
+                            width: circle ? 100 : { xs: "100%", sm: 130 },
+                            height: circle ? 100 : { xs: Math.min(height * 0.7, 180), sm: height * 0.75 },
                             borderRadius: circle ? "50%" : 2.5,
                             objectFit: "cover",
                             border: "1px solid #CBD5E1",
                         }}
                     />
 
-                    <Box sx={{ flexGrow: 1 }}>
+                    <Box sx={{ flexGrow: 1, width: "100%", minWidth: 0 }}>
                         <Stack direction="row" alignItems="center" spacing={0.8} sx={{ mb: 0.5 }}>
                             <CheckCircleRounded color="success" sx={{ fontSize: 18 }} />
                             <Typography fontSize={13} fontWeight={700} color="success.main">
@@ -182,7 +183,7 @@ export default function ImageUpload({
                             {value}
                         </Typography>
 
-                        <Stack direction="row" spacing={1}>
+                        <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ "& .MuiButton-root": { width: { xs: "100%", sm: "auto" } } }}>
                             <Button
                                 size="small"
                                 variant="outlined"
@@ -279,7 +280,7 @@ export default function ImageUpload({
                 </Button>
 
                 <Collapse in={showUrlInput}>
-                    <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
+                    <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ mt: 1 }}>
                         <TextField
                             size="small"
                             fullWidth
@@ -291,7 +292,7 @@ export default function ImageUpload({
                             size="small"
                             variant="outlined"
                             onClick={handleApplyUrl}
-                            sx={{ fontWeight: 700, textTransform: "none", minWidth: 80 }}
+                            sx={{ fontWeight: 700, textTransform: "none", minWidth: 80, width: { xs: "100%", sm: "auto" } }}
                         >
                             Apply
                         </Button>

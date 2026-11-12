@@ -653,7 +653,7 @@ export default function HospitalProfile() {
                                 <Typography fontWeight={700} fontSize={14} gutterBottom>
                                     Specialty Facilities
                                 </Typography>
-                                <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
+                                <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ mb: 2 }}>
                                     <TextField
                                         size="small"
                                         placeholder="e.g. ICU, NICU, Dialysis, 24x7 Pharmacy"
@@ -665,7 +665,7 @@ export default function HospitalProfile() {
                                                 handleAddFacility();
                                             }
                                         }}
-                                        sx={{ width: 320 }}
+                                        sx={{ width: { xs: "100%", sm: 320 } }}
                                     />
                                     <Button
                                         variant="outlined"
@@ -796,7 +796,7 @@ export default function HospitalProfile() {
                                         variant="outlined"
                                         startIcon={<AddRounded />}
                                         onClick={handleAddImage}
-                                        sx={{ textTransform: "none", fontWeight: 700, minWidth: 120, borderRadius: 2 }}
+                                        sx={{ textTransform: "none", fontWeight: 700, minWidth: { xs: 0, sm: 120 }, width: { xs: "100%", sm: "auto" }, borderRadius: 2 }}
                                     >
                                         Add Link
                                     </Button>

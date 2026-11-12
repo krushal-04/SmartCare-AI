@@ -1518,7 +1518,9 @@ export default function PatientAI() {
                         bgcolor: colors.white,
                         display: "flex",
                         flexDirection: "column",
-                        height: "76vh",
+                        height: { xs: "calc(100dvh - 180px)", sm: "76vh" },
+                        minHeight: { xs: 440, sm: 520 },
+                        maxHeight: { xs: "calc(100dvh - 120px)", sm: "none" },
                         boxShadow: "0 6px 24px rgba(0,0,0,0.03)",
                         overflow: "hidden",
                     }}
@@ -1526,7 +1528,7 @@ export default function PatientAI() {
                     {/* CHAT HEADER */}
                     <Box
                         sx={{
-                            px: 3,
+                            px: { xs: 2, sm: 3 },
                             py: 2,
                             borderBottom: `1px solid ${colors.hairline}`,
                             display: "flex",
@@ -1537,7 +1539,7 @@ export default function PatientAI() {
                             gap: 1.5,
                         }}
                     >
-                        <Stack direction="row" spacing={1.5} alignItems="center">
+                        <Stack direction="row" spacing={1.5} alignItems="center" sx={{ minWidth: 0 }}>
                             <Box sx={{ position: "relative" }}>
                                 <Avatar
                                     sx={{
@@ -1562,8 +1564,8 @@ export default function PatientAI() {
                                     }}
                                 />
                             </Box>
-                            <Box>
-                                <Stack direction="row" spacing={1} alignItems="center">
+                            <Box sx={{ minWidth: 0 }}>
+                                <Stack direction={{ xs: "column", sm: "row" }} spacing={{ xs: 0.25, sm: 1 }} alignItems={{ xs: "flex-start", sm: "center" }}>
                                     <Typography fontWeight={900} fontSize={16} color={colors.ink}>
                                         SmartCare Clinical Assistant
                                     </Typography>
@@ -1651,8 +1653,9 @@ export default function PatientAI() {
 
                                     <Box
                                         sx={{
-                                            maxWidth: { xs: "90%", md: "80%" },
-                                            p: 2.5,
+                                            maxWidth: { xs: "calc(100% - 42px)", md: "80%" },
+                                            minWidth: 0,
+                                            p: { xs: 1.75, sm: 2.5 },
                                             borderRadius: 4,
                                             borderTopRightRadius: isUser ? 1 : 4,
                                             borderTopLeftRadius: !isUser ? 1 : 4,

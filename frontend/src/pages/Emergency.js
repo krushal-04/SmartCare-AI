@@ -445,7 +445,7 @@ export default function Emergency() {
 
                     {/* LIVE RADAR MAP */}
                     <Box sx={{ width: "100%", minWidth: 0, position: { lg: "sticky" }, top: { lg: 88 } }}>
-                        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1.5 }}>
+                        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: { xs: "flex-start", sm: "center" }, flexDirection: { xs: "column", sm: "row" }, gap: 0.5, mb: 1.5 }}>
                             <Typography fontSize={17} fontWeight={800} color="#0F172A">
                                 Live Ambulance & Hospital Locator
                             </Typography>

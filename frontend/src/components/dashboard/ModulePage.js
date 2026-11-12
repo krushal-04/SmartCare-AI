@@ -68,7 +68,7 @@ export default function ModulePage({
             ) : error ? (
                 <Alert severity="warning">{error}</Alert>
             ) : (
-                <Card elevation={0} sx={{ border: "1px solid #E3EBEE", borderRadius: 4 }}>
+                <Card elevation={0} sx={{ border: "1px solid #E3EBEE", borderRadius: 4, minWidth: 0 }}>
                     <CardContent>
                         {rows.length === 0 ? (
                             <Box py={8} textAlign="center">
@@ -88,6 +88,7 @@ export default function ModulePage({
                                             direction={{ xs: "column", sm: "row" }}
                                             justifyContent="space-between"
                                             gap={1}
+                                            sx={{ minWidth: 0 }}
                                         >
                                             <Box>
                                                 {(columns || []).slice(0, 4).map((c) => (
@@ -103,7 +104,17 @@ export default function ModulePage({
                                                     </Typography>
                                                 ))}
                                             </Box>
-                                            <Stack direction="row" gap={1} flexWrap="wrap">
+                                            <Stack
+                                                direction="row"
+                                                gap={1}
+                                                flexWrap="wrap"
+                                                sx={{
+                                                    width: { xs: "100%", sm: "auto" },
+                                                    "& .MuiButton-root": {
+                                                        flex: { xs: "1 1 auto", sm: "0 1 auto" },
+                                                    },
+                                                }}
+                                            >
                                                 {actions.map((a) => (
                                                     <Button
                                                         key={a.label}
