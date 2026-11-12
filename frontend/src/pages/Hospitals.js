@@ -257,13 +257,15 @@ export default function Hospitals() {
                                 Interactive Hospital Locator
                             </Typography>
                             <Typography fontSize={12} color="#0D9488" fontWeight={700}>
-                                Live OpenStreetMap & Carto Engine
+                                Click map to adjust location pin
                             </Typography>
                         </Box>
 
                         <MedicalMap
                             hospitals={filteredHospitals}
                             patientLocation={userLocation}
+                            selectable={true}
+                            onLocationSelect={(coords) => setUserLocation(coords)}
                             onLocateMe={(coords) => setUserLocation(coords)}
                             selectedHospitalId={selectedHospitalId}
                             height={520}
