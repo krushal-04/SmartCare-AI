@@ -32,7 +32,6 @@ import {
     ReplayOutlined,
     WarningAmberOutlined,
     UpdateOutlined,
-    AccessTimeOutlined,
     HistoryOutlined,
     ArrowForwardOutlined,
 } from "@mui/icons-material";
@@ -564,69 +563,6 @@ export default function PatientAppointments() {
                                                         fontSize: 11.5,
                                                     }}
                                                 />
-                                            )}
-
-                                            {appointment.gatewayRefundId && (
-                                                <Typography fontSize={11.5} fontFamily="monospace" color={colors.slate}>
-                                                    Ref: {appointment.gatewayRefundId}
-                                                </Typography>
-                                            )}
-
-                                            {appointment.latestReminder && (
-                                                <Chip
-                                                    size="small"
-                                                    icon={<AccessTimeOutlined sx={{ fontSize: 13 }} />}
-                                                    label={
-                                                        appointment.latestReminder.status === "SENT"
-                                                            ? "Reminder Delivered"
-                                                            : appointment.latestReminder.status === "PENDING"
-                                                            ? `Reminder: ${appointment.latestReminder.reminderType === "24_HOURS" ? "Tomorrow" : "1h Before"}`
-                                                            : `Reminder ${appointment.latestReminder.status}`
-                                                    }
-                                                    sx={{
-                                                        bgcolor: appointment.latestReminder.status === "SENT" ? "#ECFDF5" : "#EFF6FF",
-                                                        color: appointment.latestReminder.status === "SENT" ? "#065F46" : "#1D4ED8",
-                                                        border: `1px solid ${appointment.latestReminder.status === "SENT" ? "#A7F3D0" : "#BFDBFE"}`,
-                                                        fontWeight: 750,
-                                                        fontSize: 11,
-                                                    }}
-                                                />
-                                            )}
-
-                                            {appointment.isRescheduled && (
-                                                <Stack direction="row" spacing={0.8} alignItems="center">
-                                                    <Chip
-                                                        size="small"
-                                                        icon={<UpdateOutlined sx={{ fontSize: 13 }} />}
-                                                        label={`Rescheduled${(appointment.rescheduleCount || 1) > 1 ? ` (${appointment.rescheduleCount}x)` : ""}`}
-                                                        sx={{
-                                                            bgcolor: "#F5F3FF",
-                                                            color: "#6D28D9",
-                                                            border: "1px solid #DDD6FE",
-                                                            fontWeight: 750,
-                                                            fontSize: 11.5,
-                                                        }}
-                                                    />
-                                                    {appointment.rescheduleHistory && appointment.rescheduleHistory.length > 0 && (
-                                                        <Button
-                                                            size="small"
-                                                            variant="text"
-                                                            onClick={() => setSelectedHistoryAppt(appointment)}
-                                                            startIcon={<HistoryOutlined sx={{ fontSize: 13 }} />}
-                                                            sx={{
-                                                                fontSize: 11.5,
-                                                                textTransform: "none",
-                                                                fontWeight: 700,
-                                                                color: "#6D28D9",
-                                                                p: 0,
-                                                                minWidth: 0,
-                                                                "&:hover": { textDecoration: "underline" },
-                                                            }}
-                                                        >
-                                                            History ({appointment.rescheduleHistory.length})
-                                                        </Button>
-                                                    )}
-                                                </Stack>
                                             )}
                                         </Stack>
                                     </Box>
