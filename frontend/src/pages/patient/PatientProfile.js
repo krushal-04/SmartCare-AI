@@ -17,7 +17,6 @@ import {
     NotificationsActiveOutlined,
     AccessTimeOutlined,
     EmailOutlined,
-    SmartphoneOutlined,
     SaveOutlined,
 } from "@mui/icons-material";
 
@@ -365,7 +364,7 @@ export default function PatientProfile() {
                             {/* NOTIFICATION CHANNELS */}
                             <Box sx={{ opacity: reminderSettings.enabled ? 1 : 0.5, pointerEvents: reminderSettings.enabled ? "auto" : "none" }}>
                                 <Typography fontSize={14.5} fontWeight={800} color={colors.ink} mb={1.5}>
-                                    Active Notification Channels
+                                    Notification Channels
                                 </Typography>
 
                                 <Stack spacing={1.5}>
@@ -384,14 +383,14 @@ export default function PatientProfile() {
                                             <NotificationsActiveOutlined sx={{ color: colors.pine }} />
                                             <Box>
                                                 <Typography fontWeight={750} fontSize={14} color={colors.ink}>
-                                                    In-App Notification & Real-Time Alert Bell
+                                                    In-App Notifications
                                                 </Typography>
                                                 <Typography fontSize={12} color={colors.slate}>
-                                                    Live popup alerts and unread badge in patient portal (Core Channel)
+                                                    Instant consultation reminders and priority alert badge in your portal
                                                 </Typography>
                                             </Box>
                                         </Stack>
-                                        <Chip label="Required" size="small" sx={{ fontWeight: 800, bgcolor: "#ECFDF5", color: "#065F46" }} />
+                                        <Chip label="Always Active" size="small" sx={{ fontWeight: 800, bgcolor: "#ECFDF5", color: "#065F46" }} />
                                     </Box>
 
                                     {/* EMAIL CHANNEL */}
@@ -412,7 +411,7 @@ export default function PatientProfile() {
                                                     Email Notifications
                                                 </Typography>
                                                 <Typography fontSize={12} color={colors.slate}>
-                                                    HTML summary sent to {form.email}
+                                                    Appointment confirmations and schedule reminders delivered to {form.email}
                                                 </Typography>
                                             </Box>
                                         </Stack>
@@ -429,32 +428,6 @@ export default function PatientProfile() {
                                             }
                                             color="primary"
                                         />
-                                    </Box>
-
-                                    {/* SMS CHANNEL (OPTIONAL FUTURE) */}
-                                    <Box
-                                        sx={{
-                                            p: 2,
-                                            borderRadius: 2.5,
-                                            border: `1px solid ${colors.hairline}`,
-                                            bgcolor: "#FAFAFA",
-                                            display: "flex",
-                                            justifyContent: "space-between",
-                                            alignItems: "center",
-                                        }}
-                                    >
-                                        <Stack direction="row" spacing={1.5} alignItems="center">
-                                            <SmartphoneOutlined sx={{ color: colors.slate }} />
-                                            <Box>
-                                                <Typography fontWeight={750} fontSize={14} color={colors.slate}>
-                                                    SMS / WhatsApp Alerts
-                                                </Typography>
-                                                <Typography fontSize={12} color={colors.slate}>
-                                                    Direct carrier messaging (Requires SMS Gateway provider setup)
-                                                </Typography>
-                                            </Box>
-                                        </Stack>
-                                        <Chip label="Future Integration" size="small" variant="outlined" sx={{ fontWeight: 650, color: colors.slate }} />
                                     </Box>
                                 </Stack>
                             </Box>
