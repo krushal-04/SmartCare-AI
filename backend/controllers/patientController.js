@@ -208,3 +208,66 @@ exports.updateMyProfile = async (req, res) => {
         });
     }
 };
+
+const { reconcilePatientReminders } = require("../services/reminderService");
+
+exports.getReminderSettings = async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id).select("reminderSettings");
+        const settings = user?.reminderSettings || {
+            enabled: true,
+            reminder24h: true,
+            reminder1h: true,
+            channels: { inApp: true, email: true, sms: false },
+        };
+
+        res.status(200).json({
+            success: true,
+            reminderSettings: settings,
+        });
+    } catch (error) {
+        console.error("getReminderSettings:", error);
+        res.status(500).json({
+            success: false,
+            message: "Unable to load reminder settings.",
+        });
+    }
+};
+
+exports.updateReminderSettings = async (req, res) => {
+    try {
+        const { enabled, reminder24h, reminder1h, channels } = req.body;
+
+        const updateData = {};
+        if (typeof enabled === "boolean") updateData["reminderSettings.enabled"] = enabled;
+        if (typeof reminder24h === "boolean") updateData["reminderSettings.reminder24h"] = reminder24h;
+        if (typeof reminder1h === "boolean") updateData["reminderSettings.reminder1h"] = reminder1h;
+        if (channels && typeof channels === "object") {
+            if (typeof channels.inApp === "boolean") updateData["reminderSettings.channels.inApp"] = channels.inApp;
+            if (typeof channels.email === "boolean") updateData["reminderSettings.channels.email"] = channels.email;
+        }
+
+        const user = await User.findByIdAndUpdate(
+            req.user._id,
+            { $set: updateData },
+            { new: true, runValidators: true }
+        ).select("reminderSettings");
+
+        // Reconcile patient reminders asynchronously based on updated preferences
+        reconcilePatientReminders(req.user._id).catch((err) =>
+            console.error("Error reconciling reminders:", err.message)
+        );
+
+        res.status(200).json({
+            success: true,
+            message: "Appointment reminder settings updated successfully.",
+            reminderSettings: user.reminderSettings,
+        });
+    } catch (error) {
+        console.error("updateReminderSettings:", error);
+        res.status(500).json({
+            success: false,
+            message: "Unable to update reminder settings.",
+        });
+    }
+};

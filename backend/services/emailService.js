@@ -854,6 +854,52 @@ SmartCare AI Billing Team`;
     return sendEmail({ to: patient.email, subject, text, html });
 };
 
+
+const sendAppointmentReminderEmail = async ({
+    to,
+    patientName,
+    doctorName,
+    hospitalName,
+    appointmentDate,
+    appointmentTime,
+    reminderType,
+}) => {
+    if (!to) return { success: false, message: "No recipient email provided" };
+
+    const is24h = reminderType === "24_HOURS";
+    const subject = is24h
+        ? `Upcoming Appointment Reminder: Tomorrow at ${appointmentTime}`
+        : `Urgent Reminder: Appointment in 1 Hour at ${appointmentTime}`;
+
+    const text = is24h
+        ? `Dear ${patientName}, this is a reminder that your appointment with Dr. ${doctorName} is scheduled for tomorrow at ${appointmentTime} at ${hospitalName}. Please arrive on time.`
+        : `Dear ${patientName}, this is a reminder that your appointment with Dr. ${doctorName} is scheduled in 1 hour at ${appointmentTime} at ${hospitalName}.`;
+
+    const html = buildHtmlEmail({
+        title: is24h ? "Appointment Reminder (Tomorrow)" : "Appointment Reminder (In 1 Hour)",
+        subtitle: `Consultation with Dr. ${doctorName}`,
+        statusText: is24h ? "Scheduled Tomorrow" : "Starting Soon",
+        statusColor: is24h ? "info" : "warning",
+        contentHtml: `
+          <p>Hello <strong>${patientName || "Patient"}</strong>,</p>
+          <p>${text}</p>
+          <div style="background-color: #F8FAFC; border-radius: 12px; padding: 20px; border: 1px solid #E2E8F0; margin: 20px 0;">
+            <p style="margin: 0; font-size: 14px;"><strong>Doctor:</strong> Dr. ${doctorName}</p>
+            <p style="margin: 6px 0 0 0; font-size: 14px;"><strong>Hospital:</strong> ${hospitalName}</p>
+            <p style="margin: 6px 0 0 0; font-size: 14px;"><strong>Date:</strong> ${appointmentDate}</p>
+            <p style="margin: 6px 0 0 0; font-size: 14px;"><strong>Time Slot:</strong> ${appointmentTime}</p>
+          </div>
+          <p>Please remember to bring any prior prescriptions or diagnostic test reports.</p>
+        `,
+        actionButton: {
+            label: "View Appointment Details",
+            url: "http://localhost:3000/patient/appointments",
+        },
+    });
+
+    return sendEmail({ to, subject, text, html });
+};
+
 module.exports = {
     sendEmail,
     sendHospitalRegistrationEmail,
@@ -869,4 +915,5 @@ module.exports = {
     sendPaymentSuccessEmail,
     sendRefundInitiatedEmail,
     sendRefundCompletedEmail,
+    sendAppointmentReminderEmail,
 };

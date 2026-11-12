@@ -13,6 +13,7 @@ import CssBaseline from "@mui/material/CssBaseline";
 
 import theme from "./theme/theme";
 import { AuthProvider } from "./context/AuthContext";
+import { NotificationProvider } from "./context/NotificationContext";
 
 /* =========================
    PUBLIC PAGES
@@ -91,6 +92,7 @@ import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import AdminReports from "./pages/admin/AdminReports";
 import AdminNotifications from "./pages/admin/AdminNotifications";
 import AdminPayments from "./pages/admin/AdminPayments";
+import AdminReminders from "./pages/admin/AdminReminders";
 
 /* =========================
    DOCTOR PAGES
@@ -105,6 +107,7 @@ function App() {
 
             <BrowserRouter>
                 <AuthProvider>
+                    <NotificationProvider>
                     <Routes>
 
                     {/* =================================================
@@ -471,6 +474,14 @@ function App() {
                             </ProtectedRoute>
                         }
                     />
+                    <Route
+                        path="/admin/reminders"
+                        element={
+                            <ProtectedRoute role="admin">
+                                <AdminReminders />
+                            </ProtectedRoute>
+                        }
+                    />
 
                     {/* =================================================
                         DOCTOR MODULE
@@ -508,6 +519,7 @@ function App() {
                     />
 
                 </Routes>
+                    </NotificationProvider>
                 </AuthProvider>
             </BrowserRouter>
         </ThemeProvider>

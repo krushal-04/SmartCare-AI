@@ -65,9 +65,19 @@ const userSchema = new mongoose.Schema(
     rejectionDate: {
         type: Date,
     },
-    isActive: {
+        isActive: {
         type: Boolean,
         default: true,
+    },
+    reminderSettings: {
+        enabled: { type: Boolean, default: true },
+        reminder24h: { type: Boolean, default: true },
+        reminder1h: { type: Boolean, default: true },
+        channels: {
+            inApp: { type: Boolean, default: true },
+            email: { type: Boolean, default: true },
+            sms: { type: Boolean, default: false },
+        },
     },
   },
   {

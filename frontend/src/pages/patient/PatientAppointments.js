@@ -32,6 +32,7 @@ import {
     ReplayOutlined,
     WarningAmberOutlined,
     UpdateOutlined,
+    AccessTimeOutlined,
     HistoryOutlined,
     ArrowForwardOutlined,
 } from "@mui/icons-material";
@@ -569,6 +570,27 @@ export default function PatientAppointments() {
                                                 <Typography fontSize={11.5} fontFamily="monospace" color={colors.slate}>
                                                     Ref: {appointment.gatewayRefundId}
                                                 </Typography>
+                                            )}
+
+                                            {appointment.latestReminder && (
+                                                <Chip
+                                                    size="small"
+                                                    icon={<AccessTimeOutlined sx={{ fontSize: 13 }} />}
+                                                    label={
+                                                        appointment.latestReminder.status === "SENT"
+                                                            ? "Reminder Delivered"
+                                                            : appointment.latestReminder.status === "PENDING"
+                                                            ? `Reminder: ${appointment.latestReminder.reminderType === "24_HOURS" ? "Tomorrow" : "1h Before"}`
+                                                            : `Reminder ${appointment.latestReminder.status}`
+                                                    }
+                                                    sx={{
+                                                        bgcolor: appointment.latestReminder.status === "SENT" ? "#ECFDF5" : "#EFF6FF",
+                                                        color: appointment.latestReminder.status === "SENT" ? "#065F46" : "#1D4ED8",
+                                                        border: `1px solid ${appointment.latestReminder.status === "SENT" ? "#A7F3D0" : "#BFDBFE"}`,
+                                                        fontWeight: 750,
+                                                        fontSize: 11,
+                                                    }}
+                                                />
                                             )}
 
                                             {appointment.isRescheduled && (

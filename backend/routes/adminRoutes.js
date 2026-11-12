@@ -20,6 +20,11 @@ const {
     getAuditLogs,
 } = require("../controllers/adminController");
 
+const {
+    getReminderMonitoring,
+    retryReminder,
+} = require("../controllers/adminReminderController");
+
 // All admin routes require valid JWT and admin role
 router.use(protect, adminOnly);
 
@@ -45,5 +50,9 @@ router.get("/reports", getAdminReportsData);
 
 // Audit Logs
 router.get("/audit-logs", getAuditLogs);
+
+// Appointment Reminder Monitoring & Retry
+router.get("/reminders", getReminderMonitoring);
+router.post("/reminders/:id/retry", retryReminder);
 
 module.exports = router;

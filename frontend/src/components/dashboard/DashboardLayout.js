@@ -38,6 +38,7 @@ import {
     MedicalServicesOutlined,
     MenuOutlined,
     NotificationsOutlined,
+    NotificationsActiveOutlined,
     PaymentOutlined,
     PersonOutlined,
     PsychologyOutlined,
@@ -48,6 +49,7 @@ import {
 } from "@mui/icons-material";
 import { colors } from "../../theme/colors";
 import { useAuth } from "../../context/AuthContext";
+import { useNotifications } from "../../context/NotificationContext";
 
 const menuConfig = {
     patient: [
@@ -154,6 +156,7 @@ const menuConfig = {
                 { label: "Audit Reports", path: "/admin/reports", icon: <DescriptionOutlined /> },
                 { label: "System Alerts", path: "/admin/notifications", icon: <NotificationsOutlined /> },
                 { label: "Platform Payments", path: "/admin/payments", icon: <PaymentOutlined /> },
+                { label: "Appointment Reminders", path: "/admin/reminders", icon: <NotificationsActiveOutlined /> },
             ],
         },
     ],
@@ -207,6 +210,7 @@ export default function DashboardLayout({ role, children, title, subtitle }) {
     const isMobile = useMediaQuery(theme.breakpoints.down("lg"));
 
     const { user, logout } = useAuth();
+    const { unreadCount } = useNotifications();
     const [mobileOpen, setMobileOpen] = useState(false);
     const [profileAnchor, setProfileAnchor] = useState(null);
 
@@ -629,7 +633,7 @@ export default function DashboardLayout({ role, children, title, subtitle }) {
                             )}
 
                             {/* NOTIFICATION BELL */}
-                            <Tooltip title="Notifications">
+                            <Tooltip title={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ""}`}>
                                 <IconButton
                                     onClick={() => handleNavigate(currentMeta.notifRoute)}
                                     sx={{
@@ -638,7 +642,23 @@ export default function DashboardLayout({ role, children, title, subtitle }) {
                                         "&:hover": { bgcolor: "rgba(0,0,0,0.06)", color: colors.ink },
                                     }}
                                 >
-                                    <Badge color="warning" variant="dot">
+                                    <Badge
+                                        badgeContent={unreadCount}
+                                        max={99}
+                                        color="error"
+                                        invisible={unreadCount === 0}
+                                        sx={{
+                                            "& .MuiBadge-badge": {
+                                                fontWeight: 850,
+                                                fontSize: 10,
+                                                bgcolor: "#EF4444",
+                                                color: "#FFFFFF",
+                                                minWidth: 18,
+                                                height: 18,
+                                                px: 0.5,
+                                            },
+                                        }}
+                                    >
                                         <NotificationsOutlined fontSize="small" />
                                     </Badge>
                                 </IconButton>

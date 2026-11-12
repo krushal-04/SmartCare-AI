@@ -1,3 +1,9 @@
+const Reminder = require("../models/Reminder");
+const {
+    scheduleRemindersForAppointment,
+    cancelRemindersForAppointment,
+} = require("../services/reminderService");
+const { emitToUser, emitUnreadCount } = require("../services/socketService");
 const Appointment = require("../models/Appointment");
 const DoctorSchedule = require("../models/DoctorSchedule");
 const Doctor = require("../models/Doctor");
@@ -611,6 +617,13 @@ exports.createAppointment = async (
                 relatedId:
                     appointment._id,
             });
+        }
+
+        // Schedule automated reminder if confirmed
+        if (appointment.bookingStatus === "Confirmed" || appointment.status === "Confirmed") {
+            scheduleRemindersForAppointment(appointment).catch((e) =>
+                console.warn("[ReminderService] Booking schedule reminder err:", e.message)
+            );
         }
 
         // Send booking confirmation email to patient
@@ -1549,6 +1562,14 @@ exports.rescheduleAppointment = async (req, res) => {
         appointment.rescheduleHistory.push(historyRecord);
 
         await appointment.save();
+
+        // Cancel old reminders and schedule new reminders for the updated date/time
+        await cancelRemindersForAppointment(appointment._id, "Rescheduled to new date/time").catch(() => {});
+        if (appointment.status === "Confirmed" || appointment.bookingStatus === "Confirmed") {
+            await scheduleRemindersForAppointment(appointment).catch((e) =>
+                console.warn("[ReminderService] Reschedule reminder err:", e.message)
+            );
+        }
 
         // Populate updated appointment for response and notification
         const populatedAppt = await Appointment.findById(appointment._id)

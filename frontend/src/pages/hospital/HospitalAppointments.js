@@ -410,6 +410,26 @@ export default function HospitalAppointments() {
                                                         variant="outlined"
                                                         sx={{ fontWeight: 700, mt: 0.5, bgcolor: "#F8FAFC" }}
                                                     />
+                                                    {appt.latestReminder && (
+                                                        <Tooltip title={`Reminder: ${appt.latestReminder.status} (${appt.latestReminder.reminderType})`}>
+                                                            <Chip
+                                                                size="small"
+                                                                label={appt.latestReminder.status === "SENT" ? "Reminder Sent" : `Reminder ${appt.latestReminder.status}`}
+                                                                sx={{
+                                                                    fontWeight: 700,
+                                                                    fontSize: 10,
+                                                                    bgcolor: appt.latestReminder.status === "FAILED" ? "#FEF2F2" : "#F8FAFC",
+                                                                    color: appt.latestReminder.status === "FAILED" ? "#B91C1C" : colors.slate,
+                                                                    border: "1px solid",
+                                                                    borderColor: appt.latestReminder.status === "FAILED" ? "#FECACA" : colors.hairline,
+                                                                    mt: 0.3,
+                                                                    display: "block",
+                                                                    width: "fit-content",
+                                                                }}
+                                                            />
+                                                        </Tooltip>
+                                                    )}
+
                                                     {appt.isRescheduled && (
                                                         <Chip
                                                             label={`Rescheduled${(appt.rescheduleCount || 1) > 1 ? ` (${appt.rescheduleCount}x)` : ""}`}

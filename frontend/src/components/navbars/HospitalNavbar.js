@@ -38,11 +38,13 @@ import {
 } from "@mui/icons-material";
 import { colors } from "../../theme/colors";
 import { useAuth } from "../../context/AuthContext";
+import { useNotifications } from "../../context/NotificationContext";
 
 export default function HospitalNavbar() {
     const navigate = useNavigate();
     const location = useLocation();
     const { user, logout } = useAuth();
+    const { unreadCount } = useNotifications();
 
     const [mobileOpen, setMobileOpen] = useState(false);
     const [anchorEl, setAnchorEl] = useState(null);
@@ -233,7 +235,23 @@ export default function HospitalNavbar() {
                                     "&:hover": { color: colors.white, bgcolor: "rgba(255,255,255,0.08)" },
                                 }}
                             >
-                                <Badge color="warning" variant="dot">
+                                <Badge
+                                    badgeContent={unreadCount}
+                                    max={99}
+                                    color="error"
+                                    invisible={unreadCount === 0}
+                                    sx={{
+                                        "& .MuiBadge-badge": {
+                                            fontWeight: 850,
+                                            fontSize: 10,
+                                            bgcolor: "#EF4444",
+                                            color: "#FFFFFF",
+                                            minWidth: 18,
+                                            height: 18,
+                                            px: 0.5,
+                                        },
+                                    }}
+                                >
                                     <NotificationsOutlined />
                                 </Badge>
                             </IconButton>

@@ -1,3 +1,4 @@
+const { cancelRemindersForAppointment } = require("../services/reminderService");
 const Payment = require("../models/Payment");
 const Appointment = require("../models/Appointment");
 const Doctor = require("../models/Doctor");
@@ -779,6 +780,9 @@ exports.cancelAndRefund = async (req, res) => {
             appointment.gatewayRefundId = razorpayRefund.id;
         }
         await appointment.save();
+
+        // Cancel any pending automated appointment reminders
+        cancelRemindersForAppointment(appointment._id, "Appointment cancelled and refunded by patient").catch(() => {});
 
         // Audit Log
         AuditLog.create({
