@@ -60,7 +60,6 @@ export default function GuestNavbar() {
                     color: colors.white,
                     borderBottom: `1px solid ${colors.hairlineOnDark}`,
                     backdropFilter: "blur(16px)",
-                    zIndex: (theme) => theme.zIndex.drawer + 1,
                 }}
             >
                 <Toolbar
@@ -271,75 +270,106 @@ export default function GuestNavbar() {
                 anchor="right"
                 open={mobileOpen}
                 onClose={() => setMobileOpen(false)}
-                PaperProps={{
-                    sx: {
-                        width: { xs: "85%", sm: 360 },
-                        bgcolor: colors.navy,
-                        color: colors.white,
+                sx={{
+                    zIndex: (theme) => theme.zIndex.modal + 10,
+                    "& .MuiDrawer-paper": {
+                        width: { xs: "86%", sm: 360 },
+                        bgcolor: "#FFFFFF !important",
+                        color: "#0F172A !important",
                         p: 3,
+                        boxSizing: "border-box",
+                        boxShadow: "-12px 0 36px rgba(16,42,67,0.18)",
                     },
                 }}
             >
-                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
+                {/* DRAWER TOP HEADER */}
+                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2.5 }}>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1.2 }}>
                         <Box
                             sx={{
-                                width: 36,
-                                height: 36,
-                                borderRadius: 2,
+                                width: 38,
+                                height: 38,
+                                borderRadius: 2.2,
                                 display: "grid",
                                 placeItems: "center",
                                 bgcolor: colors.pine,
                                 color: colors.white,
+                                boxShadow: "0 4px 12px rgba(13,148,136,0.25)",
                             }}
                         >
                             <LocalHospitalOutlined fontSize="small" />
                         </Box>
-                        <Typography
-                            sx={{
-                                fontFamily: "Inter, sans-serif",
-                                fontWeight: 750,
-                                fontSize: 22,
-                                color: colors.white,
-                            }}
-                        >
-                            SmartCare
-                        </Typography>
+                        <Box>
+                            <Typography
+                                sx={{
+                                    fontFamily: "Inter, sans-serif",
+                                    fontWeight: 800,
+                                    fontSize: 20,
+                                    lineHeight: 1.1,
+                                    color: "#0F172A",
+                                }}
+                            >
+                                SmartCare
+                            </Typography>
+                            <Typography
+                                sx={{
+                                    fontSize: 8.5,
+                                    letterSpacing: 1.5,
+                                    fontWeight: 800,
+                                    color: colors.pine,
+                                }}
+                            >
+                                HEALTHCARE PLATFORM
+                            </Typography>
+                        </Box>
                     </Box>
-                    <IconButton onClick={() => setMobileOpen(false)} sx={{ color: colors.white }}>
-                        <CloseOutlined />
+                    <IconButton
+                        onClick={() => setMobileOpen(false)}
+                        sx={{
+                            color: "#64748B",
+                            bgcolor: "#F1F5F9",
+                            "&:hover": { bgcolor: "#E2E8F0", color: "#0F172A" },
+                        }}
+                        size="small"
+                    >
+                        <CloseOutlined fontSize="small" />
                     </IconButton>
                 </Box>
 
-                <Divider sx={{ borderColor: colors.hairlineOnDark, mb: 2 }} />
+                <Divider sx={{ borderColor: "#E2E8F0", mb: 2.5 }} />
 
-                {/* QUICK EMERGENCY CARD */}
+                {/* 24/7 EMERGENCY CARD */}
                 <Box
                     onClick={() => handleNavigate("/emergency")}
                     sx={{
                         p: 2,
                         mb: 2.5,
-                        borderRadius: 3,
-                        bgcolor: "rgba(178,70,50,0.15)",
-                        border: "1px solid rgba(178,70,50,0.35)",
+                        borderRadius: 2.5,
+                        bgcolor: "#FEF2F2",
+                        border: "1px solid #FECACA",
                         cursor: "pointer",
                         display: "flex",
                         alignItems: "center",
                         gap: 1.5,
+                        transition: "all 0.15s ease",
+                        "&:hover": {
+                            bgcolor: "#FEE2E2",
+                            borderColor: "#FCA5A5",
+                        },
                     }}
                 >
-                    <EmergencyOutlined sx={{ color: "#F78D78", fontSize: 28 }} />
+                    <EmergencyOutlined sx={{ color: "#DC2626", fontSize: 28 }} />
                     <Box>
-                        <Typography fontWeight={800} fontSize={14} color="#F78D78">
+                        <Typography fontWeight={800} fontSize={14} color="#991B1B">
                             24/7 Emergency Care
                         </Typography>
-                        <Typography fontSize={11.5} color="rgba(255,255,255,0.7)">
-                            Immediate medical response
+                        <Typography fontSize={11.5} color="#64748B" fontWeight={500}>
+                            Immediate medical response & dispatch
                         </Typography>
                     </Box>
                 </Box>
 
-                {/* NAV LIST */}
+                {/* NAVIGATION LIST */}
                 <List sx={{ p: 0, mb: 3 }}>
                     {navLinks.map((item) => {
                         const active = isActive(item.path);
@@ -350,18 +380,31 @@ export default function GuestNavbar() {
                                 sx={{
                                     borderRadius: 2,
                                     mb: 0.8,
-                                    bgcolor: active ? "rgba(255,255,255,0.12)" : "transparent",
-                                    color: active ? "#5EEAD4" : "rgba(255,255,255,0.85)",
+                                    py: 1.1,
+                                    px: 1.5,
+                                    bgcolor: active ? "#F0FDFA" : "transparent",
+                                    border: active ? "1px solid #CCFBF1" : "1px solid transparent",
+                                    color: active ? "#0F766E" : "#1E293B",
+                                    transition: "all 0.15s ease",
+                                    "&:hover": {
+                                        bgcolor: active ? "#E6FFFA" : "#F8FAFC",
+                                        color: active ? "#0F766E" : "#0F172A",
+                                    },
                                 }}
                             >
-                                <ListItemIcon sx={{ color: "inherit", minWidth: 38 }}>
+                                <ListItemIcon
+                                    sx={{
+                                        color: active ? "#0D9488" : "#64748B",
+                                        minWidth: 36,
+                                    }}
+                                >
                                     {item.icon}
                                 </ListItemIcon>
                                 <ListItemText
                                     primary={item.label}
                                     primaryTypographyProps={{
-                                        fontWeight: active ? 800 : 500,
-                                        fontSize: 15,
+                                        fontWeight: active ? 800 : 650,
+                                        fontSize: 14.5,
                                     }}
                                 />
                             </ListItemButton>
@@ -369,9 +412,9 @@ export default function GuestNavbar() {
                     })}
                 </List>
 
-                <Divider sx={{ borderColor: colors.hairlineOnDark, mb: 3 }} />
+                <Divider sx={{ borderColor: "#E2E8F0", mb: 3 }} />
 
-                {/* ACTION BUTTONS IN DRAWER */}
+                {/* ACTION BUTTONS */}
                 <Stack spacing={1.5}>
                     <Button
                         variant="contained"
@@ -381,9 +424,11 @@ export default function GuestNavbar() {
                         sx={{
                             bgcolor: colors.pine,
                             color: colors.white,
-                            py: 1.2,
-                            fontWeight: 700,
-                            borderRadius: 2.5,
+                            py: 1.25,
+                            fontWeight: 800,
+                            fontSize: 14,
+                            borderRadius: 2.2,
+                            boxShadow: "0 4px 14px rgba(13,148,136,0.25)",
                             "&:hover": { bgcolor: colors.pineDeep },
                         }}
                     >
@@ -395,12 +440,16 @@ export default function GuestNavbar() {
                         startIcon={<LoginOutlined />}
                         onClick={() => handleNavigate("/login")}
                         sx={{
-                            borderColor: "rgba(255,255,255,0.3)",
-                            color: colors.white,
-                            py: 1.1,
-                            fontWeight: 700,
-                            borderRadius: 2.5,
-                            "&:hover": { borderColor: colors.white, bgcolor: "rgba(255,255,255,0.06)" },
+                            borderColor: "#CBD5E1",
+                            color: "#0F172A",
+                            py: 1.15,
+                            fontWeight: 750,
+                            fontSize: 14,
+                            borderRadius: 2.2,
+                            "&:hover": {
+                                borderColor: "#94A3B8",
+                                bgcolor: "#F8FAFC",
+                            },
                         }}
                     >
                         Sign In
@@ -411,12 +460,13 @@ export default function GuestNavbar() {
                         startIcon={<PersonAddOutlined />}
                         onClick={() => handleNavigate("/register")}
                         sx={{
-                            bgcolor: colors.pine,
+                            bgcolor: "#102A43",
                             color: colors.white,
-                            py: 1.1,
+                            py: 1.2,
                             fontWeight: 800,
-                            borderRadius: 2.5,
-                            "&:hover": { bgcolor: colors.pineDeep },
+                            fontSize: 14,
+                            borderRadius: 2.2,
+                            "&:hover": { bgcolor: "#0B2033" },
                         }}
                     >
                         Create Account

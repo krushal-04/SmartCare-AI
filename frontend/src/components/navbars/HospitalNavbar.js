@@ -91,7 +91,6 @@ export default function HospitalNavbar() {
                     color: colors.white,
                     borderBottom: `1px solid ${colors.hairlineOnDark}`,
                     backdropFilter: "blur(16px)",
-                    zIndex: (theme) => theme.zIndex.drawer + 1,
                 }}
             >
                 <Toolbar
@@ -395,35 +394,46 @@ export default function HospitalNavbar() {
                 anchor="right"
                 open={mobileOpen}
                 onClose={() => setMobileOpen(false)}
-                PaperProps={{
-                    sx: {
-                        width: { xs: "85%", sm: 360 },
-                        bgcolor: colors.ink,
-                        color: colors.white,
+                sx={{
+                    zIndex: (theme) => theme.zIndex.modal + 10,
+                    "& .MuiDrawer-paper": {
+                        width: { xs: "86%", sm: 360 },
+                        bgcolor: "#FFFFFF !important",
+                        color: "#0F172A !important",
                         p: 3,
+                        boxSizing: "border-box",
+                        boxShadow: "-12px 0 36px rgba(16,42,67,0.18)",
                     },
                 }}
             >
                 <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1.2 }}>
-                        <Avatar sx={{ bgcolor: colors.amber, color: colors.ink, width: 38, height: 38, fontWeight: 800 }}>
+                        <Avatar sx={{ bgcolor: colors.pine, color: colors.white, width: 38, height: 38, fontWeight: 800 }}>
                             {initial}
                         </Avatar>
                         <Box>
-                            <Typography fontWeight={800} fontSize={14.5} color={colors.white}>
+                            <Typography fontWeight={800} fontSize={14.5} color="#0F172A">
                                 {user?.fullName || "Hospital"}
                             </Typography>
-                            <Typography fontSize={11.5} color="rgba(255,255,255,0.6)">
-                                Hospital Management
+                            <Typography fontSize={11.5} color="#64748B">
+                                Hospital Management Portal
                             </Typography>
                         </Box>
                     </Box>
-                    <IconButton onClick={() => setMobileOpen(false)} sx={{ color: colors.white }}>
-                        <CloseOutlined />
+                    <IconButton
+                        onClick={() => setMobileOpen(false)}
+                        sx={{
+                            color: "#64748B",
+                            bgcolor: "#F1F5F9",
+                            "&:hover": { bgcolor: "#E2E8F0", color: "#0F172A" },
+                        }}
+                        size="small"
+                    >
+                        <CloseOutlined fontSize="small" />
                     </IconButton>
                 </Box>
 
-                <Divider sx={{ borderColor: colors.hairlineOnDark, mb: 2.5 }} />
+                <Divider sx={{ borderColor: "#E2E8F0", mb: 2.5 }} />
 
                 <List sx={{ p: 0, mb: 3 }}>
                     {navLinks.map((item) => {
@@ -435,17 +445,30 @@ export default function HospitalNavbar() {
                                 sx={{
                                     borderRadius: 2,
                                     mb: 0.6,
-                                    bgcolor: active ? "rgba(255,255,255,0.12)" : "transparent",
-                                    color: active ? colors.amber : "rgba(255,255,255,0.85)",
+                                    py: 1,
+                                    px: 1.5,
+                                    bgcolor: active ? "#F0FDFA" : "transparent",
+                                    border: active ? "1px solid #CCFBF1" : "1px solid transparent",
+                                    color: active ? "#0F766E" : "#1E293B",
+                                    transition: "all 0.15s ease",
+                                    "&:hover": {
+                                        bgcolor: active ? "#E6FFFA" : "#F8FAFC",
+                                        color: active ? "#0F766E" : "#0F172A",
+                                    },
                                 }}
                             >
-                                <ListItemIcon sx={{ color: "inherit", minWidth: 38 }}>
+                                <ListItemIcon
+                                    sx={{
+                                        color: active ? "#0D9488" : "#64748B",
+                                        minWidth: 36,
+                                    }}
+                                >
                                     {item.icon}
                                 </ListItemIcon>
                                 <ListItemText
                                     primary={item.label}
                                     primaryTypographyProps={{
-                                        fontWeight: active ? 800 : 500,
+                                        fontWeight: active ? 800 : 600,
                                         fontSize: 14.5,
                                     }}
                                 />
@@ -454,7 +477,7 @@ export default function HospitalNavbar() {
                     })}
                 </List>
 
-                <Divider sx={{ borderColor: colors.hairlineOnDark, mb: 2 }} />
+                <Divider sx={{ borderColor: "#E2E8F0", mb: 2 }} />
 
                 <Button
                     variant="outlined"
@@ -462,12 +485,13 @@ export default function HospitalNavbar() {
                     startIcon={<LogoutOutlined />}
                     onClick={handleLogout}
                     sx={{
-                        borderColor: "rgba(178,70,50,0.5)",
-                        color: "#F78D78",
+                        borderColor: "#FECACA",
+                        color: "#DC2626",
+                        bgcolor: "#FEF2F2",
                         py: 1.1,
-                        fontWeight: 700,
-                        borderRadius: 2.5,
-                        "&:hover": { bgcolor: "rgba(178,70,50,0.15)", borderColor: "#F78D78" },
+                        fontWeight: 750,
+                        borderRadius: 2.2,
+                        "&:hover": { bgcolor: "#FEE2E2", borderColor: "#FCA5A5" },
                     }}
                 >
                     Sign Out

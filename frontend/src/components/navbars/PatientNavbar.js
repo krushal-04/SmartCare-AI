@@ -90,7 +90,6 @@ export default function PatientNavbar() {
                     color: colors.white,
                     borderBottom: `1px solid ${colors.hairlineOnDark}`,
                     backdropFilter: "blur(16px)",
-                    zIndex: (theme) => theme.zIndex.drawer + 1,
                 }}
             >
                 <Toolbar
@@ -425,12 +424,15 @@ export default function PatientNavbar() {
                 anchor="right"
                 open={mobileOpen}
                 onClose={() => setMobileOpen(false)}
-                PaperProps={{
-                    sx: {
-                        width: { xs: "85%", sm: 360 },
-                        bgcolor: colors.ink,
-                        color: colors.white,
+                sx={{
+                    zIndex: (theme) => theme.zIndex.modal + 10,
+                    "& .MuiDrawer-paper": {
+                        width: { xs: "86%", sm: 360 },
+                        bgcolor: "#FFFFFF !important",
+                        color: "#0F172A !important",
                         p: 3,
+                        boxSizing: "border-box",
+                        boxShadow: "-12px 0 36px rgba(16,42,67,0.18)",
                     },
                 }}
             >
@@ -440,20 +442,28 @@ export default function PatientNavbar() {
                             {initial}
                         </Avatar>
                         <Box>
-                            <Typography fontWeight={800} fontSize={14.5} color={colors.white}>
+                            <Typography fontWeight={800} fontSize={14.5} color="#0F172A">
                                 {user?.fullName || "Patient"}
                             </Typography>
-                            <Typography fontSize={11.5} color="rgba(255,255,255,0.6)">
+                            <Typography fontSize={11.5} color="#64748B">
                                 {user?.email || "Patient Portal"}
                             </Typography>
                         </Box>
                     </Box>
-                    <IconButton onClick={() => setMobileOpen(false)} sx={{ color: colors.white }}>
-                        <CloseOutlined />
+                    <IconButton
+                        onClick={() => setMobileOpen(false)}
+                        sx={{
+                            color: "#64748B",
+                            bgcolor: "#F1F5F9",
+                            "&:hover": { bgcolor: "#E2E8F0", color: "#0F172A" },
+                        }}
+                        size="small"
+                    >
+                        <CloseOutlined fontSize="small" />
                     </IconButton>
                 </Box>
 
-                <Divider sx={{ borderColor: colors.hairlineOnDark, mb: 2.5 }} />
+                <Divider sx={{ borderColor: "#E2E8F0", mb: 2.5 }} />
 
                 {/* FAST BOOK APPOINTMENT CARD */}
                 <Box
@@ -461,21 +471,26 @@ export default function PatientNavbar() {
                     sx={{
                         p: 2,
                         mb: 2.5,
-                        borderRadius: 3,
-                        bgcolor: "rgba(214,138,60,0.18)",
-                        border: "1px solid rgba(214,138,60,0.45)",
+                        borderRadius: 2.5,
+                        bgcolor: "#F0FDFA",
+                        border: "1px solid #CCFBF1",
                         cursor: "pointer",
                         display: "flex",
                         alignItems: "center",
                         gap: 1.5,
+                        transition: "all 0.15s ease",
+                        "&:hover": {
+                            bgcolor: "#E6FFFA",
+                            borderColor: "#99F6E4",
+                        },
                     }}
                 >
-                    <CalendarMonthOutlined sx={{ color: colors.amber, fontSize: 30 }} />
+                    <CalendarMonthOutlined sx={{ color: colors.pine, fontSize: 30 }} />
                     <Box>
-                        <Typography fontWeight={800} fontSize={14.5} color={colors.amber}>
+                        <Typography fontWeight={800} fontSize={14.5} color="#0F766E">
                             Book Doctor Appointment
                         </Typography>
-                        <Typography fontSize={11.5} color="rgba(255,255,255,0.75)">
+                        <Typography fontSize={11.5} color="#64748B">
                             Find doctors & pick available slots
                         </Typography>
                     </Box>
@@ -502,17 +517,30 @@ export default function PatientNavbar() {
                                 sx={{
                                     borderRadius: 2,
                                     mb: 0.6,
-                                    bgcolor: active ? "rgba(255,255,255,0.12)" : "transparent",
-                                    color: active ? colors.amber : "rgba(255,255,255,0.85)",
+                                    py: 1,
+                                    px: 1.5,
+                                    bgcolor: active ? "#F0FDFA" : "transparent",
+                                    border: active ? "1px solid #CCFBF1" : "1px solid transparent",
+                                    color: active ? "#0F766E" : "#1E293B",
+                                    transition: "all 0.15s ease",
+                                    "&:hover": {
+                                        bgcolor: active ? "#E6FFFA" : "#F8FAFC",
+                                        color: active ? "#0F766E" : "#0F172A",
+                                    },
                                 }}
                             >
-                                <ListItemIcon sx={{ color: "inherit", minWidth: 38 }}>
+                                <ListItemIcon
+                                    sx={{
+                                        color: active ? "#0D9488" : "#64748B",
+                                        minWidth: 36,
+                                    }}
+                                >
                                     {item.icon}
                                 </ListItemIcon>
                                 <ListItemText
                                     primary={item.label}
                                     primaryTypographyProps={{
-                                        fontWeight: active ? 800 : 500,
+                                        fontWeight: active ? 800 : 600,
                                         fontSize: 14.5,
                                     }}
                                 />
@@ -521,7 +549,7 @@ export default function PatientNavbar() {
                     })}
                 </List>
 
-                <Divider sx={{ borderColor: colors.hairlineOnDark, mb: 2 }} />
+                <Divider sx={{ borderColor: "#E2E8F0", mb: 2 }} />
 
                 {/* LOGOUT */}
                 <Button
@@ -530,12 +558,13 @@ export default function PatientNavbar() {
                     startIcon={<LogoutOutlined />}
                     onClick={handleLogout}
                     sx={{
-                        borderColor: "rgba(178,70,50,0.5)",
-                        color: "#F78D78",
+                        borderColor: "#FECACA",
+                        color: "#DC2626",
+                        bgcolor: "#FEF2F2",
                         py: 1.1,
-                        fontWeight: 700,
-                        borderRadius: 2.5,
-                        "&:hover": { bgcolor: "rgba(178,70,50,0.15)", borderColor: "#F78D78" },
+                        fontWeight: 750,
+                        borderRadius: 2.2,
+                        "&:hover": { bgcolor: "#FEE2E2", borderColor: "#FCA5A5" },
                     }}
                 >
                     Sign Out

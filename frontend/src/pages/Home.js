@@ -68,13 +68,17 @@ function Home() {
                 >
                     <Box sx={{ maxWidth: 610 }}>
                         <Chip
-                            icon={<Psychology />}
+                            icon={<Psychology sx={{ color: `${colors.pineDeep} !important` }} />}
                             label="SMART HEALTHCARE PLATFORM"
                             sx={{
-                                bgcolor: colors.pineSoft,
-                                color: colors.pineDeep,
+                                bgcolor: "#ECFDF5",
+                                color: "#065F46",
+                                border: "1px solid #A7F3D0",
                                 fontWeight: 800,
+                                fontSize: 12,
+                                letterSpacing: 0.5,
                                 mb: 2.5,
+                                py: 0.5,
                             }}
                         />
 
@@ -217,14 +221,19 @@ function Home() {
                                         startIcon={<CalendarMonth />}
                                         onClick={() => navigate("/book-appointment")}
                                         sx={{
-                                            px: 3.2,
-                                            py: 1.6,
-                                            bgcolor: colors.amber,
-                                            color: colors.ink,
+                                            px: 3.5,
+                                            py: 1.5,
+                                            bgcolor: colors.pine,
+                                            color: colors.white,
                                             fontWeight: 800,
-                                            boxShadow: "0 6px 20px rgba(214,138,60,0.35)",
+                                            fontSize: 15,
+                                            borderRadius: 2.5,
+                                            boxShadow: "0 8px 24px rgba(13,148,136,0.30)",
+                                            transition: "all 0.2s ease",
                                             "&:hover": {
-                                                bgcolor: colors.amberDeep,
+                                                bgcolor: colors.pineDeep,
+                                                boxShadow: "0 10px 28px rgba(13,148,136,0.38)",
+                                                transform: "translateY(-1px)",
                                             },
                                         }}
                                     >
@@ -236,11 +245,21 @@ function Home() {
                                         variant="outlined"
                                         onClick={() => navigate("/login")}
                                         sx={{
-                                            px: 3.2,
-                                            py: 1.6,
-                                            borderColor: colors.pine,
-                                            color: colors.pine,
-                                            fontWeight: 700,
+                                            px: 3.5,
+                                            py: 1.5,
+                                            borderColor: colors.navy,
+                                            color: colors.navy,
+                                            fontWeight: 750,
+                                            fontSize: 15,
+                                            borderRadius: 2.5,
+                                            borderWidth: 1.5,
+                                            transition: "all 0.2s ease",
+                                            "&:hover": {
+                                                borderColor: colors.navy,
+                                                bgcolor: "rgba(16,42,67,0.06)",
+                                                borderWidth: 1.5,
+                                                transform: "translateY(-1px)",
+                                            },
                                         }}
                                     >
                                         Sign In
@@ -252,61 +271,47 @@ function Home() {
                         <Stack
                             direction="row"
                             spacing={{
-                                xs: 2.5,
-                                sm: 4,
+                                xs: 1.5,
+                                sm: 2,
                             }}
                             mt={4}
+                            flexWrap="wrap"
+                            gap={1.5}
                         >
-                            <Box>
-                                <Typography
-                                    fontSize={25}
-                                    fontWeight={900}
-                                    color="primary.main"
+                            {[
+                                { value: "24/7", label: "Emergency Support", color: "#DC2626" },
+                                { value: "AI", label: "Smart Clinical Routing", color: colors.pine },
+                                { value: "Live", label: "Ambulance Dispatch", color: "#2563EB" },
+                            ].map((stat) => (
+                                <Box
+                                    key={stat.label}
+                                    sx={{
+                                        py: 1.4,
+                                        px: 2,
+                                        borderRadius: 2.5,
+                                        bgcolor: colors.white,
+                                        border: `1px solid ${colors.hairline}`,
+                                        boxShadow: "0 2px 10px rgba(16,42,67,0.04)",
+                                        minWidth: { xs: 105, sm: 125 },
+                                    }}
                                 >
-                                    24/7
-                                </Typography>
-
-                                <Typography
-                                    fontSize={12}
-                                    color="text.secondary"
-                                >
-                                    Emergency support
-                                </Typography>
-                            </Box>
-
-                            <Box>
-                                <Typography
-                                    fontSize={25}
-                                    fontWeight={900}
-                                    color="primary.main"
-                                >
-                                    AI
-                                </Typography>
-
-                                <Typography
-                                    fontSize={12}
-                                    color="text.secondary"
-                                >
-                                    Smart routing
-                                </Typography>
-                            </Box>
-
-                            <Box>
-                                <Typography
-                                    fontSize={25}
-                                    fontWeight={900}
-                                    color="primary.main"
-                                >
-                                    Live
-                                </Typography>
-
-                                <Typography
-                                    fontSize={12}
-                                    color="text.secondary"
-                                >
-                                    Ambulance
-                                </Typography>
-                            </Box>
+                                    <Typography
+                                        fontSize={24}
+                                        fontWeight={900}
+                                        sx={{ color: stat.color, lineHeight: 1 }}
+                                    >
+                                        {stat.value}
+                                    </Typography>
+                                    <Typography
+                                        fontSize={12}
+                                        fontWeight={650}
+                                        color={colors.slate}
+                                        mt={0.6}
+                                    >
+                                        {stat.label}
+                                    </Typography>
+                                </Box>
+                            ))}
                         </Stack>
                     </Box>
 
