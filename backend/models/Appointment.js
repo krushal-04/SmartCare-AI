@@ -166,6 +166,57 @@ const appointmentSchema = new mongoose.Schema(
             type: String,
             default: "",
         },
+
+        // RESCHEDULING TRACKING & AUDIT
+        isRescheduled: {
+            type: Boolean,
+            default: false,
+            index: true,
+        },
+        rescheduledAt: {
+            type: Date,
+        },
+        rescheduleCount: {
+            type: Number,
+            default: 0,
+        },
+        rescheduleHistory: [
+            {
+                oldDate: { type: Date, required: true },
+                oldTime: { type: String, required: true },
+                oldStartTime: { type: String },
+                oldEndTime: { type: String },
+                newDate: { type: Date, required: true },
+                newTime: { type: String, required: true },
+                newStartTime: { type: String },
+                newEndTime: { type: String },
+                rescheduledBy: {
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: "User",
+                    required: true,
+                },
+                rescheduledByRole: {
+                    type: String,
+                    enum: ["patient", "doctor", "hospital", "admin"],
+                    default: "patient",
+                },
+                reason: {
+                    type: String,
+                    trim: true,
+                    default: "",
+                },
+                previousStatus: {
+                    type: String,
+                },
+                updatedStatus: {
+                    type: String,
+                },
+                rescheduledAt: {
+                    type: Date,
+                    default: Date.now,
+                },
+            },
+        ],
     },
     {
         timestamps: true,

@@ -400,7 +400,7 @@ export default function BookAppointment() {
 
                         setError(
                             verifyErr.response?.data?.message ||
-                                "Payment verification failed. Please contact billing support."
+                            "Payment verification failed. Please contact billing support."
                         );
                     } finally {
                         setSaving(false);
@@ -851,13 +851,13 @@ export default function BookAppointment() {
                                                                     bgcolor: isSelected
                                                                         ? colors.amber
                                                                         : !slot.available
-                                                                        ? "#F1F5F9"
-                                                                        : "transparent",
+                                                                            ? "#F1F5F9"
+                                                                            : "transparent",
                                                                     color: isSelected
                                                                         ? colors.ink
                                                                         : !slot.available
-                                                                        ? "#94A3B8"
-                                                                        : colors.pine,
+                                                                            ? "#94A3B8"
+                                                                            : colors.pine,
                                                                     borderColor: isSelected ? colors.amber : colors.hairline,
                                                                     "&:hover": {
                                                                         bgcolor: isSelected ? colors.amberDeep : colors.pineSoft,
@@ -979,8 +979,8 @@ export default function BookAppointment() {
                                     {saving
                                         ? "Connecting to Razorpay..."
                                         : consultationFee > 0
-                                        ? `Pay ₹${consultationFee} & Book Appointment`
-                                        : "Confirm & Book Free Appointment"}
+                                            ? `Pay ₹${consultationFee} & Book Appointment`
+                                            : "Confirm & Book Appointment"}
                                 </Button>
                             </Box>
                         )}

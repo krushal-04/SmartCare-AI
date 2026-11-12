@@ -21,6 +21,7 @@ import {
     Stack,
     TextField,
     Typography,
+    Tooltip,
 } from "@mui/material";
 import {
     CalendarMonthOutlined,
@@ -30,6 +31,9 @@ import {
     HourglassEmptyOutlined,
     ReplayOutlined,
     WarningAmberOutlined,
+    UpdateOutlined,
+    HistoryOutlined,
+    ArrowForwardOutlined,
 } from "@mui/icons-material";
 
 import DashboardLayout from "../../components/dashboard/DashboardLayout";
@@ -71,6 +75,46 @@ const isAppointmentPassed = (date, time) => {
     return false;
 };
 
+
+const getRescheduleEligibility = (appointment) => {
+    if (!appointment) return { eligible: false, reason: "Appointment not found" };
+    const rawStatus = appointment.status || appointment.bookingStatus || "Pending";
+    const isPassed = isAppointmentPassed(appointment.appointmentDate, appointment.appointmentTime);
+
+    if (isPassed) {
+        return { eligible: false, reason: "This appointment has already passed and cannot be rescheduled." };
+    }
+    if (!["Pending", "Confirmed"].includes(rawStatus)) {
+        return { eligible: false, reason: `Appointments with status '${rawStatus}' cannot be rescheduled.` };
+    }
+    if (!appointment.appointmentDate) {
+        return { eligible: false, reason: "Appointment date is missing." };
+    }
+
+    const apptDate = new Date(appointment.appointmentDate);
+    let h = 9, m = 0;
+    if (appointment.appointmentTime && appointment.appointmentTime.includes(":")) {
+        const parts = appointment.appointmentTime.split(":");
+        let ph = parseInt(parts[0], 10);
+        const isPM = /pm/i.test(appointment.appointmentTime);
+        const isAM = /am/i.test(appointment.appointmentTime);
+        let pm = parseInt(parts[1], 10) || 0;
+        if (isPM && ph < 12) ph += 12;
+        if (isAM && ph === 12) ph = 0;
+        if (!isNaN(ph)) { h = ph; m = pm; }
+    }
+    apptDate.setHours(h, m, 0, 0);
+
+    const diffHours = (apptDate.getTime() - Date.now()) / (1000 * 60 * 60);
+    if (diffHours < 2) {
+        return {
+            eligible: false,
+            reason: "Rescheduling deadline has passed (must be at least 2 hours before the scheduled consultation time).",
+        };
+    }
+    return { eligible: true };
+};
+
 export default function PatientAppointments() {
     const navigate = useNavigate();
 
@@ -80,12 +124,101 @@ export default function PatientAppointments() {
     const [error, setError] = useState("");
     const [successMessage, setSuccessMessage] = useState("");
 
+    
     // Cancellation & Refund Preview state
     const [selectedCancelAppt, setSelectedCancelAppt] = useState(null);
     const [refundPreview, setRefundPreview] = useState(null);
     const [previewLoading, setPreviewLoading] = useState(false);
     const [cancelReason, setCancelReason] = useState("");
     const [cancelling, setCancelling] = useState(false);
+
+    // Reschedule state
+    const [selectedRescheduleAppt, setSelectedRescheduleAppt] = useState(null);
+    const [rescheduleDate, setRescheduleDate] = useState("");
+    const [rescheduleTime, setRescheduleTime] = useState("");
+    const [rescheduleReason, setRescheduleReason] = useState("");
+    const [rescheduleSlots, setRescheduleSlots] = useState([]);
+    const [rescheduleNotice, setRescheduleNotice] = useState("");
+    const [slotsLoading, setSlotsLoading] = useState(false);
+    const [rescheduling, setRescheduling] = useState(false);
+    const [rescheduleError, setRescheduleError] = useState("");
+
+    // History modal state
+    const [selectedHistoryAppt, setSelectedHistoryAppt] = useState(null);
+
+    
+    // Fetch reschedule slots for selected appointment and date
+    const fetchRescheduleSlots = async (appointmentId, dateStr) => {
+        if (!appointmentId || !dateStr) return;
+        try {
+            setSlotsLoading(true);
+            setRescheduleError("");
+            setRescheduleNotice("");
+            const res = await api.get(`/appointment/${appointmentId}/reschedule/availability?date=${dateStr}`);
+            setRescheduleSlots(res.data.slots || []);
+            if (res.data.message) {
+                setRescheduleNotice(res.data.message);
+            }
+        } catch (err) {
+            setRescheduleError(err.response?.data?.message || "Unable to check doctor availability for this date.");
+            setRescheduleSlots([]);
+        } finally {
+            setSlotsLoading(false);
+        }
+    };
+
+    // Open reschedule dialog
+    const handleOpenRescheduleDialog = async (appointment) => {
+        setSelectedRescheduleAppt(appointment);
+        setRescheduleError("");
+        setRescheduleReason("");
+        setRescheduleTime("");
+
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const defaultDateStr = tomorrow.toISOString().split("T")[0];
+
+        setRescheduleDate(defaultDateStr);
+        await fetchRescheduleSlots(appointment._id, defaultDateStr);
+    };
+
+    // Change date in reschedule dialog
+    const handleRescheduleDateChange = async (newDateVal) => {
+        setRescheduleDate(newDateVal);
+        setRescheduleTime("");
+        if (selectedRescheduleAppt && newDateVal) {
+            await fetchRescheduleSlots(selectedRescheduleAppt._id, newDateVal);
+        }
+    };
+
+    // Execute reschedule
+    const executeReschedule = async () => {
+        if (!selectedRescheduleAppt || !rescheduleDate || !rescheduleTime) {
+            setRescheduleError("Please choose both a new date and an available time slot.");
+            return;
+        }
+        try {
+            setRescheduling(true);
+            setRescheduleError("");
+            const res = await api.put(`/appointment/${selectedRescheduleAppt._id}/reschedule`, {
+                newDate: rescheduleDate,
+                newTime: rescheduleTime,
+                reason: rescheduleReason.trim(),
+            });
+
+            setSuccessMessage(res.data?.message || "Appointment rescheduled successfully!");
+            setSelectedRescheduleAppt(null);
+            await loadAppointments();
+        } catch (err) {
+            const errMsg = err.response?.data?.message || "Failed to reschedule appointment. Please try again.";
+            setRescheduleError(errMsg);
+            if (selectedRescheduleAppt && rescheduleDate) {
+                await fetchRescheduleSlots(selectedRescheduleAppt._id, rescheduleDate);
+            }
+        } finally {
+            setRescheduling(false);
+        }
+    };
 
     const loadAppointments = async () => {
         try {
@@ -437,6 +570,42 @@ export default function PatientAppointments() {
                                                     Ref: {appointment.gatewayRefundId}
                                                 </Typography>
                                             )}
+
+                                            {appointment.isRescheduled && (
+                                                <Stack direction="row" spacing={0.8} alignItems="center">
+                                                    <Chip
+                                                        size="small"
+                                                        icon={<UpdateOutlined sx={{ fontSize: 13 }} />}
+                                                        label={`Rescheduled${(appointment.rescheduleCount || 1) > 1 ? ` (${appointment.rescheduleCount}x)` : ""}`}
+                                                        sx={{
+                                                            bgcolor: "#F5F3FF",
+                                                            color: "#6D28D9",
+                                                            border: "1px solid #DDD6FE",
+                                                            fontWeight: 750,
+                                                            fontSize: 11.5,
+                                                        }}
+                                                    />
+                                                    {appointment.rescheduleHistory && appointment.rescheduleHistory.length > 0 && (
+                                                        <Button
+                                                            size="small"
+                                                            variant="text"
+                                                            onClick={() => setSelectedHistoryAppt(appointment)}
+                                                            startIcon={<HistoryOutlined sx={{ fontSize: 13 }} />}
+                                                            sx={{
+                                                                fontSize: 11.5,
+                                                                textTransform: "none",
+                                                                fontWeight: 700,
+                                                                color: "#6D28D9",
+                                                                p: 0,
+                                                                minWidth: 0,
+                                                                "&:hover": { textDecoration: "underline" },
+                                                            }}
+                                                        >
+                                                            History ({appointment.rescheduleHistory.length})
+                                                        </Button>
+                                                    )}
+                                                </Stack>
+                                            )}
                                         </Stack>
                                     </Box>
 
@@ -517,27 +686,432 @@ export default function PatientAppointments() {
                                                 : ""}
                                         </Typography>
 
-                                        {canCancel && (
-                                            <Button
-                                                variant="outlined"
-                                                color="error"
-                                                size="small"
-                                                onClick={() => handleOpenCancelDialog(appointment)}
-                                                sx={{
-                                                    borderRadius: 2,
-                                                    fontWeight: 700,
-                                                    fontSize: 12,
-                                                }}
-                                            >
-                                                Cancel & Refund
-                                            </Button>
-                                        )}
+                                        <Stack direction="row" spacing={1} alignItems="center" mt={0.5} flexWrap="wrap">
+                                            {/* RESCHEDULE BUTTON */}
+                                            {(() => {
+                                                if (!["Pending", "Confirmed"].includes(rawStatus) || isPassed) {
+                                                    return null;
+                                                }
+                                                const elig = getRescheduleEligibility(appointment);
+                                                if (elig.eligible) {
+                                                    return (
+                                                        <Button
+                                                            variant="outlined"
+                                                            size="small"
+                                                            onClick={() => handleOpenRescheduleDialog(appointment)}
+                                                            startIcon={<UpdateOutlined fontSize="small" />}
+                                                            sx={{
+                                                                borderRadius: 2,
+                                                                fontWeight: 700,
+                                                                fontSize: 12,
+                                                                color: colors.pine,
+                                                                borderColor: colors.pine,
+                                                                "&:hover": {
+                                                                    bgcolor: colors.pineSoft,
+                                                                    borderColor: colors.pineDeep,
+                                                                },
+                                                            }}
+                                                        >
+                                                            Reschedule
+                                                        </Button>
+                                                    );
+                                                } else {
+                                                    return (
+                                                        <Tooltip title={elig.reason} arrow>
+                                                            <span>
+                                                                <Button
+                                                                    variant="outlined"
+                                                                    size="small"
+                                                                    disabled
+                                                                    startIcon={<UpdateOutlined fontSize="small" />}
+                                                                    sx={{
+                                                                        borderRadius: 2,
+                                                                        fontWeight: 700,
+                                                                        fontSize: 12,
+                                                                    }}
+                                                                >
+                                                                    Reschedule
+                                                                </Button>
+                                                            </span>
+                                                        </Tooltip>
+                                                    );
+                                                }
+                                            })()}
+
+                                            {canCancel && (
+                                                <Button
+                                                    variant="outlined"
+                                                    color="error"
+                                                    size="small"
+                                                    onClick={() => handleOpenCancelDialog(appointment)}
+                                                    sx={{
+                                                        borderRadius: 2,
+                                                        fontWeight: 700,
+                                                        fontSize: 12,
+                                                    }}
+                                                >
+                                                    Cancel & Refund
+                                                </Button>
+                                            )}
+                                        </Stack>
                                     </Stack>
                                 </Stack>
                             </CardContent>
                         </Card>
                     );
                 })
+            )}
+
+            
+            {/* RESCHEDULE APPOINTMENT MODAL */}
+            {selectedRescheduleAppt && (
+                <Dialog
+                    open={Boolean(selectedRescheduleAppt)}
+                    onClose={() => !rescheduling && setSelectedRescheduleAppt(null)}
+                    maxWidth="md"
+                    fullWidth
+                    PaperProps={{
+                        sx: { borderRadius: 3.5, p: 1 },
+                    }}
+                >
+                    <DialogTitle sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <Stack direction="row" spacing={1.5} alignItems="center">
+                            <UpdateOutlined sx={{ color: colors.pine }} />
+                            <Box>
+                                <Typography fontWeight={850} fontSize={17} color={colors.ink}>
+                                    Reschedule Appointment
+                                </Typography>
+                                <Typography fontSize={12} color={colors.slate}>
+                                    Select a new consultation date and available time slot
+                                </Typography>
+                            </Box>
+                        </Stack>
+                        <IconButton onClick={() => setSelectedRescheduleAppt(null)} disabled={rescheduling} size="small">
+                            <CloseOutlined />
+                        </IconButton>
+                    </DialogTitle>
+
+                    <Divider />
+
+                    <DialogContent sx={{ py: 2.5 }}>
+                        {rescheduleError && (
+                            <Alert severity="error" sx={{ mb: 2.5, borderRadius: 2 }} onClose={() => setRescheduleError("")}>
+                                {rescheduleError}
+                            </Alert>
+                        )}
+
+                        {/* DOCTOR & ORIGINAL DETAILS CARD */}
+                        <Box
+                            sx={{
+                                p: 2,
+                                mb: 2.5,
+                                borderRadius: 3,
+                                bgcolor: "#F8FAFC",
+                                border: `1px solid ${colors.hairline}`,
+                            }}
+                        >
+                            <Stack direction={{ xs: "column", sm: "row" }} justifyContent="space-between" spacing={2}>
+                                <Box>
+                                    <Typography fontWeight={800} fontSize={15} color={colors.ink}>
+                                        Dr. {selectedRescheduleAppt.doctorId?.doctorName?.replace(/^dr.?s+/i, "") || "Specialist"}
+                                    </Typography>
+                                    <Typography fontSize={12.5} color={colors.pine} fontWeight={700}>
+                                        {selectedRescheduleAppt.doctorId?.specialization || "Clinical Consultation"} • {selectedRescheduleAppt.hospitalId?.hospitalName || "Hospital"}
+                                    </Typography>
+                                    <Typography fontSize={12.5} color={colors.slate} mt={0.5}>
+                                        Current Slot: <strong>{formatAppointmentDate(selectedRescheduleAppt.appointmentDate)}</strong> at <strong>{selectedRescheduleAppt.appointmentTime}</strong>
+                                    </Typography>
+                                </Box>
+
+                                <Box textAlign={{ xs: "left", sm: "right" }}>
+                                    <Typography fontSize={13} fontWeight={750} color={colors.ink}>
+                                        Fee: ₹{selectedRescheduleAppt.consultationFee || 0}
+                                    </Typography>
+                                    <Chip
+                                        size="small"
+                                        label="Fee Preserved (No Double Charge)"
+                                        sx={{
+                                            bgcolor: "#ECFDF5",
+                                            color: "#065F46",
+                                            fontWeight: 750,
+                                            fontSize: 11,
+                                            mt: 0.5,
+                                        }}
+                                    />
+                                </Box>
+                            </Stack>
+                        </Box>
+
+                        {/* STEP 1: SELECT NEW DATE */}
+                        <Box mb={2.5}>
+                            <Typography fontSize={13.5} fontWeight={800} color={colors.ink} mb={1}>
+                                Step 1: Choose New Date
+                            </Typography>
+                            <TextField
+                                type="date"
+                                fullWidth
+                                size="small"
+                                value={rescheduleDate}
+                                onChange={(e) => handleRescheduleDateChange(e.target.value)}
+                                inputProps={{
+                                    min: new Date().toISOString().split("T")[0],
+                                }}
+                                helperText="Doctor's real-time schedule will load automatically for the selected date"
+                            />
+                        </Box>
+
+                        {/* STEP 2: SELECT NEW TIME SLOT */}
+                        <Box mb={2.5}>
+                            <Typography fontSize={13.5} fontWeight={800} color={colors.ink} mb={1}>
+                                Step 2: Choose Available Time Slot
+                            </Typography>
+
+                            {slotsLoading ? (
+                                <Box py={3} textAlign="center">
+                                    <CircularProgress size={24} sx={{ color: colors.pine }} />
+                                    <Typography fontSize={12.5} color={colors.slate} mt={1}>
+                                        Checking doctor availability & blocked slots...
+                                    </Typography>
+                                </Box>
+                            ) : rescheduleSlots.length === 0 ? (
+                                <Alert severity="warning" sx={{ borderRadius: 2 }}>
+                                    {rescheduleNotice || "No slots available on this date. Doctor may not be consulting or is on leave."}
+                                </Alert>
+                            ) : (
+                                <Box>
+                                    {rescheduleNotice && (
+                                        <Typography fontSize={12} color={colors.slate} mb={1.5}>
+                                            {rescheduleNotice}
+                                        </Typography>
+                                    )}
+                                    <Box
+                                        sx={{
+                                            display: "grid",
+                                            gridTemplateColumns: "repeat(auto-fill, minmax(95px, 1fr))",
+                                            gap: 1.2,
+                                        }}
+                                    >
+                                        {rescheduleSlots.map((slot) => {
+                                            const isSelected = rescheduleTime === slot.time;
+                                            return (
+                                                <Button
+                                                    key={slot.time}
+                                                    disabled={!slot.available}
+                                                    variant={isSelected ? "contained" : "outlined"}
+                                                    onClick={() => setRescheduleTime(slot.time)}
+                                                    size="small"
+                                                    sx={{
+                                                        borderRadius: 2,
+                                                        fontWeight: 750,
+                                                        fontSize: 12,
+                                                        py: 0.8,
+                                                        bgcolor: isSelected
+                                                            ? colors.pine
+                                                            : slot.available
+                                                            ? "#FFFFFF"
+                                                            : "#F1F5F9",
+                                                        color: isSelected
+                                                            ? "#FFFFFF"
+                                                            : slot.available
+                                                            ? colors.ink
+                                                            : "#94A3B8",
+                                                        borderColor: isSelected
+                                                            ? colors.pine
+                                                            : slot.available
+                                                            ? colors.hairline
+                                                            : "#E2E8F0",
+                                                        "&:hover": {
+                                                            bgcolor: isSelected
+                                                                ? colors.pineDeep
+                                                                : slot.available
+                                                                ? colors.pineSoft
+                                                                : "#F1F5F9",
+                                                            borderColor: colors.pine,
+                                                        },
+                                                    }}
+                                                >
+                                                    {slot.time}
+                                                </Button>
+                                            );
+                                        })}
+                                    </Box>
+                                </Box>
+                            )}
+                        </Box>
+
+                        {/* STEP 3: REASON (OPTIONAL) */}
+                        <Box mb={2.5}>
+                            <Typography fontSize={13.5} fontWeight={800} color={colors.ink} mb={1}>
+                                Step 3: Reason for Rescheduling (Optional)
+                            </Typography>
+                            <TextField
+                                fullWidth
+                                multiline
+                                minRows={2}
+                                placeholder="e.g. Work commitment conflict, feeling unwell, requested earlier slot..."
+                                value={rescheduleReason}
+                                onChange={(e) => setRescheduleReason(e.target.value)}
+                            />
+                        </Box>
+
+                        {/* STEP 4: COMPARISON SUMMARY */}
+                        {rescheduleTime && (
+                            <Box
+                                sx={{
+                                    p: 2,
+                                    borderRadius: 3,
+                                    bgcolor: "#F0FDF4",
+                                    border: "1px solid #BBF7D0",
+                                }}
+                            >
+                                <Typography fontWeight={800} fontSize={13} color="#166534" mb={1}>
+                                    Rescheduling Confirmation Summary
+                                </Typography>
+                                <Stack direction={{ xs: "column", sm: "row" }} alignItems="center" spacing={2} justifyContent="space-between">
+                                    <Box>
+                                        <Typography fontSize={12} color={colors.slate}>
+                                            From (Current Slot):
+                                        </Typography>
+                                        <Typography fontSize={13.5} fontWeight={800} color={colors.ink}>
+                                            {formatAppointmentDate(selectedRescheduleAppt.appointmentDate)} at {selectedRescheduleAppt.appointmentTime}
+                                        </Typography>
+                                    </Box>
+
+                                    <ArrowForwardOutlined sx={{ color: "#166534", display: { xs: "none", sm: "block" } }} />
+
+                                    <Box>
+                                        <Typography fontSize={12} color="#166534">
+                                            To (New Slot):
+                                        </Typography>
+                                        <Typography fontSize={13.5} fontWeight={800} color="#166534">
+                                            {formatAppointmentDate(rescheduleDate)} at {rescheduleTime}
+                                        </Typography>
+                                    </Box>
+                                </Stack>
+                            </Box>
+                        )}
+                    </DialogContent>
+
+                    <DialogActions sx={{ p: 2.5, pt: 0, justifyContent: "space-between" }}>
+                        <Button
+                            variant="outlined"
+                            disabled={rescheduling}
+                            onClick={() => setSelectedRescheduleAppt(null)}
+                            sx={{ borderRadius: 2, fontWeight: 700 }}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="contained"
+                            disabled={rescheduling || !rescheduleTime || !rescheduleDate}
+                            onClick={executeReschedule}
+                            sx={{
+                                borderRadius: 2,
+                                fontWeight: 800,
+                                px: 3,
+                                bgcolor: colors.pine,
+                                "&:hover": { bgcolor: colors.pineDeep },
+                            }}
+                        >
+                            {rescheduling ? "Securing Slot..." : "Confirm Reschedule"}
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+            )}
+
+            {/* RESCHEDULE HISTORY MODAL */}
+            {selectedHistoryAppt && (
+                <Dialog
+                    open={Boolean(selectedHistoryAppt)}
+                    onClose={() => setSelectedHistoryAppt(null)}
+                    maxWidth="sm"
+                    fullWidth
+                    PaperProps={{
+                        sx: { borderRadius: 3.5, p: 1 },
+                    }}
+                >
+                    <DialogTitle sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <Stack direction="row" spacing={1.5} alignItems="center">
+                            <HistoryOutlined sx={{ color: colors.pine }} />
+                            <Typography fontWeight={850} fontSize={17} color={colors.ink}>
+                                Reschedule Audit History
+                            </Typography>
+                        </Stack>
+                        <IconButton onClick={() => setSelectedHistoryAppt(null)} size="small">
+                            <CloseOutlined />
+                        </IconButton>
+                    </DialogTitle>
+
+                    <Divider />
+
+                    <DialogContent sx={{ py: 2.5 }}>
+                        <Typography fontSize={13.5} color={colors.slate} mb={2}>
+                            Complete history of schedule modifications for this consultation:
+                        </Typography>
+
+                        {(!selectedHistoryAppt.rescheduleHistory || selectedHistoryAppt.rescheduleHistory.length === 0) ? (
+                            <Typography fontSize={13} color={colors.slate}>
+                                No previous rescheduling records on file.
+                            </Typography>
+                        ) : (
+                            <Stack spacing={2}>
+                                {selectedHistoryAppt.rescheduleHistory.map((h, idx) => (
+                                    <Box
+                                        key={idx}
+                                        sx={{
+                                            p: 2,
+                                            borderRadius: 2.5,
+                                            border: `1px solid ${colors.hairline}`,
+                                            bgcolor: "#FAFAFA",
+                                        }}
+                                    >
+                                        <Stack direction="row" justifyContent="space-between" mb={1}>
+                                            <Chip
+                                                size="small"
+                                                label={`Modification #${idx + 1}`}
+                                                sx={{ fontWeight: 800, fontSize: 11, bgcolor: "#EEF2F6" }}
+                                            />
+                                            <Typography fontSize={11.5} color={colors.slate}>
+                                                {h.rescheduledAt ? new Date(h.rescheduledAt).toLocaleString() : "—"}
+                                            </Typography>
+                                        </Stack>
+
+                                        <Stack direction="row" spacing={1.5} alignItems="center" my={1}>
+                                            <Typography fontSize={13} color={colors.slate}>
+                                                From: <strong>{formatAppointmentDate(h.oldDate)} ({h.oldTime})</strong>
+                                            </Typography>
+                                            <ArrowForwardOutlined sx={{ fontSize: 14, color: colors.slate }} />
+                                            <Typography fontSize={13} color={colors.ink} fontWeight={750}>
+                                                To: <strong>{formatAppointmentDate(h.newDate)} ({h.newTime})</strong>
+                                            </Typography>
+                                        </Stack>
+
+                                        {h.reason && (
+                                            <Typography fontSize={12} color={colors.slate} mt={0.5}>
+                                                Reason: <em>"{h.reason}"</em>
+                                            </Typography>
+                                        )}
+                                    </Box>
+                                ))}
+                            </Stack>
+                        )}
+                    </DialogContent>
+
+                    <DialogActions sx={{ p: 2, pt: 0 }}>
+                        <Button
+                            variant="contained"
+                            onClick={() => setSelectedHistoryAppt(null)}
+                            sx={{
+                                borderRadius: 2,
+                                fontWeight: 700,
+                                bgcolor: colors.pine,
+                                "&:hover": { bgcolor: colors.pineDeep },
+                            }}
+                        >
+                            Close
+                        </Button>
+                    </DialogActions>
+                </Dialog>
             )}
 
             {/* CANCELLATION & REFUND POLICY MODAL */}

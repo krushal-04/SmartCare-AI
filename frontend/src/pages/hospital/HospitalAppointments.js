@@ -410,6 +410,22 @@ export default function HospitalAppointments() {
                                                         variant="outlined"
                                                         sx={{ fontWeight: 700, mt: 0.5, bgcolor: "#F8FAFC" }}
                                                     />
+                                                    {appt.isRescheduled && (
+                                                        <Chip
+                                                            label={`Rescheduled${(appt.rescheduleCount || 1) > 1 ? ` (${appt.rescheduleCount}x)` : ""}`}
+                                                            size="small"
+                                                            sx={{
+                                                                fontWeight: 800,
+                                                                fontSize: 10.5,
+                                                                bgcolor: "#F5F3FF",
+                                                                color: "#6D28D9",
+                                                                border: "1px solid #DDD6FE",
+                                                                mt: 0.5,
+                                                                display: "block",
+                                                                width: "fit-content",
+                                                            }}
+                                                        />
+                                                    )}
                                                 </TableCell>
 
                                                 <TableCell sx={{ maxWidth: 260 }}>
@@ -559,6 +575,23 @@ export default function HospitalAppointments() {
                                 <Typography variant="body2" color="text.secondary">
                                     Reason: {selectedAppointment.reason || "General Consultation"}
                                 </Typography>
+
+                                {selectedAppointment.isRescheduled && (
+                                    <Box sx={{ mt: 1.5, p: 1.5, borderRadius: 2, bgcolor: "#F5F3FF", border: "1px solid #DDD6FE" }}>
+                                        <Typography fontSize={12} fontWeight={800} color="#6D28D9" mb={0.5}>
+                                            Appointment Rescheduled ({(selectedAppointment.rescheduleCount || 1)} time{(selectedAppointment.rescheduleCount || 1) > 1 ? "s" : ""})
+                                        </Typography>
+                                        {selectedAppointment.rescheduleHistory && selectedAppointment.rescheduleHistory.length > 0 && (
+                                            <Stack spacing={0.8}>
+                                                {selectedAppointment.rescheduleHistory.map((h, i) => (
+                                                    <Typography key={i} fontSize={11.5} color="text.secondary">
+                                                        • {h.rescheduledAt ? new Date(h.rescheduledAt).toLocaleDateString() : "—"}: Moved from {h.oldDate ? new Date(h.oldDate).toLocaleDateString() : ""} ({h.oldTime}) to {h.newDate ? new Date(h.newDate).toLocaleDateString() : ""} ({h.newTime}) {h.reason ? `— "${h.reason}"` : ""}
+                                                    </Typography>
+                                                ))}
+                                            </Stack>
+                                        )}
+                                    </Box>
+                                )}
                             </Box>
 
                             {(actionType === "cancel" || actionType === "reject") ? (

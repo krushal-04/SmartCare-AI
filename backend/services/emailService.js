@@ -510,6 +510,72 @@ SmartCare AI Team`;
     return sendEmail({ to: patient.email, subject, text, html });
 };
 
+
+// 7b. Appointment Rescheduled Email
+const sendAppointmentRescheduledEmail = async ({
+    appointment,
+    patient,
+    doctor,
+    hospital,
+    oldDateStr,
+    oldTimeStr,
+    newDateStr,
+    newTimeStr,
+    reason,
+}) => {
+    if (!patient?.email) return;
+
+    const pName = patient?.fullName || "Patient";
+    const docName = doctor?.doctorName || "Doctor";
+    const hospName = hospital?.hospitalName || "Medical Facility";
+
+    const subject = `SmartCare AI - Appointment Rescheduled with Dr. ${docName}`;
+    const text = `Dear ${pName},
+
+Your appointment with Dr. ${docName} at ${hospName} has been successfully rescheduled.
+
+Previous Slot: ${oldDateStr} at ${oldTimeStr}
+New Confirmed Slot: ${newDateStr} at ${newTimeStr}
+${reason ? `Reason: ${reason}` : ""}
+
+Please arrive 15 minutes prior to your newly scheduled consultation slot.
+
+View your updated appointments anytime at http://localhost:3000/patient/appointments
+
+Best regards,
+SmartCare AI Team`;
+
+    const html = buildHtmlEmail({
+        title: "Appointment Rescheduled",
+        subtitle: `Dr. ${docName} • ${hospName}`,
+        statusText: "Rescheduled",
+        statusColor: "teal",
+        contentHtml: `
+          <p>Dear <strong>${pName}</strong>,</p>
+          <p>Your appointment with <strong>Dr. ${docName}</strong> at <strong>${hospName}</strong> has been successfully rescheduled.</p>
+
+          <div style="background-color: #F0FDF4; border-radius: 12px; padding: 20px; border: 1px solid #BBF7D0; margin: 20px 0;">
+            <p style="margin: 0 0 10px 0; font-size: 14px; color: #166534;">
+              <strong>New Confirmed Slot:</strong> <span style="font-size: 16px; font-weight: 800; color: #0D9488;">${newDateStr} at ${newTimeStr}</span>
+            </p>
+            <p style="margin: 0 0 8px 0; font-size: 13px; color: #64748B;">
+              <strong>Previous Slot:</strong> <span style="text-decoration: line-through;">${oldDateStr} at ${oldTimeStr}</span>
+            </p>
+            ${reason ? `<p style="margin: 0; font-size: 13px; color: #475569;"><strong>Reason:</strong> ${reason}</p>` : ""}
+          </div>
+
+          <p>Your existing consultation payment remains fully applied to this new appointment slot. No extra payment is required.</p>
+          <p>Please arrive 15 minutes prior to your allocated slot.</p>
+        `,
+        actionButton: {
+            label: "View My Appointments",
+            url: "http://localhost:3000/patient/appointments",
+        },
+    });
+
+    return sendEmail({ to: patient.email, subject, text, html });
+};
+
 // 8. Emergency Alert Email
 const sendEmergencyAlertEmail = async (emergency, hospital, patient) => {
     if (!hospital?.hospitalEmail) return;
@@ -797,6 +863,7 @@ module.exports = {
     sendHospitalRejectionEmail,
     sendAppointmentCreatedEmail,
     sendAppointmentStatusEmail,
+    sendAppointmentRescheduledEmail,
     sendEmergencyAlertEmail,
     sendEmergencyStatusEmail,
     sendPaymentSuccessEmail,

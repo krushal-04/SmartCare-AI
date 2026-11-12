@@ -506,6 +506,21 @@ export default function AdminPayments() {
                                                     <Typography fontSize={11.5} color={colors.slate}>
                                                         {hospName}
                                                     </Typography>
+                                                    {p.appointmentId?.isRescheduled && (
+                                                        <Chip
+                                                            size="small"
+                                                            label="Rescheduled"
+                                                            sx={{
+                                                                bgcolor: "#F5F3FF",
+                                                                color: "#6D28D9",
+                                                                border: "1px solid #DDD6FE",
+                                                                fontWeight: 800,
+                                                                fontSize: 10,
+                                                                mt: 0.5,
+                                                                height: 20,
+                                                            }}
+                                                        />
+                                                    )}
                                                 </TableCell>
 
                                                 <TableCell>
@@ -770,6 +785,23 @@ export default function AdminPayments() {
                                     {selectedDetail.paymentStatus}
                                 </Typography>
                             </Stack>
+
+                            {selectedDetail.appointmentId?.isRescheduled && (
+                                <Box sx={{ mt: 1, p: 1.5, borderRadius: 2, bgcolor: "#F5F3FF", border: "1px solid #DDD6FE" }}>
+                                    <Typography fontSize={12} fontWeight={800} color="#6D28D9" mb={0.5}>
+                                        Consultation Rescheduled
+                                    </Typography>
+                                    {selectedDetail.appointmentId?.rescheduleHistory && selectedDetail.appointmentId.rescheduleHistory.length > 0 && (
+                                        <Stack spacing={0.6}>
+                                            {selectedDetail.appointmentId.rescheduleHistory.map((h, i) => (
+                                                <Typography key={i} fontSize={11.5} color="text.secondary">
+                                                    • {h.rescheduledAt ? new Date(h.rescheduledAt).toLocaleDateString() : "—"}: Moved from {h.oldDate ? new Date(h.oldDate).toLocaleDateString() : ""} ({h.oldTime}) to {h.newDate ? new Date(h.newDate).toLocaleDateString() : ""} ({h.newTime}) {h.reason ? `— "${h.reason}"` : ""}
+                                                </Typography>
+                                            ))}
+                                        </Stack>
+                                    )}
+                                </Box>
+                            )}
 
                             {selectedDetail.refundAmount > 0 && (
                                 <>

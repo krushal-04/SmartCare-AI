@@ -16,6 +16,8 @@ const {
     updateAppointmentStatus,
     getAllAppointments,
     getAppointmentById,
+    getRescheduleAvailability,
+    rescheduleAppointment,
 } = require("../controllers/appointmentController");
 
 router.get("/slots", protect, patientOnly, getAvailableSlots);
@@ -23,6 +25,9 @@ router.post("/create", protect, patientOnly, createAppointment);
 router.get("/my", protect, patientOnly, getMyAppointments);
 router.get("/hospital", protect, hospitalOnly, getHospitalAppointments);
 router.get("/all", protect, adminOnly, getAllAppointments);
+
+router.get("/:appointmentId/reschedule/availability", protect, patientOnly, getRescheduleAvailability);
+router.put("/:appointmentId/reschedule", protect, patientOnly, rescheduleAppointment);
 router.get("/:id", protect, getAppointmentById);
 router.put("/:id/status", protect, updateAppointmentStatus);
 

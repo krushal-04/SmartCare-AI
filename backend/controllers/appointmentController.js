@@ -1070,3 +1070,576 @@ exports.getAppointmentById = async (req, res) => {
         });
     }
 };
+
+
+/**
+ * GET /api/appointment/:appointmentId/reschedule/availability?date=YYYY-MM-DD
+ * Check available slots for rescheduling an existing appointment
+ * Patient Only (Ownership verified)
+ */
+exports.getRescheduleAvailability = async (req, res) => {
+    try {
+        const { appointmentId } = req.params;
+        const { date } = req.query;
+
+        if (!appointmentId) {
+            return res.status(400).json({
+                success: false,
+                message: "Appointment ID is required.",
+            });
+        }
+
+        const appointment = await Appointment.findById(appointmentId)
+            .populate("doctorId", "doctorName specialization qualification doctorImage consultationFee")
+            .populate("hospitalId", "hospitalName city state address hospitalPhone")
+            .populate("departmentId", "name departmentName");
+
+        if (!appointment) {
+            return res.status(404).json({
+                success: false,
+                message: "Appointment not found.",
+            });
+        }
+
+        // Verify patient ownership
+        if (String(appointment.patientId) !== String(req.user._id)) {
+            return res.status(403).json({
+                success: false,
+                message: "You are not authorized to reschedule this appointment.",
+            });
+        }
+
+        // Eligibility: Only Pending or Confirmed
+        if (!["Pending", "Confirmed"].includes(appointment.status)) {
+            return res.status(400).json({
+                success: false,
+                message: `Appointments with status "${appointment.status}" cannot be rescheduled.`,
+            });
+        }
+
+        // Check if appointment date & time has already passed
+        const apptDateIso = appointment.appointmentDate.toISOString().slice(0, 10);
+        const [appY, appM, appD] = apptDateIso.split("-").map(Number);
+        const [appH, appMin] = (appointment.appointmentTime || "00:00").split(":").map(Number);
+        const appointmentDateTime = new Date(appY, appM - 1, appD, appH, appMin);
+        const now = new Date();
+
+        if (appointmentDateTime.getTime() <= now.getTime()) {
+            return res.status(400).json({
+                success: false,
+                message: "Past appointments cannot be rescheduled.",
+                deadlinePassed: true,
+            });
+        }
+
+        // 2-hour rescheduling deadline
+        const diffMs = appointmentDateTime.getTime() - now.getTime();
+        const minNoticeMs = 2 * 60 * 60 * 1000; // 2 hours
+        if (diffMs < minNoticeMs) {
+            return res.status(400).json({
+                success: false,
+                message: "Appointments can only be rescheduled at least 2 hours before the scheduled time.",
+                deadlinePassed: true,
+            });
+        }
+
+        // If date query param not provided, return appointment eligibility status
+        if (!date) {
+            return res.status(200).json({
+                success: true,
+                eligible: true,
+                appointment: {
+                    _id: appointment._id,
+                    appointmentDate: appointment.appointmentDate,
+                    appointmentTime: appointment.appointmentTime,
+                    status: appointment.status,
+                    bookingStatus: appointment.bookingStatus,
+                    consultationFee: appointment.consultationFee,
+                    doctor: appointment.doctorId,
+                    hospital: appointment.hospitalId,
+                    department: appointment.departmentId,
+                    isRescheduled: appointment.isRescheduled,
+                    rescheduleHistory: appointment.rescheduleHistory || [],
+                },
+                message: "Appointment is eligible for rescheduling. Please select a date to view available slots.",
+            });
+        }
+
+        // Validate date format
+        const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+        if (!datePattern.test(date)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid date format. Expected YYYY-MM-DD.",
+            });
+        }
+
+        const todayString = getTodayString();
+        if (date < todayString) {
+            return res.status(400).json({
+                success: false,
+                message: "Past dates are not allowed for appointment rescheduling.",
+            });
+        }
+
+        const doctorId = appointment.doctorId._id || appointment.doctorId;
+
+        // Fetch Doctor Schedule
+        let schedule = await DoctorSchedule.findOne({
+            doctorId,
+            isActive: true,
+        }).lean();
+
+        if (!schedule) {
+            schedule = await DoctorSchedule.findOneAndUpdate(
+                { doctorId },
+                {
+                    doctorId,
+                    workingDays: [
+                        "Monday",
+                        "Tuesday",
+                        "Wednesday",
+                        "Thursday",
+                        "Friday",
+                        "Saturday",
+                    ],
+                    startTime: "09:00",
+                    endTime: "17:00",
+                    slotDuration: 30,
+                    leaveDates: [],
+                    isActive: true,
+                },
+                { upsert: true, returnDocument: "after" }
+            ).lean();
+        }
+
+        const [y, m, d] = date.split("-").map(Number);
+        const dayOfWeekIndex = new Date(y, m - 1, d).getDay();
+        const selectedDay = dayNames[dayOfWeekIndex];
+
+        if (!schedule.workingDays.includes(selectedDay)) {
+            return res.status(200).json({
+                success: true,
+                slots: [],
+                message: `Doctor is not available on ${selectedDay}s.`,
+                workingDays: schedule.workingDays,
+            });
+        }
+
+        const isDateOnLeave = (leaveDatesList, target) => {
+            if (!Array.isArray(leaveDatesList) || !target) return false;
+            const cleanTarget = String(target).split("T")[0].trim();
+            return leaveDatesList.some((ld) => {
+                if (!ld) return false;
+                const cleanLd = String(ld).split("T")[0].trim();
+                return cleanLd === cleanTarget;
+            });
+        };
+
+        if (isDateOnLeave(schedule.leaveDates, date)) {
+            return res.status(200).json({
+                success: true,
+                slots: [],
+                message: "Doctor is marked on leave on this date.",
+                workingDays: schedule.workingDays,
+            });
+        }
+
+        const startMinutes = toMinutes(schedule.startTime || "09:00");
+        const endMinutes = toMinutes(schedule.endTime || "17:00");
+        const duration = Number(schedule.slotDuration) || 30;
+
+        const { start, end } = getDateRange(date);
+
+        // Fetch booked appointments on requested date, EXCLUDING this appointment itself!
+        const bookedAppointments = await Appointment.find({
+            _id: { $ne: appointment._id },
+            doctorId,
+            appointmentDate: { $gte: start, $lte: end },
+            status: { $nin: ["Cancelled", "Rejected"] },
+        })
+            .select("appointmentTime")
+            .lean();
+
+        const bookedTimes = new Set(bookedAppointments.map((item) => item.appointmentTime));
+
+        const isToday = date === todayString;
+        const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+        const slots = [];
+        for (let current = startMinutes; current + duration <= endMinutes; current += duration) {
+            const time = toTimeString(current);
+            const isPassedTime = isToday && current <= currentMinutes;
+            const isBooked = bookedTimes.has(time);
+            const isCurrentSlot = (date === apptDateIso && time === appointment.appointmentTime);
+
+            slots.push({
+                time,
+                available: !isBooked && !isPassedTime && !isCurrentSlot,
+                isPast: isPassedTime,
+                isCurrentSlot,
+            });
+        }
+
+        const availableCount = slots.filter((s) => s.available).length;
+        let noticeMsg = "";
+        if (isToday && availableCount === 0) {
+            noticeMsg = "All consultation slots for today have already passed. Please select tomorrow or a future date.";
+        }
+
+        return res.status(200).json({
+            success: true,
+            date,
+            appointment: {
+                _id: appointment._id,
+                appointmentDate: appointment.appointmentDate,
+                appointmentTime: appointment.appointmentTime,
+                status: appointment.status,
+                bookingStatus: appointment.bookingStatus,
+                consultationFee: appointment.consultationFee,
+                doctor: appointment.doctorId,
+                hospital: appointment.hospitalId,
+                department: appointment.departmentId,
+                isRescheduled: appointment.isRescheduled,
+                rescheduleHistory: appointment.rescheduleHistory || [],
+            },
+            schedule: {
+                workingDays: schedule.workingDays,
+                startTime: schedule.startTime,
+                endTime: schedule.endTime,
+                slotDuration: schedule.slotDuration,
+            },
+            slots,
+            availableCount,
+            message: noticeMsg,
+        });
+    } catch (error) {
+        console.error("getRescheduleAvailability error:", error);
+        res.status(500).json({
+            success: false,
+            message: "Unable to retrieve doctor availability for rescheduling.",
+        });
+    }
+};
+
+/**
+ * PUT /api/appointment/:appointmentId/reschedule
+ * Reschedule an existing appointment to a new date and time
+ * Patient Only (Ownership verified)
+ */
+exports.rescheduleAppointment = async (req, res) => {
+    try {
+        const { appointmentId } = req.params;
+        const { newDate, newTime, reason } = req.body;
+
+        if (!appointmentId || !newDate || !newTime) {
+            return res.status(400).json({
+                success: false,
+                message: "Appointment ID, new date, and new time slot are required.",
+            });
+        }
+
+        const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+        if (!datePattern.test(newDate)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid date format. Expected YYYY-MM-DD.",
+            });
+        }
+
+        const timePattern = /^([01]?\d|2[0-3]):[0-5]\d$/;
+        if (!timePattern.test(newTime)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid time format. Expected HH:MM (24-hour).",
+            });
+        }
+
+        const appointment = await Appointment.findById(appointmentId)
+            .populate("doctorId")
+            .populate("hospitalId")
+            .populate("departmentId");
+
+        if (!appointment) {
+            return res.status(404).json({
+                success: false,
+                message: "Appointment not found.",
+            });
+        }
+
+        // Verify patient ownership
+        if (String(appointment.patientId) !== String(req.user._id)) {
+            return res.status(403).json({
+                success: false,
+                message: "You are not authorized to reschedule this appointment.",
+            });
+        }
+
+        // Eligibility: Only Pending or Confirmed
+        if (!["Pending", "Confirmed"].includes(appointment.status)) {
+            return res.status(400).json({
+                success: false,
+                message: `Cannot reschedule appointment in "${appointment.status}" status.`,
+            });
+        }
+
+        // Check if appointment date & time has already passed
+        const apptDateIso = appointment.appointmentDate.toISOString().slice(0, 10);
+        const [appY, appM, appD] = apptDateIso.split("-").map(Number);
+        const [appH, appMin] = (appointment.appointmentTime || "00:00").split(":").map(Number);
+        const currentApptDateTime = new Date(appY, appM - 1, appD, appH, appMin);
+        const now = new Date();
+
+        if (currentApptDateTime.getTime() <= now.getTime()) {
+            return res.status(400).json({
+                success: false,
+                message: "Past appointments cannot be rescheduled.",
+                deadlinePassed: true,
+            });
+        }
+
+        // 2-hour rescheduling deadline rule
+        const diffMs = currentApptDateTime.getTime() - now.getTime();
+        const minNoticeMs = 2 * 60 * 60 * 1000;
+        if (diffMs < minNoticeMs) {
+            return res.status(400).json({
+                success: false,
+                message: "The rescheduling deadline for this appointment has passed (at least 2 hours advance notice required).",
+                deadlinePassed: true,
+            });
+        }
+
+        // Prevent rescheduling to the exact same date and time
+        if (apptDateIso === newDate && appointment.appointmentTime === newTime) {
+            return res.status(400).json({
+                success: false,
+                message: "The selected date and time are identical to your current appointment. Please choose a different slot.",
+            });
+        }
+
+        const todayString = getTodayString();
+        if (newDate < todayString) {
+            return res.status(400).json({
+                success: false,
+                message: "Cannot reschedule to a past date.",
+            });
+        }
+
+        const doctorId = appointment.doctorId._id || appointment.doctorId;
+
+        // Fetch Doctor Schedule for verification
+        let schedule = await DoctorSchedule.findOne({
+            doctorId,
+            isActive: true,
+        }).lean();
+
+        if (!schedule) {
+            schedule = {
+                workingDays: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+                startTime: "09:00",
+                endTime: "17:00",
+                slotDuration: 30,
+                leaveDates: [],
+            };
+        }
+
+        const [ny, nm, nd] = newDate.split("-").map(Number);
+        const dayOfWeekIndex = new Date(ny, nm - 1, nd).getDay();
+        const selectedDay = dayNames[dayOfWeekIndex];
+
+        if (!schedule.workingDays.includes(selectedDay)) {
+            return res.status(400).json({
+                success: false,
+                message: `Doctor is not scheduled to consult on ${selectedDay}s.`,
+            });
+        }
+
+        const isDateOnLeave = (leaveDatesList, target) => {
+            if (!Array.isArray(leaveDatesList) || !target) return false;
+            const cleanTarget = String(target).split("T")[0].trim();
+            return leaveDatesList.some((ld) => {
+                if (!ld) return false;
+                const cleanLd = String(ld).split("T")[0].trim();
+                return cleanLd === cleanTarget;
+            });
+        };
+
+        if (isDateOnLeave(schedule.leaveDates, newDate)) {
+            return res.status(400).json({
+                success: false,
+                message: "Doctor is marked on leave on this date. Please choose another date.",
+            });
+        }
+
+        const startMinutes = toMinutes(schedule.startTime || "09:00");
+        const endMinutes = toMinutes(schedule.endTime || "17:00");
+        const duration = Number(schedule.slotDuration) || 30;
+        const requestedMinutes = toMinutes(newTime);
+
+        if (
+            requestedMinutes < startMinutes ||
+            requestedMinutes + duration > endMinutes ||
+            (requestedMinutes - startMinutes) % duration !== 0
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Selected time is not a valid consultation slot for this doctor.",
+            });
+        }
+
+        if (newDate === todayString) {
+            const currentTotalMinutes = now.getHours() * 60 + now.getMinutes();
+            if (requestedMinutes <= currentTotalMinutes) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Cannot select a time slot that has already passed today.",
+                });
+            }
+        }
+
+        // CRITICAL DOUBLE-BOOKING PREVENTION & CONCURRENCY
+        // Ensure no other active appointment occupies the target new slot
+        const { start: newRangeStart, end: newRangeEnd } = getDateRange(newDate);
+
+        const conflictingAppt = await Appointment.findOne({
+            _id: { $ne: appointment._id },
+            doctorId,
+            appointmentDate: { $gte: newRangeStart, $lte: newRangeEnd },
+            appointmentTime: newTime,
+            status: { $nin: ["Cancelled", "Rejected"] },
+        });
+
+        if (conflictingAppt) {
+            return res.status(409).json({
+                success: false,
+                message: "This time slot is no longer available. Please select another time slot.",
+            });
+        }
+
+        // Capture previous details for history
+        const oldDate = appointment.appointmentDate;
+        const oldStartTime = appointment.appointmentTime;
+        const oldEndTime = toTimeString(toMinutes(oldStartTime) + duration);
+        const newStartTime = newTime;
+        const newEndTime = toTimeString(toMinutes(newStartTime) + duration);
+
+        const historyRecord = {
+            oldDate,
+            oldTime: oldStartTime,
+            oldStartTime,
+            oldEndTime,
+            newDate: parseAppointmentDate(newDate),
+            newTime: newStartTime,
+            newStartTime,
+            newEndTime,
+            rescheduledBy: req.user._id,
+            rescheduledByRole: "patient",
+            reason: reason?.trim() || "Patient requested rescheduling",
+            previousStatus: appointment.status,
+            updatedStatus: appointment.status,
+            rescheduledAt: new Date(),
+        };
+
+        // Update appointment atomically: old slot is released, new slot is booked
+        appointment.appointmentDate = parseAppointmentDate(newDate);
+        appointment.appointmentTime = newTime;
+        appointment.isRescheduled = true;
+        appointment.rescheduledAt = new Date();
+        appointment.rescheduleCount = (appointment.rescheduleCount || 0) + 1;
+        appointment.rescheduleHistory.push(historyRecord);
+
+        await appointment.save();
+
+        // Populate updated appointment for response and notification
+        const populatedAppt = await Appointment.findById(appointment._id)
+            .populate("hospitalId", "hospitalName city state address hospitalPhone userId")
+            .populate("doctorId", "doctorName specialization qualification doctorImage consultationFee userId")
+            .populate("departmentId", "name departmentName")
+            .populate("patientId", "fullName email phone")
+            .populate("paymentId", "paymentStatus amount gatewayPaymentId");
+
+        const oldDateFormatted = new Date(oldDate).toLocaleDateString(undefined, {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+        });
+        const newDateFormatted = new Date(parseAppointmentDate(newDate)).toLocaleDateString(undefined, {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+        });
+
+        const docName = populatedAppt.doctorId?.doctorName || "Doctor";
+        const hospName = populatedAppt.hospitalId?.hospitalName || "Medical Center";
+        const patientName = populatedAppt.patientId?.fullName || "Patient";
+
+        // 1. In-app notification to Patient
+        Notification.create({
+            userId: req.user._id,
+            title: "Appointment Rescheduled",
+            message: `Your appointment with Dr. ${docName} at ${hospName} has been rescheduled to ${newDateFormatted} at ${newStartTime}.`,
+            type: "Appointment",
+            relatedId: appointment._id,
+        }).catch((e) => console.warn("Patient reschedule notification err:", e.message));
+
+        // 2. In-app notification to Hospital
+        if (populatedAppt.hospitalId?.userId) {
+            Notification.create({
+                userId: populatedAppt.hospitalId.userId,
+                title: "Appointment Rescheduled by Patient",
+                message: `Patient ${patientName} rescheduled consultation with Dr. ${docName} from ${oldDateFormatted} (${oldStartTime}) to ${newDateFormatted} (${newStartTime}).`,
+                type: "Appointment",
+                relatedId: appointment._id,
+            }).catch((e) => console.warn("Hospital reschedule notification err:", e.message));
+        }
+
+        // 3. In-app notification to Doctor
+        if (populatedAppt.doctorId?.userId) {
+            Notification.create({
+                userId: populatedAppt.doctorId.userId,
+                title: "Appointment Rescheduled by Patient",
+                message: `Patient ${patientName} rescheduled consultation to ${newDateFormatted} at ${newStartTime}.`,
+                type: "Appointment",
+                relatedId: appointment._id,
+            }).catch((e) => console.warn("Doctor reschedule notification err:", e.message));
+        }
+
+        // 4. Audit Log
+        AuditLog.create({
+            userId: req.user._id,
+            userName: req.user.fullName || "Patient",
+            userRole: "patient",
+            action: "APPOINTMENT_RESCHEDULED",
+            targetType: "Appointment",
+            targetId: appointment._id,
+            details: `Appointment #${appointment._id} rescheduled from ${oldDateFormatted} ${oldStartTime} to ${newDateFormatted} ${newStartTime}.`,
+        }).catch((e) => console.warn("AuditLog err:", e.message));
+
+        // 5. Email Notification to patient
+        emailService
+            .sendAppointmentRescheduledEmail({
+                appointment: populatedAppt,
+                patient: populatedAppt.patientId,
+                doctor: populatedAppt.doctorId,
+                hospital: populatedAppt.hospitalId,
+                oldDateStr: oldDateFormatted,
+                oldTimeStr: oldStartTime,
+                newDateStr: newDateFormatted,
+                newTimeStr: newStartTime,
+                reason: reason?.trim() || "",
+            })
+            .catch((e) => console.error("Reschedule email err:", e.message));
+
+        return res.status(200).json({
+            success: true,
+            message: "Your appointment has been successfully rescheduled.",
+            appointment: populatedAppt,
+        });
+    } catch (error) {
+        console.error("rescheduleAppointment error:", error);
+        res.status(500).json({
+            success: false,
+            message: error.message || "Failed to reschedule appointment.",
+        });
+    }
+};

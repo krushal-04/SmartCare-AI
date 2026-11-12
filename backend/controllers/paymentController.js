@@ -892,7 +892,7 @@ exports.getDoctorPaymentSummary = async (req, res) => {
 
         const payments = await Payment.find({ doctorId })
             .populate("patientId", "fullName email phone")
-            .populate("appointmentId", "appointmentDate appointmentTime status bookingStatus")
+            .populate("appointmentId", "appointmentDate appointmentTime status bookingStatus isRescheduled rescheduleHistory")
             .sort({ createdAt: -1 });
 
         let totalPaidAppointments = 0;
@@ -1009,7 +1009,7 @@ exports.getAdminPaymentOverview = async (req, res) => {
             .populate("patientId", "fullName email phone")
             .populate("doctorId", "doctorName specialization")
             .populate("hospitalId", "hospitalName city")
-            .populate("appointmentId", "appointmentDate appointmentTime status")
+            .populate("appointmentId", "appointmentDate appointmentTime status isRescheduled rescheduleHistory")
             .sort({ createdAt: -1 });
 
         let totalRevenue = 0;
