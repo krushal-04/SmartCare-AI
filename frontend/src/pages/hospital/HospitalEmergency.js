@@ -119,7 +119,7 @@ export default function HospitalEmergency() {
         socket.on("emergency:created", (data) => {
             setAlert({
                 type: "error",
-                message: `🚨 NEW INCOMING EMERGENCY: ${data.emergencyCategory || "Transfer Request"} received! Review & accept below.`,
+                message: `New incoming emergency: ${data.emergencyCategory || "Transfer Request"}. Review and accept it below.`,
             });
             fetchOperations();
         });
@@ -131,7 +131,7 @@ export default function HospitalEmergency() {
         socket.on("ambulance:not-responding", (data) => {
             setAlert({
                 type: "error",
-                message: `⚠️ DRIVER ISSUE REPORTED for Emergency #${data.emergencyId?.toString().slice(-6)}. Reassign replacement vehicle immediately.`,
+                message: `Driver issue reported for emergency #${data.emergencyId?.toString().slice(-6)}. Reassign a replacement vehicle immediately.`,
             });
             fetchOperations();
         });

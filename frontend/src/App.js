@@ -94,7 +94,6 @@ import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import AdminReports from "./pages/admin/AdminReports";
 import AdminNotifications from "./pages/admin/AdminNotifications";
 import AdminPayments from "./pages/admin/AdminPayments";
-import AdminReminders from "./pages/admin/AdminReminders";
 
 /* =========================
    DRIVER PAGES
@@ -498,14 +497,6 @@ function App() {
                         element={
                             <ProtectedRoute role="admin">
                                 <AdminPayments />
-                            </ProtectedRoute>
-                        }
-                    />
-                    <Route
-                        path="/admin/reminders"
-                        element={
-                            <ProtectedRoute role="admin">
-                                <AdminReminders />
                             </ProtectedRoute>
                         }
                     />

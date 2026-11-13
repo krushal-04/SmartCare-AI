@@ -124,8 +124,8 @@ const getAdminNotificationMeta = (notification) => {
             borderLight: "#C7D2FE",
             accentBorder: "#4F46E5",
             icon: <CalendarMonthOutlined sx={{ color: "#4F46E5", fontSize: 22 }} />,
-            actionLabel: "Reminder Engine",
-            actionPath: "/admin/reminders",
+            actionLabel: "Audit Reports",
+            actionPath: "/admin/reports",
         };
     }
 
@@ -163,7 +163,7 @@ export default function AdminNotifications() {
     const { markAsRead: markGlobalAsRead, markAllAsRead: markGlobalAllRead } = useNotifications();
 
     const [notifications, setNotifications] = useState([]);
-    const [unreadCount, setUnreadCount] = useState(0);
+    const [, setUnreadCount] = useState(0);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
     const [tab, setTab] = useState("all");

@@ -922,48 +922,9 @@ function Login() {
                                 </Button>
                             </Box>
 
-                            {/* Demo Accounts Quick-Fill Box */}
                             <Box
                                 sx={{
-                                    mt: 2.5,
-                                    p: 2,
-                                    borderRadius: 3,
-                                    bgcolor: "#F8FAFC",
-                                    border: "1px dashed #CBD5E1",
-                                }}
-                            >
-                                <Typography fontSize={11.5} fontWeight={800} color="#64748B" textTransform="uppercase" letterSpacing={0.5} mb={1}>
-                                    Demo Access
-                                </Typography>
-                                <Stack direction="row" spacing={1} flexWrap="wrap">
-                                    <Button
-                                        size="small"
-                                        variant="outlined"
-                                        onClick={() => {
-                                            setForm({
-                                                email: "driver@smartcare.ai",
-                                                password: "Driver@123",
-                                            });
-                                            setMessage("");
-                                        }}
-                                        sx={{
-                                            textTransform: "none",
-                                            fontSize: 12,
-                                            fontWeight: 700,
-                                            borderRadius: 2,
-                                            borderColor: "#CBD5E1",
-                                            color: "#0F172A",
-                                            "&:hover": { borderColor: "#0B8793", bgcolor: "#F0FDFA" },
-                                        }}
-                                    >
-                                        Fill Driver Demo (driver@smartcare.ai)
-                                    </Button>
-                                </Stack>
-                            </Box>
-
-                            <Box
-                                sx={{
-                                    mt: 2,
+                                    mt: 3,
                                     p: 2,
                                     borderRadius: 3,
                                     bgcolor:

@@ -18,6 +18,20 @@ const {
     emitToRole,
 } = require("../services/socketService");
 
+const getRequestHospital = async (user) => {
+    let hospital = await Hospital.findOne({ userId: user._id });
+    if (!hospital) hospital = await Hospital.findOne({ hospitalEmail: user.email });
+    return hospital;
+};
+
+const assertHospitalOwnsEmergency = (hospital, emergency, res) => {
+    if (!hospital || String(emergency.hospitalId?._id || emergency.hospitalId) !== String(hospital._id)) {
+        res.status(403).json({ success: false, message: "This emergency is not assigned to your hospital." });
+        return false;
+    }
+    return true;
+};
+
 // Patient: Submit structured emergency request
 exports.requestEmergency = async (req, res) => {
     try {
@@ -406,10 +420,8 @@ exports.hospitalAcceptEmergency = async (req, res) => {
     try {
         const emergencyId = req.params.id;
 
-        let hospital = await Hospital.findOne({ userId: req.user._id });
-        if (!hospital) hospital = await Hospital.findOne({ hospitalEmail: req.user.email });
-
-        if (!hospital && req.user.role !== "admin") {
+        const hospital = await getRequestHospital(req.user);
+        if (!hospital) {
             return res.status(403).json({ success: false, message: "Hospital profile not found." });
         }
 
@@ -419,6 +431,7 @@ exports.hospitalAcceptEmergency = async (req, res) => {
         if (!emergency) {
             return res.status(404).json({ success: false, message: "Emergency request not found." });
         }
+        if (!assertHospitalOwnsEmergency(hospital, emergency, res)) return;
 
         emergency.hospitalAcceptanceStatus = "ACCEPTED";
         emergency.status = "HOSPITAL_ACCEPTED";
@@ -491,8 +504,7 @@ exports.hospitalRejectEmergency = async (req, res) => {
             return res.status(400).json({ success: false, message: "Please provide a reason for redirecting/rejecting this emergency." });
         }
 
-        let hospital = await Hospital.findOne({ userId: req.user._id });
-        if (!hospital) hospital = await Hospital.findOne({ hospitalEmail: req.user.email });
+        const hospital = await getRequestHospital(req.user);
 
         const emergency = await EmergencyRequest.findById(emergencyId)
             .populate("patientId", "fullName phone email");
@@ -500,6 +512,7 @@ exports.hospitalRejectEmergency = async (req, res) => {
         if (!emergency) {
             return res.status(404).json({ success: false, message: "Emergency request not found." });
         }
+        if (!assertHospitalOwnsEmergency(hospital, emergency, res)) return;
 
         emergency.hospitalAcceptanceStatus = "REJECTED";
         emergency.hospitalRejectReason = reason.trim();
@@ -565,8 +578,8 @@ exports.hospitalDispatchAmbulance = async (req, res) => {
             return res.status(400).json({ success: false, message: "Please select an ambulance to dispatch." });
         }
 
-        let hospital = await Hospital.findOne({ userId: req.user._id });
-        if (!hospital) hospital = await Hospital.findOne({ hospitalEmail: req.user.email });
+        const hospital = await getRequestHospital(req.user);
+        if (!hospital) return res.status(403).json({ success: false, message: "Hospital profile not found." });
 
         const emergency = await EmergencyRequest.findById(emergencyId)
             .populate("patientId", "fullName phone email");
@@ -574,12 +587,14 @@ exports.hospitalDispatchAmbulance = async (req, res) => {
         if (!emergency) {
             return res.status(404).json({ success: false, message: "Emergency request not found." });
         }
+        if (!assertHospitalOwnsEmergency(hospital, emergency, res)) return;
 
         // Atomic vehicle lock
         const claimedAmbulance = await Ambulance.findOneAndUpdate(
             {
                 _id: ambulanceId,
-                verificationStatus: { $ne: "SUSPENDED" },
+                hospitalId: hospital?._id,
+                isRestricted: { $ne: true },
                 $or: [
                     { assignedEmergencyId: emergency._id },
                     { assignedEmergencyId: null, availability: true },
@@ -602,6 +617,14 @@ exports.hospitalDispatchAmbulance = async (req, res) => {
                 success: false,
                 message: "This ambulance is no longer available or is already assigned to another active emergency.",
             });
+        }
+
+        if (claimedAmbulance.driverId?.dutyStatus !== "ON_DUTY") {
+            await Ambulance.updateOne(
+                { _id: claimedAmbulance._id, assignedEmergencyId: emergency._id },
+                { $set: { status: "Offline", availabilityStatus: "OFF_DUTY", availability: false, assignedEmergencyId: null } }
+            );
+            return res.status(409).json({ success: false, message: "The assigned driver is not on duty. Select another ambulance." });
         }
 
         // Release previous ambulance if reassigned
@@ -652,7 +675,7 @@ exports.hospitalDispatchAmbulance = async (req, res) => {
         if (driverUser?._id) {
             await Notification.create({
                 userId: driverUser._id,
-                title: `🚨 DISPATCH ORDER: ${emergency.emergencyCategory}`,
+                title: `DISPATCH ORDER: ${emergency.emergencyCategory}`,
                 message: `Immediate response required! Destination: ${emergency.address || "Live GPS location"}. Patient: ${emergency.contactNumber}.`,
                 type: "Emergency",
                 relatedId: emergency._id,
@@ -891,6 +914,8 @@ exports.getHospitalAvailableAmbulances = async (req, res) => {
         let emergency = null;
         if (emergencyId) {
             emergency = await EmergencyRequest.findById(emergencyId).lean();
+            if (!emergency) return res.status(404).json({ success: false, message: "Emergency request not found." });
+            if (!assertHospitalOwnsEmergency(hospital, emergency, res)) return;
         }
 
         const matchResult = await matchAmbulanceForHospital(
@@ -1233,6 +1258,7 @@ exports.adminOverrideAmbulance = async (req, res) => {
         const claimed = await Ambulance.findOneAndUpdate(
             {
                 _id: ambulanceId,
+                isRestricted: { $ne: true },
                 $or: [
                     { assignedEmergencyId: emergency._id },
                     { assignedEmergencyId: null, availability: true },

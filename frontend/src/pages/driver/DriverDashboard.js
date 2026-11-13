@@ -142,7 +142,7 @@ export default function DriverDashboard() {
         socket.on("emergency:ambulance-dispatched", (data) => {
             setAlert({
                 type: "error",
-                message: `🚨 NEW DISPATCH ORDER: ${data.emergencyCategory || "Emergency Transfer"}! Tap below to start journey.`,
+                message: `New dispatch order: ${data.emergencyCategory || "Emergency Transfer"}. Open the trip to begin the journey.`,
             });
             fetchData();
         });
@@ -274,7 +274,7 @@ export default function DriverDashboard() {
                                 <Box sx={{ flex: 1 }}>
                                     <Box sx={{ display: "flex", alignItems: "center", gap: 1.2, mb: 1 }}>
                                         <Chip
-                                            label="🚨 ACTIVE DISPATCH ORDER"
+                                            label="ACTIVE DISPATCH ORDER"
                                             size="small"
                                             sx={{
                                                 bgcolor: "#DC2626",
@@ -569,17 +569,6 @@ export default function DriverDashboard() {
                                                     }}
                                                 />
                                             ))}
-                                            <Chip
-                                                label={ambulance.verificationStatus || "VERIFIED"}
-                                                size="small"
-                                                sx={{
-                                                    bgcolor: "#F0FDF4",
-                                                    color: "#16A34A",
-                                                    fontWeight: 800,
-                                                    fontSize: 10.5,
-                                                    height: 20,
-                                                }}
-                                            />
                                         </Box>
                                     </Box>
                                 </Box>

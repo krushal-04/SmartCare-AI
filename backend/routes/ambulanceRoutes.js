@@ -3,7 +3,6 @@ const router = express.Router();
 
 const {
     protect,
-    adminOnly,
 } = require("../middleware/protect");
 
 const {
@@ -11,25 +10,22 @@ const {
     getAmbulanceById,
     createAmbulance,
     updateAmbulance,
-    verifyAmbulance,
     deleteAmbulance,
+    setAmbulanceRestriction,
 } = require("../controllers/ambulanceController");
 
-// Get all ambulances (Public / Hospital / Admin)
-router.get("/", getAmbulances);
-router.get("/all", getAmbulances);
-router.get("/:id", getAmbulanceById);
+// Fleet data is operational data and requires authentication.
+router.get("/", protect, getAmbulances);
+router.get("/all", protect, getAmbulances);
+router.get("/:id", protect, getAmbulanceById);
 
-// Add ambulance (Admin or Hospital)
+// Hospitals own and register their own ambulances.
 router.post("/create", protect, createAmbulance);
 
 // Update ambulance
 router.put("/:id", protect, updateAmbulance);
+router.patch("/:id/restriction", protect, setAmbulanceRestriction);
 
-// Verify / Suspend ambulance (Admin only)
-router.post("/:id/verify", protect, adminOnly, verifyAmbulance);
-
-// Delete ambulance (Admin only)
-router.delete("/:id", protect, adminOnly, deleteAmbulance);
+router.delete("/:id", protect, deleteAmbulance);
 
 module.exports = router;

@@ -21,6 +21,7 @@ const {
     getHospitalAvailableAmbulances,
     hospitalDispatchAmbulance,
 } = require("../controllers/emergencyController");
+const { getHospitalDrivers, createHospitalDriver } = require("../controllers/ambulanceController");
 
 const {
     protect,
@@ -40,6 +41,8 @@ router.post("/emergencies/:id/accept", protect, hospitalOnly, hospitalAcceptEmer
 router.post("/emergencies/:id/reject", protect, hospitalOnly, hospitalRejectEmergency);
 router.get("/ambulances/available", protect, hospitalOnly, getHospitalAvailableAmbulances);
 router.post("/emergencies/:id/dispatch-ambulance", protect, hospitalOnly, hospitalDispatchAmbulance);
+router.get("/drivers", protect, hospitalOnly, getHospitalDrivers);
+router.post("/drivers", protect, hospitalOnly, createHospitalDriver);
 
 // Hospital Patients list
 router.get("/patients", protect, hospitalOnly, getHospitalPatients);

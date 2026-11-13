@@ -35,6 +35,11 @@ exports.startDuty = async (req, res) => {
         if (driver.assignedAmbulanceId) {
             assignedAmbulance = await Ambulance.findById(driver.assignedAmbulanceId);
             if (assignedAmbulance) {
+                if (assignedAmbulance.isRestricted) {
+                    driver.dutyStatus = "OFF_DUTY";
+                    await driver.save();
+                    return res.status(403).json({ success: false, message: `Your ambulance is restricted by the hospital: ${assignedAmbulance.restrictionReason || "Contact hospital operations."}` });
+                }
                 // If not currently on an active emergency, make it available
                 if (!assignedAmbulance.assignedEmergencyId) {
                     assignedAmbulance.status = "Available";
@@ -135,7 +140,7 @@ exports.endDuty = async (req, res) => {
             assignedAmbulance = await Ambulance.findById(driver.assignedAmbulanceId);
             if (assignedAmbulance && !assignedAmbulance.assignedEmergencyId) {
                 assignedAmbulance.status = "Offline";
-                assignedAmbulance.availabilityStatus = "OFFLINE";
+                assignedAmbulance.availabilityStatus = "OFF_DUTY";
                 assignedAmbulance.availability = false;
                 await assignedAmbulance.save();
             }

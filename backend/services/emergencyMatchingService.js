@@ -165,10 +165,10 @@ const recommendHospital = async ({ emergencyCategory, latitude, longitude }) => 
 const matchAmbulanceForHospital = async (hospitalId, emergencyCategory, patientLat, patientLon) => {
     const rule = CATEGORY_RULES[emergencyCategory] || CATEGORY_RULES["Other Emergency"];
 
-    // Find all verified/available ambulances owned by this hospital
+    // Find dispatch-ready ambulances owned by this hospital.
     const ambulances = await Ambulance.find({
         hospitalId,
-        verificationStatus: { $ne: "SUSPENDED" },
+        isRestricted: { $ne: true },
         $or: [
             { availabilityStatus: "AVAILABLE" },
             { status: "Available", availability: true },
@@ -185,7 +185,8 @@ const matchAmbulanceForHospital = async (hospitalId, emergencyCategory, patientL
         };
     }
 
-    const scored = ambulances.map((amb) => {
+    const dispatchReady = ambulances.filter((amb) => amb.driverId?.dutyStatus === "ON_DUTY");
+    const scored = dispatchReady.map((amb) => {
         let score = 0;
         const capabilities = Array.isArray(amb.capability) ? amb.capability : [amb.capability || "BASIC"];
 

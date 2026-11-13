@@ -3,11 +3,21 @@ const Hospital = require("../models/Hospital");
 const EmergencyRequest = require("../models/EmergencyRequest");
 const User = require("../models/User");
 const AuditLog = require("../models/AuditLog");
+const bcrypt = require("bcrypt");
 
-// Get all ambulances (Public / Hospital / Admin)
-// Query params: status, availability, hospitalId, search, capability, verificationStatus
+const getRequestHospital = async (user) => {
+    let hospital = await Hospital.findOne({ userId: user._id });
+    if (!hospital) hospital = await Hospital.findOne({ hospitalEmail: user.email });
+    return hospital;
+};
+
+// Get ambulances. Hospital users can view only their own fleet; admins can monitor all fleets.
+// Query params: status, availability, hospitalId, search, capability
 const getAmbulances = async (req, res) => {
     try {
+        if (!['admin', 'hospital'].includes(req.user?.role)) {
+            return res.status(403).json({ success: false, message: "Fleet monitoring is available only to hospitals and administrators." });
+        }
         const query = {};
 
         if (req.query.status) {
@@ -22,8 +32,12 @@ const getAmbulances = async (req, res) => {
             query.hospitalId = req.query.hospitalId;
         }
 
-        if (req.query.verificationStatus) {
-            query.verificationStatus = req.query.verificationStatus;
+        if (req.user?.role === "hospital") {
+            const hospital = await getRequestHospital(req.user);
+            if (!hospital) {
+                return res.status(404).json({ success: false, message: "Hospital profile not found." });
+            }
+            query.hospitalId = hospital._id;
         }
 
         if (req.query.capability) {
@@ -76,6 +90,17 @@ const getAmbulanceById = async (req, res) => {
             });
         }
 
+        const isAdmin = req.user.role === "admin";
+        const isAssignedDriver = req.user.role === "driver" && String(ambulance.driverId?._id || ambulance.driverId) === String(req.user._id);
+        let isOwningHospital = false;
+        if (req.user.role === "hospital") {
+            const hospital = await getRequestHospital(req.user);
+            isOwningHospital = Boolean(hospital && String(ambulance.hospitalId?._id || ambulance.hospitalId) === String(hospital._id));
+        }
+        if (!isAdmin && !isAssignedDriver && !isOwningHospital) {
+            return res.status(403).json({ success: false, message: "You do not have access to this ambulance." });
+        }
+
         res.status(200).json({
             success: true,
             ambulance,
@@ -89,9 +114,12 @@ const getAmbulanceById = async (req, res) => {
     }
 };
 
-// Create new ambulance (Admin or Hospital)
+// Create new ambulance (Hospital owned only)
 const createAmbulance = async (req, res) => {
     try {
+        if (req.user.role !== "hospital") {
+            return res.status(403).json({ success: false, message: "Ambulances can only be registered by their hospital." });
+        }
         const {
             ambulanceNumber,
             vehicleRegNumber,
@@ -107,10 +135,10 @@ const createAmbulance = async (req, res) => {
             address,
         } = req.body;
 
-        if (!ambulanceNumber?.trim() || !driverName?.trim() || !driverPhone?.trim()) {
+        if (!ambulanceNumber?.trim() || !driverId) {
             return res.status(400).json({
                 success: false,
-                message: "Ambulance number, driver name, and driver phone are required.",
+                message: "Ambulance number and an assigned hospital driver are required.",
             });
         }
 
@@ -124,17 +152,17 @@ const createAmbulance = async (req, res) => {
             });
         }
 
-        let assignedHospitalId = hospitalId;
-        if (req.user.role === "hospital") {
-            let hospital = await Hospital.findOne({ userId: req.user._id });
-            if (!hospital) hospital = await Hospital.findOne({ hospitalEmail: req.user.email });
-            if (!hospital) {
-                return res.status(404).json({
-                    success: false,
-                    message: "Hospital profile not found.",
-                });
-            }
-            assignedHospitalId = hospital._id;
+        const hospital = await getRequestHospital(req.user);
+        if (!hospital) {
+            return res.status(404).json({ success: false, message: "Hospital profile not found." });
+        }
+        const assignedHospitalId = hospital._id;
+        const assignedDriver = await User.findOne({ _id: driverId, role: "driver", hospitalId: assignedHospitalId });
+        if (!assignedDriver) {
+            return res.status(400).json({ success: false, message: "Select a driver registered by this hospital." });
+        }
+        if (assignedDriver.assignedAmbulanceId) {
+            return res.status(409).json({ success: false, message: "This driver is already linked to another ambulance." });
         }
 
         // Capability parsing: ensure array
@@ -145,21 +173,18 @@ const createAmbulance = async (req, res) => {
             caps = [capability];
         }
 
-        const verificationStatus = req.user.role === "admin" ? "VERIFIED" : "PENDING";
-
         const ambulance = await Ambulance.create({
             ambulanceNumber: cleanNumber,
             vehicleRegNumber: vehicleRegNumber?.trim().toUpperCase() || cleanNumber,
             vehicleType: vehicleType || "Basic Life Support (BLS)",
             capability: caps,
-            driverName: driverName.trim(),
-            driverPhone: driverPhone.trim(),
-            driverId: driverId || undefined,
+            driverName: assignedDriver.fullName,
+            driverPhone: assignedDriver.phone,
+            driverId: assignedDriver._id,
             hospitalId: assignedHospitalId || undefined,
-            status: status || "Available",
-            availabilityStatus: status ? (status === "Available" ? "AVAILABLE" : status.toUpperCase()) : "AVAILABLE",
-            verificationStatus,
-            availability: status ? status === "Available" : true,
+            status: "Offline",
+            availabilityStatus: "OFF_DUTY",
+            availability: false,
             currentLocation: {
                 latitude: latitude ? Number(latitude) : undefined,
                 longitude: longitude ? Number(longitude) : undefined,
@@ -169,15 +194,9 @@ const createAmbulance = async (req, res) => {
         });
 
         // Link driver if specified
-        if (driverId) {
-            await User.findByIdAndUpdate(driverId, {
-                $set: {
-                    assignedAmbulanceId: ambulance._id,
-                    hospitalId: assignedHospitalId,
-                    role: "driver",
-                },
-            });
-        }
+        await User.findByIdAndUpdate(assignedDriver._id, {
+            $set: { assignedAmbulanceId: ambulance._id, hospitalId: assignedHospitalId, role: "driver" },
+        });
 
         // Audit Log
         await AuditLog.create({
@@ -185,7 +204,7 @@ const createAmbulance = async (req, res) => {
             userName: req.user.fullName,
             userRole: req.user.role,
             action: "Ambulance Created",
-            details: `Created ambulance ${cleanNumber} (${driverName})`,
+            details: `Created ambulance ${cleanNumber} (${assignedDriver.fullName})`,
             targetId: ambulance._id,
             targetType: "Ambulance",
         }).catch(() => {});
@@ -204,7 +223,7 @@ const createAmbulance = async (req, res) => {
     }
 };
 
-// Update ambulance details or status
+// Update ambulance details or operational status. Hospitals may update only their own fleet.
 const updateAmbulance = async (req, res) => {
     try {
         const ambulance = await Ambulance.findById(req.params.id);
@@ -213,6 +232,14 @@ const updateAmbulance = async (req, res) => {
                 success: false,
                 message: "Ambulance not found.",
             });
+        }
+
+        if (req.user.role !== "hospital") {
+            return res.status(403).json({ success: false, message: "Only the owning hospital can update an ambulance." });
+        }
+        const ownerHospital = await getRequestHospital(req.user);
+        if (!ownerHospital || String(ambulance.hospitalId) !== String(ownerHospital._id)) {
+            return res.status(403).json({ success: false, message: "You can update only your hospital fleet." });
         }
 
         const {
@@ -226,7 +253,6 @@ const updateAmbulance = async (req, res) => {
             hospitalId,
             status,
             availability,
-            verificationStatus,
             latitude,
             longitude,
             address,
@@ -251,51 +277,25 @@ const updateAmbulance = async (req, res) => {
         if (capability) {
             ambulance.capability = Array.isArray(capability) ? capability : [capability];
         }
-        if (driverName) ambulance.driverName = driverName.trim();
-        if (driverPhone) ambulance.driverPhone = driverPhone.trim();
         if (driverId !== undefined) {
-            ambulance.driverId = driverId || null;
-            if (driverId) {
+            if (!driverId) return res.status(400).json({ success: false, message: "An ambulance must remain linked to a hospital driver." });
+            if (String(ambulance.driverId || "") !== String(driverId)) {
+                const driver = await User.findOne({ _id: driverId, role: "driver", hospitalId: ownerHospital._id });
+                if (!driver) return res.status(400).json({ success: false, message: "Select a driver registered by this hospital." });
+                if (driver.assignedAmbulanceId) return res.status(409).json({ success: false, message: "This driver is already linked to another ambulance." });
+                const formerDriverId = ambulance.driverId;
+                ambulance.driverId = driverId;
+                ambulance.driverName = driver.fullName;
+                ambulance.driverPhone = driver.phone;
                 await User.findByIdAndUpdate(driverId, {
                     $set: { assignedAmbulanceId: ambulance._id, role: "driver" },
                 });
+                if (formerDriverId) await User.findByIdAndUpdate(formerDriverId, { $unset: { assignedAmbulanceId: 1 } });
             }
         }
-        if (hospitalId !== undefined) ambulance.hospitalId = hospitalId || null;
-
-        if (verificationStatus && req.user.role === "admin") {
-            ambulance.verificationStatus = verificationStatus;
-        }
-
-        const isBeingMarkedAvailable = status === "Available" || availability === true;
-        if (isBeingMarkedAvailable && ambulance.assignedEmergencyId) {
-            const linkedEmergency = await EmergencyRequest.findById(ambulance.assignedEmergencyId)
-                .select("status")
-                .lean();
-            const activeStatuses = ["Requested", "Assigned", "On The Way", "Arrived", "DISPATCHED", "EN_ROUTE_TO_PATIENT", "ARRIVED_AT_PATIENT", "PATIENT_ONBOARD", "EN_ROUTE_TO_HOSPITAL"];
-
-            if (linkedEmergency && activeStatuses.includes(linkedEmergency.status)) {
-                return res.status(409).json({
-                    success: false,
-                    message: "This ambulance is assigned to an active emergency and cannot be marked available.",
-                });
-            }
-            ambulance.assignedEmergencyId = null;
-        }
-
-        if (status) {
-            ambulance.status = status;
-            ambulance.availabilityStatus = status === "Available" ? "AVAILABLE" : status.toUpperCase();
-            ambulance.availability = status === "Available";
-        } else if (availability !== undefined) {
-            ambulance.availability = Boolean(availability);
-            if (!ambulance.availability && ambulance.status === "Available") {
-                ambulance.status = "Offline";
-                ambulance.availabilityStatus = "OFFLINE";
-            } else if (ambulance.availability && ambulance.status === "Offline") {
-                ambulance.status = "Available";
-                ambulance.availabilityStatus = "AVAILABLE";
-            }
+        // Fleet ownership is fixed to the hospital that registered the vehicle.
+        if (req.body.status !== undefined || req.body.availability !== undefined) {
+            return res.status(403).json({ success: false, message: "Duty availability is controlled by the assigned driver, not the hospital." });
         }
 
         if (latitude !== undefined || longitude !== undefined || address !== undefined) {
@@ -323,50 +323,7 @@ const updateAmbulance = async (req, res) => {
     }
 };
 
-// Admin: Verify / Suspend ambulance
-const verifyAmbulance = async (req, res) => {
-    try {
-        const { verificationStatus } = req.body;
-        const validStatuses = ["PENDING", "VERIFIED", "SUSPENDED"];
-        const status = validStatuses.includes(verificationStatus) ? verificationStatus : "VERIFIED";
-
-        const ambulance = await Ambulance.findByIdAndUpdate(
-            req.params.id,
-            {
-                $set: {
-                    verificationStatus: status,
-                    availabilityStatus: status === "VERIFIED" ? "AVAILABLE" : "OFFLINE",
-                },
-            },
-            { new: true }
-        ).populate("hospitalId", "hospitalName");
-
-        if (!ambulance) {
-            return res.status(404).json({ success: false, message: "Ambulance not found." });
-        }
-
-        await AuditLog.create({
-            userId: req.user._id,
-            userName: req.user.fullName,
-            userRole: "admin",
-            action: "Ambulance Verified",
-            details: `Ambulance ${ambulance.ambulanceNumber} verification status set to ${status}`,
-            targetId: ambulance._id,
-            targetType: "Ambulance",
-        }).catch(() => {});
-
-        res.status(200).json({
-            success: true,
-            message: `Ambulance verification status updated to ${status}.`,
-            ambulance,
-        });
-    } catch (error) {
-        console.error("verifyAmbulance error:", error);
-        res.status(500).json({ success: false, message: "Failed to verify ambulance." });
-    }
-};
-
-// Delete ambulance (Admin only)
+// Delete ambulance (owning hospital only)
 const deleteAmbulance = async (req, res) => {
     try {
         const ambulance = await Ambulance.findById(req.params.id);
@@ -377,6 +334,14 @@ const deleteAmbulance = async (req, res) => {
             });
         }
 
+        if (req.user.role !== "hospital") {
+            return res.status(403).json({ success: false, message: "Only the owning hospital can remove an ambulance." });
+        }
+        const ownerHospital = await getRequestHospital(req.user);
+        if (!ownerHospital || String(ambulance.hospitalId) !== String(ownerHospital._id)) {
+            return res.status(403).json({ success: false, message: "You can remove only your hospital fleet." });
+        }
+
         if (ambulance.status === "Assigned" || ambulance.status === "On The Way" || ambulance.status === "Busy") {
             return res.status(400).json({
                 success: false,
@@ -385,6 +350,7 @@ const deleteAmbulance = async (req, res) => {
         }
 
         await ambulance.deleteOne();
+        if (ambulance.driverId) await User.findByIdAndUpdate(ambulance.driverId, { $unset: { assignedAmbulanceId: 1 } });
 
         res.status(200).json({
             success: true,
@@ -399,11 +365,124 @@ const deleteAmbulance = async (req, res) => {
     }
 };
 
+// Hospital safety control: block a vehicle from duty and dispatch, or restore it.
+const setAmbulanceRestriction = async (req, res) => {
+    try {
+        if (req.user.role !== "hospital") {
+            return res.status(403).json({ success: false, message: "Only the owning hospital can restrict an ambulance." });
+        }
+
+        const { restricted, reason } = req.body;
+        if (typeof restricted !== "boolean") {
+            return res.status(400).json({ success: false, message: "Specify whether the ambulance should be restricted or restored." });
+        }
+        if (restricted && !reason?.trim()) {
+            return res.status(400).json({ success: false, message: "A restriction reason is required." });
+        }
+
+        const hospital = await getRequestHospital(req.user);
+        const ambulance = await Ambulance.findOne({ _id: req.params.id, hospitalId: hospital?._id });
+        if (!ambulance) {
+            return res.status(404).json({ success: false, message: "Ambulance not found in your hospital fleet." });
+        }
+        if (restricted && ambulance.assignedEmergencyId) {
+            return res.status(409).json({ success: false, message: "This ambulance has an active emergency. Use the emergency issue workflow before restricting it." });
+        }
+
+        ambulance.isRestricted = restricted;
+        ambulance.restrictionReason = restricted ? reason.trim() : undefined;
+        ambulance.restrictedAt = restricted ? new Date() : undefined;
+        ambulance.restrictedBy = restricted ? req.user._id : undefined;
+
+        if (restricted) {
+            ambulance.status = "Offline";
+            ambulance.availabilityStatus = "RESTRICTED";
+            ambulance.availability = false;
+        } else {
+            // Restoring does not make the vehicle available. The driver must start duty again.
+            ambulance.status = "Offline";
+            ambulance.availabilityStatus = "OFF_DUTY";
+            ambulance.availability = false;
+        }
+
+        await ambulance.save();
+        await AuditLog.create({
+            userId: req.user._id,
+            userName: req.user.fullName,
+            userRole: req.user.role,
+            action: restricted ? "Ambulance Restricted" : "Ambulance Restriction Removed",
+            details: restricted ? `${ambulance.ambulanceNumber}: ${reason.trim()}` : `${ambulance.ambulanceNumber} restored to off-duty state.`,
+            targetId: ambulance._id,
+            targetType: "Ambulance",
+        }).catch(() => {});
+
+        res.status(200).json({
+            success: true,
+            message: restricted ? "Ambulance restricted. It cannot be dispatched until restored." : "Ambulance restored. The driver must start duty before it can be dispatched.",
+            ambulance,
+        });
+    } catch (error) {
+        console.error("setAmbulanceRestriction error:", error);
+        res.status(500).json({ success: false, message: error.message || "Failed to update ambulance restriction." });
+    }
+};
+
+// Hospital-managed driver accounts. Admin never owns driver registration.
+const getHospitalDrivers = async (req, res) => {
+    try {
+        if (req.user.role !== "hospital") return res.status(403).json({ success: false, message: "Hospital access required." });
+        const hospital = await getRequestHospital(req.user);
+        if (!hospital) return res.status(404).json({ success: false, message: "Hospital profile not found." });
+        const drivers = await User.find({ role: "driver", hospitalId: hospital._id })
+            .select("fullName email phone dutyStatus assignedAmbulanceId isActive")
+            .populate("assignedAmbulanceId", "ambulanceNumber")
+            .sort({ fullName: 1 })
+            .lean();
+        res.status(200).json({ success: true, drivers });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Failed to load hospital drivers." });
+    }
+};
+
+const createHospitalDriver = async (req, res) => {
+    try {
+        if (req.user.role !== "hospital") return res.status(403).json({ success: false, message: "Hospital access required." });
+        const { fullName, email, phone, password } = req.body;
+        if (!fullName?.trim() || !email?.trim() || !phone?.trim() || !password) {
+            return res.status(400).json({ success: false, message: "Name, email, phone, and temporary password are required." });
+        }
+        const cleanPhone = phone.trim().replace(/\D/g, "");
+        if (cleanPhone.length !== 10) {
+            return res.status(400).json({ success: false, message: "Driver phone number must be exactly 10 digits." });
+        }
+        const hospital = await getRequestHospital(req.user);
+        if (!hospital) return res.status(404).json({ success: false, message: "Hospital profile not found." });
+        const existing = await User.findOne({ $or: [{ email: email.toLowerCase().trim() }, { phone: cleanPhone }] });
+        if (existing) return res.status(409).json({ success: false, message: "A user already uses this email or phone number." });
+        const driver = await User.create({
+            fullName: fullName.trim(),
+            email: email.toLowerCase().trim(),
+            phone: cleanPhone,
+            password: await bcrypt.hash(password, 10),
+            role: "driver",
+            hospitalId: hospital._id,
+            dutyStatus: "OFF_DUTY",
+            isApproved: true,
+            status: "Approved",
+        });
+        res.status(201).json({ success: true, message: "Driver account created. Assign this driver to an ambulance.", driver: { _id: driver._id, fullName: driver.fullName, email: driver.email, phone: driver.phone, dutyStatus: driver.dutyStatus } });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message || "Failed to create driver account." });
+    }
+};
+
 module.exports = {
     getAmbulances,
     getAmbulanceById,
     createAmbulance,
     updateAmbulance,
-    verifyAmbulance,
     deleteAmbulance,
+    setAmbulanceRestriction,
+    getHospitalDrivers,
+    createHospitalDriver,
 };

@@ -64,24 +64,19 @@ const ambulanceSchema = new mongoose.Schema(
         availabilityStatus: {
             type: String,
             enum: [
-                "PENDING_VERIFICATION",
                 "AVAILABLE",
-                "RESERVED",
                 "DISPATCHED",
                 "EN_ROUTE_TO_PATIENT",
                 "ARRIVED_AT_PATIENT",
                 "PATIENT_ONBOARD",
                 "EN_ROUTE_TO_HOSPITAL",
                 "HANDOVER_COMPLETE",
-                "OFFLINE",
+                "OFF_DUTY",
                 "MAINTENANCE",
+                "ISSUE_REPORTED",
+                "RESTRICTED",
             ],
             default: "AVAILABLE",
-        },
-        verificationStatus: {
-            type: String,
-            enum: ["PENDING", "VERIFIED", "SUSPENDED"],
-            default: "VERIFIED",
         },
         availability: {
             type: Boolean,
@@ -90,6 +85,19 @@ const ambulanceSchema = new mongoose.Schema(
         assignedEmergencyId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "EmergencyRequest",
+        },
+        isRestricted: {
+            type: Boolean,
+            default: false,
+        },
+        restrictionReason: {
+            type: String,
+            trim: true,
+        },
+        restrictedAt: Date,
+        restrictedBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
         },
     },
     {
@@ -100,6 +108,5 @@ const ambulanceSchema = new mongoose.Schema(
 ambulanceSchema.index({ hospitalId: 1, status: 1 });
 ambulanceSchema.index({ hospitalId: 1, availabilityStatus: 1 });
 ambulanceSchema.index({ status: 1, availability: 1 });
-ambulanceSchema.index({ verificationStatus: 1 });
 
 module.exports = mongoose.model("Ambulance", ambulanceSchema);

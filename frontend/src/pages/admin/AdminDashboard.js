@@ -440,8 +440,8 @@ export default function AdminDashboard() {
                                     path: "/admin/departments",
                                 },
                                 {
-                                    title: "Ambulance Fleet Dispatch",
-                                    desc: "Configure emergency vehicles, drivers, and status",
+                                    title: "Ambulance Fleet Monitor",
+                                    desc: "View hospital-owned vehicles, driver duty, and live readiness",
                                     icon: <TimeToLeaveOutlined />,
                                     path: "/admin/ambulances",
                                 },

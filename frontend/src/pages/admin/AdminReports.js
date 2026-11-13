@@ -7,7 +7,6 @@ import {
     CardContent,
     CircularProgress,
     FormControl,
-    InputLabel,
     MenuItem,
     Select,
     Stack,
@@ -74,6 +73,7 @@ export default function AdminReports() {
 
     useEffect(() => {
         fetchReport();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [reportType]);
 
     // CSV Exporter
@@ -187,18 +187,26 @@ export default function AdminReports() {
             )}
 
             {/* Filter Configuration Card */}
-            <Card elevation={0} sx={{ p: 3, borderRadius: 4, border: "1px solid #E3EBEE", mb: 3.5 }}>
-                <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr", md: "4fr 2.5fr 2.5fr 3fr" }, gap: 2, alignItems: "center" }}>
+            <Card elevation={0} sx={{ p: 2.5, borderRadius: 3.5, border: "1px solid #E3EBEE", bgcolor: "#FFFFFF", mb: 3.5 }}>
+                <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)", md: "3fr 2.2fr 2.2fr 2.2fr" }, gap: 2, alignItems: "flex-end" }}>
                     <Box>
+                        <Typography fontSize={12} fontWeight={750} color="#475569" mb={0.8}>
+                            Report Classification
+                        </Typography>
                         <FormControl fullWidth size="small">
-                            <InputLabel>Report Classification</InputLabel>
                             <Select
                                 value={reportType}
-                                label="Report Classification"
                                 onChange={(e) => setReportType(e.target.value)}
+                                sx={{
+                                    borderRadius: 2,
+                                    bgcolor: "#F8FAFC",
+                                    fontSize: 13.5,
+                                    fontWeight: 650,
+                                    "& .MuiOutlinedInput-notchedOutline": { borderColor: "#E2E8F0" },
+                                }}
                             >
                                 {REPORT_TYPES.map((t) => (
-                                    <MenuItem key={t.value} value={t.value}>
+                                    <MenuItem key={t.value} value={t.value} sx={{ fontSize: 13.5 }}>
                                         {t.label}
                                     </MenuItem>
                                 ))}
@@ -207,38 +215,63 @@ export default function AdminReports() {
                     </Box>
 
                     <Box>
+                        <Typography fontSize={12} fontWeight={750} color="#475569" mb={0.8}>
+                            From Date
+                        </Typography>
                         <TextField
                             fullWidth
                             size="small"
                             type="date"
-                            label="From Date"
-                            InputLabelProps={{ shrink: true }}
                             value={startDate}
                             onChange={(e) => setStartDate(e.target.value)}
-                            inputProps={{ style: { padding: "8.5px 12px" } }}
+                            sx={{
+                                bgcolor: "#F8FAFC",
+                                "& .MuiOutlinedInput-root": {
+                                    borderRadius: 2,
+                                    fontSize: 13.5,
+                                    fontWeight: 600,
+                                    "& fieldset": { borderColor: "#E2E8F0" },
+                                },
+                            }}
                         />
                     </Box>
 
                     <Box>
+                        <Typography fontSize={12} fontWeight={750} color="#475569" mb={0.8}>
+                            To Date
+                        </Typography>
                         <TextField
                             fullWidth
                             size="small"
                             type="date"
-                            label="To Date"
-                            InputLabelProps={{ shrink: true }}
                             value={endDate}
                             onChange={(e) => setEndDate(e.target.value)}
-                            inputProps={{ style: { padding: "8.5px 12px" } }}
+                            sx={{
+                                bgcolor: "#F8FAFC",
+                                "& .MuiOutlinedInput-root": {
+                                    borderRadius: 2,
+                                    fontSize: 13.5,
+                                    fontWeight: 600,
+                                    "& fieldset": { borderColor: "#E2E8F0" },
+                                },
+                            }}
                         />
                     </Box>
 
                     <Box>
-                        <Stack direction="row" spacing={1}>
+                        <Stack direction="row" spacing={1} sx={{ height: 40 }}>
                             <Button
                                 fullWidth
                                 variant="contained"
                                 onClick={fetchReport}
-                                sx={{ textTransform: "none", fontWeight: 700, borderRadius: 2 }}
+                                sx={{
+                                    textTransform: "none",
+                                    fontWeight: 750,
+                                    fontSize: 13.5,
+                                    borderRadius: 2,
+                                    bgcolor: "#102F42",
+                                    "&:hover": { bgcolor: "#0A202E" },
+                                }}
                             >
                                 Filter Report
                             </Button>
@@ -251,7 +284,7 @@ export default function AdminReports() {
                                         setEndDate("");
                                         setTimeout(fetchReport, 50);
                                     }}
-                                    sx={{ textTransform: "none" }}
+                                    sx={{ textTransform: "none", fontSize: 12, fontWeight: 700, minWidth: 60 }}
                                 >
                                     Reset
                                 </Button>

@@ -6,7 +6,6 @@ const {
     patientOnly,
     hospitalOnly,
     adminOnly,
-    hospitalOrAdmin,
 } = require("../middleware/protect");
 
 const {
@@ -42,11 +41,11 @@ router.put("/:id/cancel", protect, patientOnly, cancelEmergency);
 router.get("/hospital/operations", protect, hospitalOnly, getHospitalEmergencyOperations);
 router.patch("/hospital/capabilities", protect, hospitalOnly, updateHospitalEmergencyCapabilities);
 router.get("/hospital/available-ambulances", protect, hospitalOnly, getHospitalAvailableAmbulances);
-router.post("/hospital/:id/accept", protect, hospitalOrAdmin, hospitalAcceptEmergency);
-router.post("/hospital/:id/reject", protect, hospitalOrAdmin, hospitalRejectEmergency);
-router.post("/hospital/:id/dispatch-ambulance", protect, hospitalOrAdmin, hospitalDispatchAmbulance);
+router.post("/hospital/:id/accept", protect, hospitalOnly, hospitalAcceptEmergency);
+router.post("/hospital/:id/reject", protect, hospitalOnly, hospitalRejectEmergency);
+router.post("/hospital/:id/dispatch-ambulance", protect, hospitalOnly, hospitalDispatchAmbulance);
 router.get("/hospital", protect, hospitalOnly, getHospitalEmergencies);
-router.put("/:id/status", protect, updateHospitalEmergencyStatus);
+router.put("/:id/status", protect, hospitalOnly, updateHospitalEmergencyStatus);
 
 // Admin Live Monitor & Exception Handling
 router.get("/admin/monitor", protect, adminOnly, getAdminEmergencyMonitor);
