@@ -34,12 +34,13 @@ exports.requestEmergency = async (req, res) => {
             hospitalId,
         } = req.body;
 
-        if (!description?.trim() || !contactNumber?.trim()) {
+        if (!contactNumber?.trim()) {
             return res.status(400).json({
                 success: false,
-                message: "Emergency description and contact number are required.",
+                message: "Emergency contact number is required.",
             });
         }
+        const finalDescription = (description && description.trim()) || `${emergencyCategory} emergency reported.`;
 
         let cleanPhone = contactNumber.trim().replace(/\D/g, "");
         if (cleanPhone.length === 12 && cleanPhone.startsWith("91")) {
@@ -87,7 +88,7 @@ exports.requestEmergency = async (req, res) => {
             latitude: latitude != null ? Number(latitude) : undefined,
             longitude: longitude != null ? Number(longitude) : undefined,
             address: address?.trim() || "",
-            description: description.trim(),
+            description: finalDescription,
             contactNumber: cleanPhone,
             hospitalAcceptanceStatus: "PENDING",
             status: initialStatus,
@@ -120,7 +121,7 @@ exports.requestEmergency = async (req, res) => {
             await Notification.create({
                 userId: selectedHospital.userId,
                 title: `URGENT: Incoming ${emergencyCategory} Request`,
-                message: `Patient ${req.user.fullName || "User"} requires immediate transfer: "${description.trim().slice(0, 80)}"`,
+                message: `Patient ${req.user.fullName || "User"} requires immediate transfer: "${finalDescription.slice(0, 80)}"`,
                 type: "Emergency",
                 relatedId: emergency._id,
             }).catch(() => {});

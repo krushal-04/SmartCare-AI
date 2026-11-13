@@ -8,35 +8,21 @@ import {
     CardContent,
     Chip,
     CircularProgress,
-    Divider,
+    FormControl,
     Grid,
     InputAdornment,
-    Paper,
+    InputLabel,
+    MenuItem,
+    Select,
     Stack,
     TextField,
     Typography,
-    useMediaQuery,
 } from "@mui/material";
-import { useTheme } from "@mui/material/styles";
 import {
     EmergencyOutlined,
     LocationOnOutlined,
     MyLocationRounded,
     PhoneOutlined,
-    CheckCircleRounded,
-    WarningAmberRounded,
-    LocalHospitalOutlined,
-    RefreshRounded,
-    FavoriteRounded,
-    CarCrashRounded,
-    AirRounded,
-    PsychologyRounded,
-    BloodtypeRounded,
-    HotelRounded,
-    PregnantWomanRounded,
-    ChildCareRounded,
-    HelpOutlineRounded,
-    NavigationRounded,
     CallRounded,
 } from "@mui/icons-material";
 import { io } from "socket.io-client";
@@ -52,15 +38,15 @@ const SOCKET_URL = process.env.REACT_APP_API_URL
     : "http://localhost:5000";
 
 const EMERGENCY_CATEGORIES = [
-    { id: "Heart / Chest Pain", label: "Heart / Chest Pain", icon: <FavoriteRounded />, color: "#DC2626", bg: "#FEF2F2", border: "#FECACA" },
-    { id: "Accident / Trauma", label: "Accident / Trauma", icon: <CarCrashRounded />, color: "#EA580C", bg: "#FFF7ED", border: "#FED7AA" },
-    { id: "Breathing Emergency", label: "Breathing Emergency", icon: <AirRounded />, color: "#0284C7", bg: "#F0F9FF", border: "#BAE6FD" },
-    { id: "Stroke Symptoms", label: "Stroke Symptoms", icon: <PsychologyRounded />, color: "#9333EA", bg: "#FAF5FF", border: "#E9D5FF" },
-    { id: "Severe Bleeding", label: "Severe Bleeding", icon: <BloodtypeRounded />, color: "#BE123C", bg: "#FFF1F2", border: "#FECDD3" },
-    { id: "Unconscious Person", label: "Unconscious Person", icon: <HotelRounded />, color: "#4F46E5", bg: "#EEF2FF", border: "#C7D2FE" },
-    { id: "Pregnancy Emergency", label: "Pregnancy Emergency", icon: <PregnantWomanRounded />, color: "#DB2777", bg: "#FDF2F8", border: "#FBCFE8" },
-    { id: "Child Emergency", label: "Child Emergency", icon: <ChildCareRounded />, color: "#D97706", bg: "#FFFBEB", border: "#FDE68A" },
-    { id: "Other Emergency", label: "Other Emergency", icon: <HelpOutlineRounded />, color: "#475569", bg: "#F8FAFC", border: "#E2E8F0" },
+    { id: "Heart / Chest Pain", label: "Heart / Chest Pain" },
+    { id: "Accident / Trauma", label: "Accident / Trauma" },
+    { id: "Breathing Emergency", label: "Breathing Emergency" },
+    { id: "Stroke Symptoms", label: "Stroke Symptoms" },
+    { id: "Severe Bleeding", label: "Severe Bleeding" },
+    { id: "Unconscious Person", label: "Unconscious Person" },
+    { id: "Pregnancy Emergency", label: "Pregnancy Emergency" },
+    { id: "Child Emergency", label: "Child Emergency" },
+    { id: "Other Emergency", label: "Other Emergency" },
 ];
 
 const TIMELINE_STEPS = [
@@ -77,14 +63,12 @@ const TIMELINE_STEPS = [
 export default function PatientEmergency() {
     const routerLocation = useLocation();
     const { user } = useAuth();
-    const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
     // Form inputs
     const [category, setCategory] = useState("Heart / Chest Pain");
     const [consciousness, setConsciousness] = useState("conscious");
     const [breathingStatus, setBreathingStatus] = useState("normal");
-    const [patientCount, setPatientCount] = useState(1);
+    const [patientCount] = useState(1);
     const [description, setDescription] = useState("");
     const [phone, setPhone] = useState("");
     const [address, setAddress] = useState("");
@@ -646,52 +630,41 @@ export default function PatientEmergency() {
 
                         <form onSubmit={handleSubmitEmergency}>
                             <Stack spacing={3}>
-                                {/* 1. Emergency Category Selection Cards */}
+                                {/* 1. Emergency Category Selection Dropdown */}
                                 <Box>
                                     <Typography fontSize={13} fontWeight={800} color={colors.slate} letterSpacing={0.5} mb={1.5}>
                                         1. SELECT EMERGENCY CATEGORY
                                     </Typography>
-                                    <Grid container spacing={1.5}>
-                                        {EMERGENCY_CATEGORIES.map((cat) => {
-                                            const isSelected = category === cat.id;
-                                            return (
-                                                <Grid item xs={6} sm={4} key={cat.id}>
-                                                    <Button
-                                                        fullWidth
-                                                        onClick={() => setCategory(cat.id)}
-                                                        sx={{
-                                                            p: { xs: 1.5, sm: 2 },
-                                                            borderRadius: 2.8,
-                                                            textAlign: "left",
-                                                            textTransform: "none",
-                                                            justifyContent: "flex-start",
-                                                            gap: 1.5,
-                                                            bgcolor: isSelected ? cat.bg : colors.white,
-                                                            border: "2px solid",
-                                                            borderColor: isSelected ? cat.color : colors.hairline,
-                                                            boxShadow: isSelected ? `0 4px 14px ${cat.bg}` : "none",
-                                                            transition: "all 0.15s ease",
-                                                            "&:hover": {
-                                                                bgcolor: cat.bg,
-                                                                borderColor: cat.color,
-                                                            },
-                                                        }}
-                                                    >
-                                                        <Box sx={{ color: cat.color, display: "grid", placeItems: "center" }}>
-                                                            {cat.icon}
-                                                        </Box>
-                                                        <Typography
-                                                            fontSize={13}
-                                                            fontWeight={isSelected ? 850 : 650}
-                                                            color={isSelected ? cat.color : colors.ink}
-                                                        >
-                                                            {cat.label}
-                                                        </Typography>
-                                                    </Button>
-                                                </Grid>
-                                            );
-                                        })}
-                                    </Grid>
+                                    <FormControl fullWidth>
+                                        <InputLabel id="emergency-category-label">Emergency Medical Category</InputLabel>
+                                        <Select
+                                            labelId="emergency-category-label"
+                                            id="emergency-category-select"
+                                            value={category}
+                                            label="Emergency Medical Category"
+                                            onChange={(e) => setCategory(e.target.value)}
+                                            sx={{
+                                                borderRadius: 2.5,
+                                                bgcolor: colors.white,
+                                                fontWeight: 700,
+                                                fontSize: 15,
+                                            }}
+                                        >
+                                            {EMERGENCY_CATEGORIES.map((cat) => (
+                                                <MenuItem
+                                                    key={cat.id}
+                                                    value={cat.id}
+                                                    sx={{
+                                                        fontWeight: category === cat.id ? 800 : 500,
+                                                        py: 1.2,
+                                                        fontSize: 14.5,
+                                                    }}
+                                                >
+                                                    {cat.label}
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
                                 </Box>
 
                                 {/* 2. Triage & Essential Details */}
@@ -871,14 +844,14 @@ export default function PatientEmergency() {
 
                                         <Grid item xs={12}>
                                             <TextField
-                                                label="Short Description of Situation"
-                                                placeholder="e.g. Severe chest pain for 20 minutes, patient is breathing heavily..."
+                                                label="Short Description of Situation (Optional)"
+                                                placeholder="e.g. Patient details, symptoms, or landmark details..."
                                                 fullWidth
                                                 multiline
                                                 rows={2}
-                                                required
                                                 value={description}
                                                 onChange={(e) => setDescription(e.target.value)}
+                                                helperText="Optional — provide additional context for hospital triage and ambulance crew."
                                             />
                                         </Grid>
                                     </Grid>
@@ -890,7 +863,8 @@ export default function PatientEmergency() {
                                     variant="contained"
                                     size="large"
                                     fullWidth
-                                    disabled={loading || !isPhoneValid || !description.trim()}
+                                    disabled={loading || !isPhoneValid}
+                                    startIcon={!loading ? <EmergencyOutlined /> : null}
                                     sx={{
                                         bgcolor: "#DC2626",
                                         color: colors.white,
@@ -906,7 +880,7 @@ export default function PatientEmergency() {
                                     {loading ? (
                                         <CircularProgress size={24} sx={{ color: colors.white }} />
                                     ) : (
-                                        "🚨 DISPATCH EMERGENCY AMBULANCE NOW"
+                                        "Dispatch Emergency Ambulance Now"
                                     )}
                                 </Button>
                             </Stack>
