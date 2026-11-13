@@ -4,7 +4,6 @@ import {
     Box,
     Button,
     Card,
-    CardContent,
     Checkbox,
     Chip,
     CircularProgress,
@@ -12,30 +11,20 @@ import {
     DialogActions,
     DialogContent,
     DialogTitle,
+    Divider,
     FormControlLabel,
     Grid,
-    IconButton,
     Radio,
-    RadioGroup,
     Stack,
     Switch,
     TextField,
-    Tooltip,
     Typography,
 } from "@mui/material";
 import {
-    EmergencyOutlined,
     PhoneOutlined,
     LocationOnOutlined,
     RefreshRounded,
-    TimeToLeaveOutlined,
     CheckCircleRounded,
-    CloseRounded,
-    LocalHospitalOutlined,
-    NavigationRounded,
-    WarningAmberRounded,
-    SendRounded,
-    CheckCircleOutlineRounded,
 } from "@mui/icons-material";
 import { io } from "socket.io-client";
 
@@ -53,7 +42,6 @@ export default function HospitalEmergency() {
     const { user } = useAuth();
 
     // Data state
-    const [hospitalInfo, setHospitalInfo] = useState(null);
     const [capabilities, setCapabilities] = useState({
         emergencyOpen: true,
         cardiacCare: false,
@@ -92,7 +80,6 @@ export default function HospitalEmergency() {
             setLoading(true);
             const res = await api.get("/hospital/emergency-operations");
             if (res.data?.success) {
-                setHospitalInfo(res.data.hospital);
                 if (res.data.hospital?.capabilities) {
                     setCapabilities((prev) => ({
                         ...prev,

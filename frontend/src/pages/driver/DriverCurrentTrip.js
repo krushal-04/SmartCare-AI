@@ -657,3 +657,4 @@ export default function DriverCurrentTrip() {
         </DashboardLayout>
     );
 }
+
