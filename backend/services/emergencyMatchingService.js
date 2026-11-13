@@ -85,6 +85,13 @@ const CATEGORY_RULES = {
     },
 };
 
+const canHospitalHandleEmergency = (hospital, emergencyCategory) => {
+    const rule = CATEGORY_RULES[emergencyCategory] || CATEGORY_RULES["Other Emergency"];
+    const capabilities = hospital?.emergencyCapabilities || {};
+    if (hospital?.emergencyAvailable !== true || capabilities.emergencyOpen !== true) return false;
+    return !rule.hospitalCapabilityField || capabilities[rule.hospitalCapabilityField] === true;
+};
+
 /**
  * Recommends the best capable hospital for an emergency request
  */
@@ -92,12 +99,10 @@ const recommendHospital = async ({ emergencyCategory, latitude, longitude }) => 
     const rule = CATEGORY_RULES[emergencyCategory] || CATEGORY_RULES["Other Emergency"];
     const requiredField = rule.hospitalCapabilityField;
 
-    // Query active emergency hospitals
+    // Only hospitals that have explicitly opened emergency intake are eligible.
     const hospitals = await Hospital.find({
-        $or: [
-            { "emergencyCapabilities.emergencyOpen": true },
-            { emergencyAvailable: true },
-        ],
+        emergencyAvailable: true,
+        "emergencyCapabilities.emergencyOpen": true,
     }).lean();
 
     if (!hospitals || hospitals.length === 0) {
@@ -108,13 +113,23 @@ const recommendHospital = async ({ emergencyCategory, latitude, longitude }) => 
         };
     }
 
-    // Score each hospital:
+    // A specialised emergency is never sent to a hospital without that exact capability.
+    // When there is no match, the request is escalated instead of risking an unsafe route.
+    const exactCapableHospitals = requiredField
+        ? hospitals.filter((hospital) => hospital.emergencyCapabilities?.[requiredField] === true)
+        : hospitals;
+    if (requiredField && exactCapableHospitals.length === 0) {
+        return { recommendedHospital: null, alternativeHospitals: [], rule };
+    }
+    const eligibleHospitals = exactCapableHospitals;
+
+    // Score each eligible hospital:
     // 1. Capability match (+1000 points)
     // 2. Proximity: higher points for closer distance
-    const scoredHospitals = hospitals.map((hosp) => {
+    const scoredHospitals = eligibleHospitals.map((hosp) => {
         let score = 0;
         const capabilities = hosp.emergencyCapabilities || {};
-        const isEmergencyOpen = capabilities.emergencyOpen !== false && hosp.emergencyAvailable !== false;
+        const isEmergencyOpen = capabilities.emergencyOpen === true && hosp.emergencyAvailable === true;
 
         if (isEmergencyOpen) score += 500;
 
@@ -251,6 +266,7 @@ const matchAmbulanceForHospital = async (hospitalId, emergencyCategory, patientL
 module.exports = {
     calculateDistance,
     CATEGORY_RULES,
+    canHospitalHandleEmergency,
     recommendHospital,
     matchAmbulanceForHospital,
 };

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
     AppBar,
@@ -9,6 +9,10 @@ import {
     Chip,
     Divider,
     Drawer,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
     IconButton,
     List,
     ListItemButton,
@@ -22,6 +26,7 @@ import {
     Typography,
     useMediaQuery,
 } from "@mui/material";
+import { io } from "socket.io-client";
 import { useTheme } from "@mui/material/styles";
 import {
     AccountBalanceWalletOutlined,
@@ -49,6 +54,11 @@ import {
 import { colors } from "../../theme/colors";
 import { useAuth } from "../../context/AuthContext";
 import { useNotifications } from "../../context/NotificationContext";
+import api from "../../services/api";
+
+const SOCKET_URL = process.env.REACT_APP_API_URL
+    ? process.env.REACT_APP_API_URL.replace(/\/api\/?$/, "")
+    : "http://localhost:5000";
 
 const menuConfig = {
     patient: [
@@ -136,7 +146,6 @@ const menuConfig = {
             group: "OVERVIEW",
             items: [
                 { label: "Control Center", path: "/admin", icon: <DashboardOutlined /> },
-                { label: "Emergency Live Monitor", path: "/admin/emergency-monitor", icon: <EmergencyOutlined /> },
                 { label: "System Analytics", path: "/admin/analytics", icon: <AnalyticsOutlined /> },
             ],
         },
@@ -237,6 +246,8 @@ export default function DashboardLayout({ role, children, title, subtitle }) {
     const { unreadCount } = useNotifications();
     const [mobileOpen, setMobileOpen] = useState(false);
     const [profileAnchor, setProfileAnchor] = useState(null);
+    const [incomingEmergencyCount, setIncomingEmergencyCount] = useState(0);
+    const [emergencyAlert, setEmergencyAlert] = useState(null);
 
     const activeRole = role || user?.role || "patient";
     const currentMeta = roleMeta[activeRole] || roleMeta.patient;
@@ -258,6 +269,45 @@ export default function DashboardLayout({ role, children, title, subtitle }) {
         logout();
         navigate("/");
     };
+
+    useEffect(() => {
+        if (activeRole !== "hospital" || !user?._id) {
+            setIncomingEmergencyCount(0);
+            return undefined;
+        }
+
+        let active = true;
+        const refreshIncomingCount = async () => {
+            try {
+                const response = await api.get("/hospital/emergency-operations");
+                if (!active || !response.data?.success) return;
+                setIncomingEmergencyCount((response.data.incomingEmergencies || []).length);
+                if (response.data.hospital?._id) socket.emit("join_hospital", response.data.hospital._id);
+            } catch (_) {
+                // Emergency page remains available even if this background indicator cannot refresh.
+            }
+        };
+
+        const socket = io(SOCKET_URL, { transports: ["websocket", "polling"] });
+        socket.on("connect", () => {
+            socket.emit("join", user._id);
+            socket.emit("join_role", "hospital");
+            refreshIncomingCount();
+        });
+        socket.on("emergency:created", (data) => {
+            if (!active) return;
+            setIncomingEmergencyCount((count) => count + 1);
+            setEmergencyAlert(data);
+        });
+        socket.on("emergency:hospital-accepted", refreshIncomingCount);
+        socket.on("emergency:hospital-rejected", refreshIncomingCount);
+        refreshIncomingCount();
+
+        return () => {
+            active = false;
+            socket.disconnect();
+        };
+    }, [activeRole, user?._id]);
 
     const sidebarContent = (
         <Box
@@ -473,13 +523,22 @@ export default function DashboardLayout({ role, children, title, subtitle }) {
                                                 color: active ? "#5EEAD4" : "inherit",
                                             }}
                                         >
-                                            {item.icon}
+                                            {activeRole === "hospital" && item.path === "/hospital/emergency" ? (
+                                                <Badge badgeContent={incomingEmergencyCount} color="error" max={9} invisible={incomingEmergencyCount === 0}>
+                                                    {item.icon}
+                                                </Badge>
+                                            ) : item.icon}
                                         </ListItemIcon>
                                         <ListItemText
-                                            primary={item.label}
+                                            primary={
+                                                activeRole === "hospital" && item.path === "/hospital/emergency" && incomingEmergencyCount > 0
+                                                    ? `${item.label} (${incomingEmergencyCount})`
+                                                    : item.label
+                                            }
                                             primaryTypographyProps={{
                                                 fontSize: 14,
-                                                fontWeight: active ? 700 : 500,
+                                                fontWeight: active ? 700 : incomingEmergencyCount > 0 && item.path === "/hospital/emergency" ? 800 : 500,
+                                                color: incomingEmergencyCount > 0 && item.path === "/hospital/emergency" ? "#FCA5A5" : undefined,
                                             }}
                                         />
                                     </ListItemButton>
@@ -520,6 +579,7 @@ export default function DashboardLayout({ role, children, title, subtitle }) {
                     Sign Out
                 </Button>
             </Box>
+
         </Box>
     );
 
@@ -804,6 +864,21 @@ export default function DashboardLayout({ role, children, title, subtitle }) {
                     {children}
                 </Box>
             </Box>
+            <Dialog open={Boolean(emergencyAlert)} onClose={() => setEmergencyAlert(null)} maxWidth="xs" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
+                <DialogTitle sx={{ color: "#B91C1C", fontWeight: 850 }}>New Emergency Request</DialogTitle>
+                <DialogContent>
+                    <Typography fontWeight={750}>{emergencyAlert?.emergencyCategory || "Emergency transfer request"}</Typography>
+                    <Typography color="text.secondary" fontSize={14} mt={0.8}>
+                        A patient emergency request needs hospital review and dispatch action.
+                    </Typography>
+                </DialogContent>
+                <DialogActions sx={{ p: 2 }}>
+                    <Button onClick={() => setEmergencyAlert(null)} sx={{ textTransform: "none" }}>Dismiss</Button>
+                    <Button variant="contained" color="error" onClick={() => { setEmergencyAlert(null); handleNavigate("/hospital/emergency"); }} sx={{ textTransform: "none", fontWeight: 750 }}>
+                        Review Emergency
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 }

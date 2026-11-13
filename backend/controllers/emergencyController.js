@@ -9,6 +9,7 @@ const {
     recommendHospital,
     matchAmbulanceForHospital,
     calculateDistance,
+    canHospitalHandleEmergency,
 } = require("../services/emergencyMatchingService");
 const {
     broadcastEmergencyEvent,
@@ -76,6 +77,12 @@ exports.requestEmergency = async (req, res) => {
 
         if (hospitalId) {
             selectedHospital = await Hospital.findById(hospitalId).lean();
+            if (!selectedHospital) {
+                return res.status(404).json({ success: false, message: "Selected hospital was not found." });
+            }
+            if (!canHospitalHandleEmergency(selectedHospital, emergencyCategory)) {
+                return res.status(409).json({ success: false, message: "This hospital is not currently eligible for the selected emergency type." });
+            }
         }
 
         if (!selectedHospital) {
@@ -432,6 +439,9 @@ exports.hospitalAcceptEmergency = async (req, res) => {
             return res.status(404).json({ success: false, message: "Emergency request not found." });
         }
         if (!assertHospitalOwnsEmergency(hospital, emergency, res)) return;
+        if (!canHospitalHandleEmergency(hospital, emergency.emergencyCategory)) {
+            return res.status(409).json({ success: false, message: "Your hospital has not enabled the required capability for this emergency type." });
+        }
 
         emergency.hospitalAcceptanceStatus = "ACCEPTED";
         emergency.status = "HOSPITAL_ACCEPTED";
@@ -588,6 +598,9 @@ exports.hospitalDispatchAmbulance = async (req, res) => {
             return res.status(404).json({ success: false, message: "Emergency request not found." });
         }
         if (!assertHospitalOwnsEmergency(hospital, emergency, res)) return;
+        if (!canHospitalHandleEmergency(hospital, emergency.emergencyCategory)) {
+            return res.status(409).json({ success: false, message: "Your hospital has not enabled the required capability for this emergency type." });
+        }
 
         // Atomic vehicle lock
         const claimedAmbulance = await Ambulance.findOneAndUpdate(
