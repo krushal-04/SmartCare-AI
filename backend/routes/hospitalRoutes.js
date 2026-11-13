@@ -13,6 +13,16 @@ const {
 } = require("../controllers/hospitalController");
 
 const {
+    getHospitalEmergencyOperations,
+    updateHospitalEmergencyCapabilities,
+    getHospitalEmergencies,
+    hospitalAcceptEmergency,
+    hospitalRejectEmergency,
+    getHospitalAvailableAmbulances,
+    hospitalDispatchAmbulance,
+} = require("../controllers/emergencyController");
+
+const {
     protect,
     hospitalOnly,
 } = require("../middleware/protect");
@@ -21,6 +31,15 @@ const uploadHospitalImages = require("../middleware/cloudinaryUpload");
 
 // Hospital Dashboard statistics
 router.get("/dashboard-stats", protect, hospitalOnly, getHospitalDashboardStats);
+
+// Emergency Operations Endpoints (Prompt Spec #13)
+router.get("/emergency-operations", protect, hospitalOnly, getHospitalEmergencyOperations);
+router.patch("/emergency-capabilities", protect, hospitalOnly, updateHospitalEmergencyCapabilities);
+router.get("/emergencies/incoming", protect, hospitalOnly, getHospitalEmergencies);
+router.post("/emergencies/:id/accept", protect, hospitalOnly, hospitalAcceptEmergency);
+router.post("/emergencies/:id/reject", protect, hospitalOnly, hospitalRejectEmergency);
+router.get("/ambulances/available", protect, hospitalOnly, getHospitalAvailableAmbulances);
+router.post("/emergencies/:id/dispatch-ambulance", protect, hospitalOnly, hospitalDispatchAmbulance);
 
 // Hospital Patients list
 router.get("/patients", protect, hospitalOnly, getHospitalPatients);

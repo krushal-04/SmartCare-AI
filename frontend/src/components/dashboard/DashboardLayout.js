@@ -96,6 +96,7 @@ const menuConfig = {
                 { label: "Duty Schedules", path: "/hospital/schedules", icon: <ScheduleOutlined /> },
                 { label: "Appointments", path: "/hospital/appointments", icon: <CalendarMonthOutlined /> },
                 { label: "Patients", path: "/hospital/patients", icon: <GroupOutlined /> },
+                { label: "Ambulance Fleet", path: "/hospital/ambulances", icon: <TimeToLeaveOutlined /> },
                 { label: "Revenue & Payments", path: "/hospital/payments", icon: <AccountBalanceWalletOutlined /> },
             ],
         },
@@ -136,6 +137,7 @@ const menuConfig = {
             group: "OVERVIEW",
             items: [
                 { label: "Control Center", path: "/admin", icon: <DashboardOutlined /> },
+                { label: "Emergency Live Monitor", path: "/admin/emergency-monitor", icon: <EmergencyOutlined /> },
                 { label: "System Analytics", path: "/admin/analytics", icon: <AnalyticsOutlined /> },
             ],
         },
@@ -160,6 +162,21 @@ const menuConfig = {
             ],
         },
     ],
+    driver: [
+        {
+            group: "DISPATCH & TRIP",
+            items: [
+                { label: "Driver Portal", path: "/driver", icon: <DashboardOutlined /> },
+                { label: "Active Dispatch", path: "/driver/current-trip", icon: <TimeToLeaveOutlined /> },
+            ],
+        },
+        {
+            group: "ACCOUNT",
+            items: [
+                { label: "My Profile", path: "/driver/profile", icon: <PersonOutlined /> },
+            ],
+        },
+    ],
 };
 
 const roleMeta = {
@@ -171,6 +188,15 @@ const roleMeta = {
         avatarBg: colors.pine,
         homeRoute: "/patient",
         notifRoute: "/patient/notifications",
+    },
+    driver: {
+        title: "Driver Portal",
+        badge: "Ambulance Driver",
+        badgeBg: "rgba(245,158,11,0.2)",
+        badgeColor: "#FCD34D",
+        avatarBg: "#D97706",
+        homeRoute: "/driver",
+        notifRoute: "/driver",
     },
     hospital: {
         title: "Hospital Hub",

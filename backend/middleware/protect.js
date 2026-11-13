@@ -97,6 +97,16 @@ const doctorOnly = (req, res, next) => {
     next();
 };
 
+const driverOnly = (req, res, next) => {
+    if (!req.user || req.user.role !== "driver") {
+        return res.status(403).json({
+            success: false,
+            message: "Access restricted to ambulance drivers only.",
+        });
+    }
+    next();
+};
+
 const adminOnly = (req, res, next) => {
     if (!req.user || req.user.role !== "admin") {
         return res.status(403).json({
@@ -125,6 +135,21 @@ const hospitalOrAdmin = (req, res, next) => {
     next();
 };
 
+const driverOrHospitalOrAdmin = (req, res, next) => {
+    if (
+        !req.user ||
+        (req.user.role !== "driver" &&
+            req.user.role !== "hospital" &&
+            req.user.role !== "admin")
+    ) {
+        return res.status(403).json({
+            success: false,
+            message: "Access restricted to ambulance drivers, hospitals, and administrators.",
+        });
+    }
+    next();
+};
+
 const doctorOrHospitalOrAdmin = (req, res, next) => {
     if (
         !req.user ||
@@ -145,7 +170,9 @@ module.exports = {
     patientOnly,
     hospitalOnly,
     doctorOnly,
+    driverOnly,
     adminOnly,
     hospitalOrAdmin,
+    driverOrHospitalOrAdmin,
     doctorOrHospitalOrAdmin,
 };

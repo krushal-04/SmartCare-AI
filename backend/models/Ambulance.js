@@ -9,6 +9,11 @@ const ambulanceSchema = new mongoose.Schema(
             trim: true,
             uppercase: true,
         },
+        vehicleRegNumber: {
+            type: String,
+            trim: true,
+            uppercase: true,
+        },
         vehicleType: {
             type: String,
             enum: [
@@ -18,6 +23,11 @@ const ambulanceSchema = new mongoose.Schema(
                 "Neonatal Ambulance",
             ],
             default: "Basic Life Support (BLS)",
+        },
+        capability: {
+            type: [String],
+            enum: ["BASIC", "CARDIAC", "TRAUMA", "OXYGEN_SUPPORT"],
+            default: ["BASIC"],
         },
         driverName: {
             type: String,
@@ -29,6 +39,10 @@ const ambulanceSchema = new mongoose.Schema(
             required: true,
             trim: true,
         },
+        driverId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+        },
         hospitalId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Hospital",
@@ -36,12 +50,38 @@ const ambulanceSchema = new mongoose.Schema(
         currentLocation: {
             latitude: { type: Number },
             longitude: { type: Number },
+            accuracy: { type: Number },
+            speed: { type: Number },
+            heading: { type: Number },
             address: { type: String, trim: true },
+            updatedAt: { type: Date, default: Date.now },
         },
         status: {
             type: String,
             enum: ["Available", "Assigned", "On The Way", "Busy", "Offline"],
             default: "Available",
+        },
+        availabilityStatus: {
+            type: String,
+            enum: [
+                "PENDING_VERIFICATION",
+                "AVAILABLE",
+                "RESERVED",
+                "DISPATCHED",
+                "EN_ROUTE_TO_PATIENT",
+                "ARRIVED_AT_PATIENT",
+                "PATIENT_ONBOARD",
+                "EN_ROUTE_TO_HOSPITAL",
+                "HANDOVER_COMPLETE",
+                "OFFLINE",
+                "MAINTENANCE",
+            ],
+            default: "AVAILABLE",
+        },
+        verificationStatus: {
+            type: String,
+            enum: ["PENDING", "VERIFIED", "SUSPENDED"],
+            default: "VERIFIED",
         },
         availability: {
             type: Boolean,
@@ -58,6 +98,8 @@ const ambulanceSchema = new mongoose.Schema(
 );
 
 ambulanceSchema.index({ hospitalId: 1, status: 1 });
+ambulanceSchema.index({ hospitalId: 1, availabilityStatus: 1 });
 ambulanceSchema.index({ status: 1, availability: 1 });
+ambulanceSchema.index({ verificationStatus: 1 });
 
 module.exports = mongoose.model("Ambulance", ambulanceSchema);

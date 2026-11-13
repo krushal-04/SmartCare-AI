@@ -25,11 +25,29 @@ const {
     retryReminder,
 } = require("../controllers/adminReminderController");
 
+const {
+    getAdminEmergencyMonitor,
+    getAllEmergencies,
+    adminOverrideHospital,
+    adminOverrideAmbulance,
+} = require("../controllers/emergencyController");
+
+const {
+    verifyAmbulance,
+} = require("../controllers/ambulanceController");
+
 // All admin routes require valid JWT and admin role
 router.use(protect, adminOnly);
 
 // Dashboard
 router.get("/dashboard-stats", getAdminDashboardStats);
+
+// Emergency Live Monitor & Overrides (Prompt Spec #13)
+router.get("/emergency-monitor", getAdminEmergencyMonitor);
+router.get("/emergencies/active", getAllEmergencies);
+router.post("/emergencies/:id/override-hospital", adminOverrideHospital);
+router.post("/emergencies/:id/override-ambulance", adminOverrideAmbulance);
+router.post("/ambulances/:id/verify", verifyAmbulance);
 
 // Hospital Approvals & Management
 router.get("/pending-hospitals", getPendingHospitals);

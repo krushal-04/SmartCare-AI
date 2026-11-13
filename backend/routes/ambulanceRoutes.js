@@ -11,6 +11,7 @@ const {
     getAmbulanceById,
     createAmbulance,
     updateAmbulance,
+    verifyAmbulance,
     deleteAmbulance,
 } = require("../controllers/ambulanceController");
 
@@ -24,6 +25,9 @@ router.post("/create", protect, createAmbulance);
 
 // Update ambulance
 router.put("/:id", protect, updateAmbulance);
+
+// Verify / Suspend ambulance (Admin only)
+router.post("/:id/verify", protect, adminOnly, verifyAmbulance);
 
 // Delete ambulance (Admin only)
 router.delete("/:id", protect, adminOnly, deleteAmbulance);

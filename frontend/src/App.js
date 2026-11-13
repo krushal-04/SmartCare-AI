@@ -73,6 +73,7 @@ import HospitalSchedules from "./pages/hospital/HospitalSchedules";
 import HospitalAppointments from "./pages/hospital/HospitalAppointments";
 import HospitalPatients from "./pages/hospital/HospitalPatients";
 import HospitalEmergency from "./pages/hospital/HospitalEmergency";
+import HospitalAmbulances from "./pages/hospital/HospitalAmbulances";
 import HospitalReports from "./pages/hospital/HospitalReports";
 import HospitalNotifications from "./pages/hospital/HospitalNotifications";
 import HospitalPayments from "./pages/hospital/HospitalPayments";
@@ -87,12 +88,20 @@ import AdminUsers from "./pages/admin/AdminUsers";
 import AdminDoctors from "./pages/admin/AdminDoctors";
 import AdminDepartments from "./pages/admin/AdminDepartments";
 import AdminAmbulances from "./pages/admin/AdminAmbulances";
+import AdminEmergencyMonitor from "./pages/admin/AdminEmergencyMonitor";
 // import AdminMedicines from "./pages/admin/AdminMedicines";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import AdminReports from "./pages/admin/AdminReports";
 import AdminNotifications from "./pages/admin/AdminNotifications";
 import AdminPayments from "./pages/admin/AdminPayments";
 import AdminReminders from "./pages/admin/AdminReminders";
+
+/* =========================
+   DRIVER PAGES
+========================= */
+import DriverDashboard from "./pages/driver/DriverDashboard";
+import DriverCurrentTrip from "./pages/driver/DriverCurrentTrip";
+import DriverProfile from "./pages/driver/DriverProfile";
 
 /* =========================
    DOCTOR PAGES
@@ -344,6 +353,15 @@ function App() {
                     />
 
                     <Route
+                        path="/hospital/ambulances"
+                        element={
+                            <ProtectedRoute role="hospital">
+                                <HospitalAmbulances />
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    <Route
                         path="/hospital/reports"
                         element={
                             <ProtectedRoute role="hospital">
@@ -428,6 +446,15 @@ function App() {
                         }
                     />
 
+                    <Route
+                        path="/admin/emergency-monitor"
+                        element={
+                            <ProtectedRoute role="admin">
+                                <AdminEmergencyMonitor />
+                            </ProtectedRoute>
+                        }
+                    />
+
                     {/* 
                     <Route
                         path="/admin/medicines"
@@ -500,6 +527,34 @@ function App() {
                         element={
                             <ProtectedRoute role={["doctor", "hospital", "admin"]}>
                                 <DoctorDashboard />
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    {/* =================================================
+                        DRIVER MODULE
+                    ================================================= */}
+                    <Route
+                        path="/driver"
+                        element={
+                            <ProtectedRoute role="driver">
+                                <DriverDashboard />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/driver/current-trip"
+                        element={
+                            <ProtectedRoute role="driver">
+                                <DriverCurrentTrip />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/driver/profile"
+                        element={
+                            <ProtectedRoute role="driver">
+                                <DriverProfile />
                             </ProtectedRoute>
                         }
                     />

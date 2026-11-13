@@ -43,6 +43,8 @@ export default function ProtectedRoute({ children, role }) {
                 ? "/hospital"
                 : user.role === "doctor"
                 ? "/doctor"
+                : user.role === "driver"
+                ? "/driver"
                 : "/patient";
 
         return <Navigate to={dashboard} replace />;

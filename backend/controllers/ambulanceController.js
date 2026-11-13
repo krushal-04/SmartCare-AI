@@ -1,10 +1,11 @@
 const Ambulance = require("../models/Ambulance");
 const Hospital = require("../models/Hospital");
 const EmergencyRequest = require("../models/EmergencyRequest");
+const User = require("../models/User");
 const AuditLog = require("../models/AuditLog");
 
 // Get all ambulances (Public / Hospital / Admin)
-// Query params: status, availability, hospitalId, search
+// Query params: status, availability, hospitalId, search, capability, verificationStatus
 const getAmbulances = async (req, res) => {
     try {
         const query = {};
@@ -21,10 +22,19 @@ const getAmbulances = async (req, res) => {
             query.hospitalId = req.query.hospitalId;
         }
 
+        if (req.query.verificationStatus) {
+            query.verificationStatus = req.query.verificationStatus;
+        }
+
+        if (req.query.capability) {
+            query.capability = req.query.capability;
+        }
+
         if (req.query.search) {
             const s = new RegExp(req.query.search, "i");
             query.$or = [
                 { ambulanceNumber: s },
+                { vehicleRegNumber: s },
                 { driverName: s },
                 { driverPhone: s },
             ];
@@ -32,7 +42,8 @@ const getAmbulances = async (req, res) => {
 
         const ambulances = await Ambulance.find(query)
             .populate("hospitalId", "hospitalName city hospitalPhone")
-            .populate("assignedEmergencyId", "description status contactNumber address")
+            .populate("driverId", "fullName phone dutyStatus currentLocation")
+            .populate("assignedEmergencyId", "description status contactNumber address emergencyCategory")
             .sort({ createdAt: -1 })
             .lean();
 
@@ -54,6 +65,7 @@ const getAmbulanceById = async (req, res) => {
     try {
         const ambulance = await Ambulance.findById(req.params.id)
             .populate("hospitalId", "hospitalName city address hospitalPhone")
+            .populate("driverId", "fullName phone dutyStatus currentLocation")
             .populate("assignedEmergencyId")
             .lean();
 
@@ -82,9 +94,12 @@ const createAmbulance = async (req, res) => {
     try {
         const {
             ambulanceNumber,
+            vehicleRegNumber,
             vehicleType,
+            capability,
             driverName,
             driverPhone,
+            driverId,
             hospitalId,
             status,
             latitude,
@@ -111,7 +126,8 @@ const createAmbulance = async (req, res) => {
 
         let assignedHospitalId = hospitalId;
         if (req.user.role === "hospital") {
-            const hospital = await Hospital.findOne({ userId: req.user._id });
+            let hospital = await Hospital.findOne({ userId: req.user._id });
+            if (!hospital) hospital = await Hospital.findOne({ hospitalEmail: req.user.email });
             if (!hospital) {
                 return res.status(404).json({
                     success: false,
@@ -121,20 +137,47 @@ const createAmbulance = async (req, res) => {
             assignedHospitalId = hospital._id;
         }
 
+        // Capability parsing: ensure array
+        let caps = ["BASIC"];
+        if (Array.isArray(capability) && capability.length > 0) {
+            caps = capability;
+        } else if (typeof capability === "string" && capability) {
+            caps = [capability];
+        }
+
+        const verificationStatus = req.user.role === "admin" ? "VERIFIED" : "PENDING";
+
         const ambulance = await Ambulance.create({
             ambulanceNumber: cleanNumber,
+            vehicleRegNumber: vehicleRegNumber?.trim().toUpperCase() || cleanNumber,
             vehicleType: vehicleType || "Basic Life Support (BLS)",
+            capability: caps,
             driverName: driverName.trim(),
             driverPhone: driverPhone.trim(),
+            driverId: driverId || undefined,
             hospitalId: assignedHospitalId || undefined,
             status: status || "Available",
+            availabilityStatus: status ? (status === "Available" ? "AVAILABLE" : status.toUpperCase()) : "AVAILABLE",
+            verificationStatus,
             availability: status ? status === "Available" : true,
             currentLocation: {
                 latitude: latitude ? Number(latitude) : undefined,
                 longitude: longitude ? Number(longitude) : undefined,
                 address: address?.trim() || "",
+                updatedAt: new Date(),
             },
         });
+
+        // Link driver if specified
+        if (driverId) {
+            await User.findByIdAndUpdate(driverId, {
+                $set: {
+                    assignedAmbulanceId: ambulance._id,
+                    hospitalId: assignedHospitalId,
+                    role: "driver",
+                },
+            });
+        }
 
         // Audit Log
         await AuditLog.create({
@@ -174,12 +217,16 @@ const updateAmbulance = async (req, res) => {
 
         const {
             ambulanceNumber,
+            vehicleRegNumber,
             vehicleType,
+            capability,
             driverName,
             driverPhone,
+            driverId,
             hospitalId,
             status,
             availability,
+            verificationStatus,
             latitude,
             longitude,
             address,
@@ -199,20 +246,33 @@ const updateAmbulance = async (req, res) => {
             }
         }
 
+        if (vehicleRegNumber) ambulance.vehicleRegNumber = vehicleRegNumber.trim().toUpperCase();
         if (vehicleType) ambulance.vehicleType = vehicleType;
+        if (capability) {
+            ambulance.capability = Array.isArray(capability) ? capability : [capability];
+        }
         if (driverName) ambulance.driverName = driverName.trim();
         if (driverPhone) ambulance.driverPhone = driverPhone.trim();
+        if (driverId !== undefined) {
+            ambulance.driverId = driverId || null;
+            if (driverId) {
+                await User.findByIdAndUpdate(driverId, {
+                    $set: { assignedAmbulanceId: ambulance._id, role: "driver" },
+                });
+            }
+        }
         if (hospitalId !== undefined) ambulance.hospitalId = hospitalId || null;
 
-        // An ambulance must never be shown as available while it is still held by
-        // an active emergency.  This used to allow an admin edit to create a
-        // contradictory record: `availability: true` with `assignedEmergencyId`.
+        if (verificationStatus && req.user.role === "admin") {
+            ambulance.verificationStatus = verificationStatus;
+        }
+
         const isBeingMarkedAvailable = status === "Available" || availability === true;
         if (isBeingMarkedAvailable && ambulance.assignedEmergencyId) {
             const linkedEmergency = await EmergencyRequest.findById(ambulance.assignedEmergencyId)
                 .select("status")
                 .lean();
-            const activeStatuses = ["Requested", "Assigned", "On The Way", "Arrived"];
+            const activeStatuses = ["Requested", "Assigned", "On The Way", "Arrived", "DISPATCHED", "EN_ROUTE_TO_PATIENT", "ARRIVED_AT_PATIENT", "PATIENT_ONBOARD", "EN_ROUTE_TO_HOSPITAL"];
 
             if (linkedEmergency && activeStatuses.includes(linkedEmergency.status)) {
                 return res.status(409).json({
@@ -220,21 +280,21 @@ const updateAmbulance = async (req, res) => {
                     message: "This ambulance is assigned to an active emergency and cannot be marked available.",
                 });
             }
-
-            // The linked emergency is no longer active (or was deleted), so clean
-            // up the stale assignment before returning the ambulance to the fleet.
             ambulance.assignedEmergencyId = null;
         }
 
         if (status) {
             ambulance.status = status;
+            ambulance.availabilityStatus = status === "Available" ? "AVAILABLE" : status.toUpperCase();
             ambulance.availability = status === "Available";
         } else if (availability !== undefined) {
             ambulance.availability = Boolean(availability);
             if (!ambulance.availability && ambulance.status === "Available") {
                 ambulance.status = "Offline";
+                ambulance.availabilityStatus = "OFFLINE";
             } else if (ambulance.availability && ambulance.status === "Offline") {
                 ambulance.status = "Available";
+                ambulance.availabilityStatus = "AVAILABLE";
             }
         }
 
@@ -243,21 +303,11 @@ const updateAmbulance = async (req, res) => {
                 latitude: latitude !== undefined ? Number(latitude) : ambulance.currentLocation?.latitude,
                 longitude: longitude !== undefined ? Number(longitude) : ambulance.currentLocation?.longitude,
                 address: address !== undefined ? address.trim() : ambulance.currentLocation?.address,
+                updatedAt: new Date(),
             };
         }
 
         await ambulance.save();
-
-        // Audit Log
-        await AuditLog.create({
-            userId: req.user._id,
-            userName: req.user.fullName,
-            userRole: req.user.role,
-            action: "Ambulance Updated",
-            details: `Updated ambulance ${ambulance.ambulanceNumber}: status ${ambulance.status}`,
-            targetId: ambulance._id,
-            targetType: "Ambulance",
-        }).catch(() => {});
 
         res.status(200).json({
             success: true,
@@ -270,6 +320,49 @@ const updateAmbulance = async (req, res) => {
             success: false,
             message: error.message || "Failed to update ambulance.",
         });
+    }
+};
+
+// Admin: Verify / Suspend ambulance
+const verifyAmbulance = async (req, res) => {
+    try {
+        const { verificationStatus } = req.body;
+        const validStatuses = ["PENDING", "VERIFIED", "SUSPENDED"];
+        const status = validStatuses.includes(verificationStatus) ? verificationStatus : "VERIFIED";
+
+        const ambulance = await Ambulance.findByIdAndUpdate(
+            req.params.id,
+            {
+                $set: {
+                    verificationStatus: status,
+                    availabilityStatus: status === "VERIFIED" ? "AVAILABLE" : "OFFLINE",
+                },
+            },
+            { new: true }
+        ).populate("hospitalId", "hospitalName");
+
+        if (!ambulance) {
+            return res.status(404).json({ success: false, message: "Ambulance not found." });
+        }
+
+        await AuditLog.create({
+            userId: req.user._id,
+            userName: req.user.fullName,
+            userRole: "admin",
+            action: "Ambulance Verified",
+            details: `Ambulance ${ambulance.ambulanceNumber} verification status set to ${status}`,
+            targetId: ambulance._id,
+            targetType: "Ambulance",
+        }).catch(() => {});
+
+        res.status(200).json({
+            success: true,
+            message: `Ambulance verification status updated to ${status}.`,
+            ambulance,
+        });
+    } catch (error) {
+        console.error("verifyAmbulance error:", error);
+        res.status(500).json({ success: false, message: "Failed to verify ambulance." });
     }
 };
 
@@ -293,17 +386,6 @@ const deleteAmbulance = async (req, res) => {
 
         await ambulance.deleteOne();
 
-        // Audit Log
-        await AuditLog.create({
-            userId: req.user._id,
-            userName: req.user.fullName,
-            userRole: req.user.role,
-            action: "Ambulance Deleted",
-            details: `Deleted ambulance ${ambulance.ambulanceNumber}`,
-            targetId: req.params.id,
-            targetType: "Ambulance",
-        }).catch(() => {});
-
         res.status(200).json({
             success: true,
             message: "Ambulance deleted successfully.",
@@ -322,5 +404,6 @@ module.exports = {
     getAmbulanceById,
     createAmbulance,
     updateAmbulance,
+    verifyAmbulance,
     deleteAmbulance,
 };

@@ -35,6 +35,8 @@ import {
     SearchRounded,
     TimeToLeaveOutlined,
     PhoneOutlined,
+    CheckCircleOutlineRounded,
+    BlockOutlined,
 } from "@mui/icons-material";
 
 import DashboardLayout from "../../components/dashboard/DashboardLayout";
@@ -48,6 +50,7 @@ const VEHICLE_TYPES = [
     "Neonatal Ambulance",
 ];
 
+const CAPABILITY_OPTIONS = ["BASIC", "CARDIAC", "TRAUMA", "OXYGEN_SUPPORT"];
 const AMBULANCE_STATUSES = ["Available", "Assigned", "On The Way", "Busy", "Offline"];
 
 const STATUS_COLORS = {
@@ -72,7 +75,9 @@ export default function AdminAmbulances() {
     const [submitting, setSubmitting] = useState(false);
     const [form, setForm] = useState({
         ambulanceNumber: "",
+        vehicleRegNumber: "",
         vehicleType: "Basic Life Support (BLS)",
+        capability: ["BASIC"],
         driverName: "",
         driverPhone: "",
         hospitalId: "",
@@ -116,10 +121,12 @@ export default function AdminAmbulances() {
         setEditingAmb(null);
         setForm({
             ambulanceNumber: "",
+            vehicleRegNumber: "",
             vehicleType: "Basic Life Support (BLS)",
+            capability: ["BASIC"],
             driverName: "",
             driverPhone: "",
-            hospitalId: hospitals[0]?._id || "",
+            hospitalId: "",
             status: "Available",
             address: "",
         });
@@ -129,10 +136,12 @@ export default function AdminAmbulances() {
     const handleOpenEdit = (amb) => {
         setEditingAmb(amb);
         setForm({
-            ambulanceNumber: amb.ambulanceNumber || "",
+            ambulanceNumber: amb.ambulanceNumber,
+            vehicleRegNumber: amb.vehicleRegNumber || amb.ambulanceNumber,
             vehicleType: amb.vehicleType || "Basic Life Support (BLS)",
-            driverName: amb.driverName || "",
-            driverPhone: amb.driverPhone || "",
+            capability: amb.capability || ["BASIC"],
+            driverName: amb.driverName,
+            driverPhone: amb.driverPhone,
             hospitalId: amb.hospitalId?._id || amb.hospitalId || "",
             status: amb.status || "Available",
             address: amb.currentLocation?.address || "",
@@ -142,10 +151,9 @@ export default function AdminAmbulances() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setAlert({ type: "", message: "" });
-
-        if (!form.ambulanceNumber.trim() || !form.driverName.trim() || !form.driverPhone.trim()) {
-            return setAlert({ type: "error", message: "Please fill in all required fields." });
+        if (!form.ambulanceNumber.trim()) {
+            setAlert({ type: "error", message: "Please enter an ambulance registration number." });
+            return;
         }
 
         setSubmitting(true);
@@ -166,6 +174,17 @@ export default function AdminAmbulances() {
             });
         } finally {
             setSubmitting(false);
+        }
+    };
+
+    // Quick verify / suspend
+    const handleVerify = async (id, status) => {
+        try {
+            await api.post(`/ambulance/${id}/verify`, { verificationStatus: status });
+            setAlert({ type: "success", message: `Ambulance status updated to ${status}.` });
+            fetchData();
+        } catch (err) {
+            setAlert({ type: "error", message: err.response?.data?.message || "Verification update failed." });
         }
     };
 
@@ -208,7 +227,7 @@ export default function AdminAmbulances() {
         >
             <PageHeader
                 title="Ambulance Fleet Console"
-                subtitle="Register ambulances, track deployment states, and assign vehicles to hospitals"
+                subtitle="Register ambulances, verify hospital fleet submissions, track deployment states, and assign vehicles"
                 backTo="/admin"
                 backLabel="← Back to Dashboard"
                 action={
@@ -248,20 +267,20 @@ export default function AdminAmbulances() {
                             InputProps={{
                                 startAdornment: (
                                     <InputAdornment position="start">
-                                        <SearchRounded fontSize="small" />
+                                        <SearchRounded fontSize="small" color="action" />
                                     </InputAdornment>
                                 ),
                             }}
                         />
 
-                        <FormControl size="small" sx={{ minWidth: 180 }}>
+                        <FormControl size="small" sx={{ width: { xs: "100%", sm: 200 } }}>
                             <InputLabel>Filter by Status</InputLabel>
                             <Select
                                 value={statusFilter}
                                 label="Filter by Status"
                                 onChange={(e) => setStatusFilter(e.target.value)}
                             >
-                                <MenuItem value="all">All Statuses</MenuItem>
+                                <MenuItem value="all">All Operational States</MenuItem>
                                 {AMBULANCE_STATUSES.map((s) => (
                                     <MenuItem key={s} value={s}>
                                         {s}
@@ -281,30 +300,23 @@ export default function AdminAmbulances() {
                             <Typography fontWeight={800} variant="h6">
                                 No Ambulances Found
                             </Typography>
-                            <Typography color="text.secondary" variant="body2" sx={{ mt: 0.5, mb: 2 }}>
+                            <Typography color="text.secondary" variant="body2" sx={{ mt: 0.5 }}>
                                 {search || statusFilter !== "all"
-                                    ? "No ambulances matched the selected filters."
-                                    : "Register your first emergency fleet vehicle."}
+                                    ? "No fleet units match your search query."
+                                    : "No ambulances are currently registered in the platform database."}
                             </Typography>
-                            <Button
-                                variant="outlined"
-                                startIcon={<AddRounded />}
-                                onClick={handleOpenAdd}
-                                sx={{ borderRadius: 2.5, textTransform: "none", fontWeight: 700 }}
-                            >
-                                Register Ambulance
-                            </Button>
                         </Box>
                     ) : (
-                        <TableContainer sx={{ overflowX: "auto" }}>
-                            <Table sx={{ minWidth: 700 }}>
+                        <TableContainer>
+                            <Table sx={{ minWidth: 800 }}>
                                 <TableHead>
                                     <TableRow sx={{ bgcolor: "#F8FAFB" }}>
                                         <TableCell sx={{ fontWeight: 800 }}>Vehicle Details</TableCell>
-                                        <TableCell sx={{ fontWeight: 800 }}>Type & Capability</TableCell>
+                                        <TableCell sx={{ fontWeight: 800 }}>Type & Capabilities</TableCell>
                                         <TableCell sx={{ fontWeight: 800 }}>Driver Information</TableCell>
                                         <TableCell sx={{ fontWeight: 800 }}>Assigned Base / Hospital</TableCell>
                                         <TableCell sx={{ fontWeight: 800 }}>Fleet Status</TableCell>
+                                        <TableCell sx={{ fontWeight: 800 }}>Verification</TableCell>
                                         <TableCell align="right" sx={{ fontWeight: 800 }}>Actions</TableCell>
                                     </TableRow>
                                 </TableHead>
@@ -332,20 +344,21 @@ export default function AdminAmbulances() {
                                                             {amb.ambulanceNumber}
                                                         </Typography>
                                                         <Typography variant="caption" color="text.secondary">
-                                                            {amb.currentLocation?.address || "Base Station"}
+                                                            Plate: {amb.vehicleRegNumber || amb.ambulanceNumber}
                                                         </Typography>
                                                     </Box>
                                                 </Stack>
                                             </TableCell>
 
                                             <TableCell>
-                                                <Chip
-                                                    label={amb.vehicleType}
-                                                    size="small"
-                                                    variant="outlined"
-                                                    color="primary"
-                                                    sx={{ fontWeight: 700 }}
-                                                />
+                                                <Typography fontSize={13} fontWeight={700}>
+                                                    {amb.vehicleType}
+                                                </Typography>
+                                                <Box sx={{ display: "flex", gap: 0.5, mt: 0.5, flexWrap: "wrap" }}>
+                                                    {(amb.capability || ["BASIC"]).map((c) => (
+                                                        <Chip key={c} label={c} size="small" sx={{ fontSize: 10, height: 18 }} />
+                                                    ))}
+                                                </Box>
                                             </TableCell>
 
                                             <TableCell>
@@ -375,8 +388,45 @@ export default function AdminAmbulances() {
                                                 />
                                             </TableCell>
 
+                                            <TableCell>
+                                                <Chip
+                                                    label={amb.verificationStatus || "VERIFIED"}
+                                                    size="small"
+                                                    color={
+                                                        amb.verificationStatus === "VERIFIED"
+                                                            ? "success"
+                                                            : amb.verificationStatus === "SUSPENDED"
+                                                            ? "error"
+                                                            : "warning"
+                                                    }
+                                                    sx={{ fontWeight: 800 }}
+                                                />
+                                            </TableCell>
+
                                             <TableCell align="right">
-                                                <Stack direction="row" spacing={1} justifyContent="flex-end">
+                                                <Stack direction="row" spacing={0.5} justifyContent="flex-end">
+                                                    {amb.verificationStatus === "PENDING" && (
+                                                        <Tooltip title="Verify Ambulance">
+                                                            <IconButton
+                                                                size="small"
+                                                                color="success"
+                                                                onClick={() => handleVerify(amb._id, "VERIFIED")}
+                                                            >
+                                                                <CheckCircleOutlineRounded fontSize="small" />
+                                                            </IconButton>
+                                                        </Tooltip>
+                                                    )}
+                                                    {amb.verificationStatus === "VERIFIED" && (
+                                                        <Tooltip title="Suspend Ambulance">
+                                                            <IconButton
+                                                                size="small"
+                                                                color="warning"
+                                                                onClick={() => handleVerify(amb._id, "SUSPENDED")}
+                                                            >
+                                                                <BlockOutlined fontSize="small" />
+                                                            </IconButton>
+                                                        </Tooltip>
+                                                    )}
                                                     <Tooltip title="Edit Ambulance">
                                                         <IconButton
                                                             size="small"
@@ -417,10 +467,18 @@ export default function AdminAmbulances() {
                             <TextField
                                 fullWidth
                                 required
-                                label="Ambulance Registration Number"
-                                placeholder="e.g. GJ-01-AB-1234"
+                                label="Ambulance Code"
+                                placeholder="e.g. AMB-01"
                                 value={form.ambulanceNumber}
                                 onChange={(e) => setForm({ ...form, ambulanceNumber: e.target.value })}
+                            />
+
+                            <TextField
+                                fullWidth
+                                label="Registration Plate"
+                                placeholder="e.g. GJ-01-AB-1234"
+                                value={form.vehicleRegNumber}
+                                onChange={(e) => setForm({ ...form, vehicleRegNumber: e.target.value })}
                             />
 
                             <FormControl fullWidth required>
@@ -433,6 +491,29 @@ export default function AdminAmbulances() {
                                     {VEHICLE_TYPES.map((t) => (
                                         <MenuItem key={t} value={t}>
                                             {t}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+
+                            <FormControl fullWidth>
+                                <InputLabel>Capabilities</InputLabel>
+                                <Select
+                                    multiple
+                                    value={form.capability}
+                                    label="Capabilities"
+                                    onChange={(e) => setForm({ ...form, capability: e.target.value })}
+                                    renderValue={(sel) => (
+                                        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                                            {sel.map((v) => (
+                                                <Chip key={v} label={v} size="small" />
+                                            ))}
+                                        </Box>
+                                    )}
+                                >
+                                    {CAPABILITY_OPTIONS.map((c) => (
+                                        <MenuItem key={c} value={c}>
+                                            {c}
                                         </MenuItem>
                                     ))}
                                 </Select>
