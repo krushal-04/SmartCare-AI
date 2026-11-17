@@ -96,8 +96,8 @@ const getHospitalNotificationMeta = (notification) => {
         };
     }
 
-    // 3. Rescheduled Appointment Pending Approval
-    if (title.includes("reschedule") || message.includes("reschedule") || title.includes("pending approval") || message.includes("review and approve")) {
+    // 3. Rescheduled Appointment Pending Approval (Only when actually rescheduled)
+    if (title.includes("reschedule") || message.includes("reschedule") || message.includes("rescheduled")) {
         return {
             category: "Rescheduled",
             label: "Rescheduled • Approval Required",
@@ -106,6 +106,21 @@ const getHospitalNotificationMeta = (notification) => {
             borderLight: "#FDE68A",
             accentBorder: "#D97706",
             icon: <UpdateOutlined sx={{ color: "#D97706", fontSize: 22 }} />,
+            actionLabel: "Review & Approve Slot",
+            actionPath: "/hospital/appointments",
+        };
+    }
+
+    // 4. New Appointment Booking Awaiting Approval
+    if (title.includes("awaiting approval") || title.includes("pending approval") || message.includes("review and approve") || title.includes("new appointment") || message.includes("booked")) {
+        return {
+            category: "Appointment",
+            label: "New Booking • Approval Required",
+            color: "#0284C7",
+            bgLight: "#F0F9FF",
+            borderLight: "#BAE6FD",
+            accentBorder: "#0284C7",
+            icon: <CalendarMonthOutlined sx={{ color: "#0284C7", fontSize: 22 }} />,
             actionLabel: "Review & Approve Slot",
             actionPath: "/hospital/appointments",
         };

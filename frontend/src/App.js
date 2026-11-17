@@ -100,6 +100,8 @@ import AdminPayments from "./pages/admin/AdminPayments";
 ========================= */
 import DriverDashboard from "./pages/driver/DriverDashboard";
 import DriverCurrentTrip from "./pages/driver/DriverCurrentTrip";
+import DriverHistory from "./pages/driver/DriverHistory";
+import DriverNotifications from "./pages/driver/DriverNotifications";
 import DriverProfile from "./pages/driver/DriverProfile";
 
 /* =========================
@@ -538,6 +540,22 @@ function App() {
                         element={
                             <ProtectedRoute role="driver">
                                 <DriverCurrentTrip />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/driver/history"
+                        element={
+                            <ProtectedRoute role="driver">
+                                <DriverHistory />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/driver/notifications"
+                        element={
+                            <ProtectedRoute role="driver">
+                                <DriverNotifications />
                             </ProtectedRoute>
                         }
                     />

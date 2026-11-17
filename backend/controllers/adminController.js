@@ -640,7 +640,7 @@ const getAdminReportsData = async (req, res) => {
                     .populate("hospitalId", "hospitalName city")
                     .populate("doctorId", "doctorName specialization")
                     .populate("departmentId", "departmentName")
-                    .sort({ appointmentDate: -1 })
+                    .sort({ createdAt: -1, appointmentDate: -1 })
                     .lean();
 
                 summary = {

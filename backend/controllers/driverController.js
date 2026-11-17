@@ -561,3 +561,51 @@ exports.getProfile = async (req, res) => {
     }
 };
 
+// Driver Work & Trip History
+exports.getDriverHistory = async (req, res) => {
+    try {
+        const driver = await User.findById(req.user._id);
+        if (!driver) {
+            return res.status(404).json({ success: false, message: "Driver not found." });
+        }
+
+        const matchConditions = [{ assignedDriverId: driver._id }];
+        if (driver.assignedAmbulanceId) {
+            matchConditions.push({ assignedAmbulanceId: driver.assignedAmbulanceId });
+            matchConditions.push({ ambulanceId: driver.assignedAmbulanceId });
+        }
+
+        const trips = await EmergencyRequest.find({ $or: matchConditions })
+            .populate("patientId", "fullName email phone")
+            .populate("hospitalId", "hospitalName hospitalPhone address city latitude longitude")
+            .populate("ambulanceId", "ambulanceNumber vehicleType capability status currentLocation")
+            .sort({ createdAt: -1 })
+            .lean();
+
+        const totalTrips = trips.length;
+        const completedTrips = trips.filter(
+            (t) => t.journeyStatus === "HANDOVER_COMPLETE" || t.status === "Completed"
+        ).length;
+        const activeTrips = trips.filter(
+            (t) => !["Completed", "Cancelled", "HOSPITAL_REJECTED"].includes(t.status) && t.journeyStatus !== "HANDOVER_COMPLETE"
+        ).length;
+
+        res.status(200).json({
+            success: true,
+            trips,
+            metrics: {
+                totalTrips,
+                completedTrips,
+                activeTrips,
+                dutyStatus: driver.dutyStatus,
+                lastDutyStartAt: driver.lastDutyStartAt,
+                lastDutyEndAt: driver.lastDutyEndAt,
+            },
+        });
+    } catch (err) {
+        console.error("getDriverHistory error:", err);
+        res.status(500).json({ success: false, message: "Failed to retrieve driver work history." });
+    }
+};
+
+

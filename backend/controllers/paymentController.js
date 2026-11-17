@@ -10,6 +10,7 @@ const Notification = require("../models/Notification");
 const AuditLog = require("../models/AuditLog");
 const User = require("../models/User");
 const paymentService = require("../services/paymentService");
+const { emitToHospital } = require("../services/socketService");
 const emailService = require("../services/emailService");
 
 const dayNames = [
@@ -471,6 +472,8 @@ exports.verifyPayment = async (req, res) => {
                 Notification.create({
                     userId: hospitalObj.userId,
                     title: "New Appointment Awaiting Approval",
+                    // Notify hospital live in real-time
+                    _notified: emitToHospital(hospitalObj._id, "appointment:new", { appointmentId: appointment._id }),
                     message: `Patient ${patientUser?.fullName || "Patient"} booked Dr. ${doctorObj?.doctorName} for ${appointment.appointmentDate.toISOString().split("T")[0]} at ${appointment.appointmentTime}. Fee paid: ₹${paymentRecord.amount}. Please review and approve.`,
                     type: "Appointment",
                 }).catch((e) => console.warn("Hospital notification err:", e.message));

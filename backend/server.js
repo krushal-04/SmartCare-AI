@@ -1,5 +1,11 @@
 require("dotenv").config();
 const http = require("http");
+const dns = require("dns");
+
+// Prioritize IPv4 to prevent 21-second ETIMEDOUT socket hangs on Razorpay & Atlas connections
+if (dns.setDefaultResultOrder) {
+    dns.setDefaultResultOrder("ipv4first");
+}
 
 const app = require("./app");
 const connectDB = require("./config/db");

@@ -5,8 +5,8 @@ const CancellationPolicy = require("../models/CancellationPolicy");
 let razorpayInstance = null;
 
 const getRazorpayInstance = () => {
-    const key_id = process.env.RAZORPAY_KEY_ID;
-    const key_secret = process.env.RAZORPAY_KEY_SECRET;
+    const key_id = process.env.RAZORPAY_KEY_ID?.trim();
+    const key_secret = process.env.RAZORPAY_KEY_SECRET?.trim();
 
     if (!key_id || !key_secret) {
         throw new Error(

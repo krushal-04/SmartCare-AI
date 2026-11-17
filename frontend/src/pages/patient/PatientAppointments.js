@@ -238,8 +238,7 @@ export default function PatientAppointments() {
     }, []);
 
     const filtered = useMemo(() => {
-        if (statusFilter === "All") return appointments;
-        return appointments.filter((item) => {
+        const list = statusFilter === "All" ? appointments : appointments.filter((item) => {
             const isPassed = isAppointmentPassed(item.appointmentDate, item.appointmentTime);
             const effStatus = (item.status === "Cancelled" || item.status === "Rejected")
                 ? item.status
@@ -248,6 +247,7 @@ export default function PatientAppointments() {
                 : item.status;
             return effStatus === statusFilter;
         });
+        return [...list].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
     }, [appointments, statusFilter]);
 
     // Open cancellation modal and load real refund preview

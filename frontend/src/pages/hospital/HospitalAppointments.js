@@ -114,6 +114,7 @@ export default function HospitalAppointments() {
 
     useEffect(() => {
         fetchAppointments();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [statusFilter, dateFilter]);
 
     const handleOpenAction = (appt, type) => {
@@ -226,7 +227,11 @@ export default function HospitalAppointments() {
         }
     };
 
-    const filtered = appointments.filter((a) => {
+    const sortedAppointments = [...appointments].sort(
+        (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
+    );
+
+    const filtered = sortedAppointments.filter((a) => {
         const patientName = a.patientId?.fullName?.toLowerCase() || "";
         const patientEmail = a.patientId?.email?.toLowerCase() || "";
         const doctorName = a.doctorId?.doctorName?.toLowerCase() || "";
@@ -305,11 +310,15 @@ export default function HospitalAppointments() {
                             <TextField
                                 type="date"
                                 size="small"
-                                label="Date"
-                                InputLabelProps={{ shrink: true }}
                                 value={dateFilter}
                                 onChange={(e) => setDateFilter(e.target.value)}
-                                sx={{ minWidth: 165 }}
+                                sx={{
+                                    minWidth: 160,
+                                    bgcolor: "#FFFFFF",
+                                    "& .MuiOutlinedInput-root": {
+                                        borderRadius: 2,
+                                    },
+                                }}
                             />
 
                             {dateFilter && (

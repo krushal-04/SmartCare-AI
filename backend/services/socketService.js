@@ -76,6 +76,7 @@ const emitToRole = (role, event, data) => {
 const emitToHospital = (hospitalId, event, data) => {
     if (!io || !hospitalId) return;
     io.to(`hospital_${hospitalId}`).emit(event, data);
+    io.to("role_hospital").emit(event, data);
 };
 
 const emitToDriver = (driverId, event, data) => {

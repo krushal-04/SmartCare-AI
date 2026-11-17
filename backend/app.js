@@ -3,6 +3,11 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const morgan = require("morgan");
 const path = require("path");
+const dns = require("dns");
+
+if (dns.setDefaultResultOrder) {
+    dns.setDefaultResultOrder("ipv4first");
+}
 
 const authRoutes = require("./routes/authRoutes");
 const hospitalRoutes = require("./routes/hospitalRoutes");

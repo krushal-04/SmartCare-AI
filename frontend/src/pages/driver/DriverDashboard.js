@@ -5,7 +5,6 @@ import {
     Box,
     Button,
     Card,
-    CardContent,
     Chip,
     CircularProgress,
     Stack,
@@ -17,12 +16,11 @@ import {
     MyLocationRounded,
     PlayArrowRounded,
     PowerSettingsNewRounded,
-    EmergencyOutlined,
     PhoneOutlined,
     LocationOnOutlined,
-    CheckCircleRounded,
-    ShieldOutlined,
     ArrowForwardRounded,
+    HistoryOutlined,
+    NotificationsOutlined,
 } from "@mui/icons-material";
 import { io } from "socket.io-client";
 
@@ -593,6 +591,52 @@ export default function DriverDashboard() {
                             </Box>
                         )}
                     </Card>
+
+                    {/* QUICK DRIVER PORTAL SHORTCUTS */}
+                    <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+                        <Button
+                            variant="outlined"
+                            fullWidth
+                            size="large"
+                            startIcon={<HistoryOutlined sx={{ color: colors.pine }} />}
+                            onClick={() => navigate("/driver/history")}
+                            sx={{
+                                py: 1.8,
+                                borderRadius: 3,
+                                borderColor: colors.hairline,
+                                bgcolor: colors.white,
+                                color: colors.ink,
+                                fontWeight: 800,
+                                fontSize: 14,
+                                textTransform: "none",
+                                boxShadow: "0 2px 8px rgba(0,0,0,0.03)",
+                                "&:hover": { borderColor: colors.secondary, bgcolor: "#F0FDFA" },
+                            }}
+                        >
+                            View Work & Trip History
+                        </Button>
+                        <Button
+                            variant="outlined"
+                            fullWidth
+                            size="large"
+                            startIcon={<NotificationsOutlined sx={{ color: "#2563EB" }} />}
+                            onClick={() => navigate("/driver/notifications")}
+                            sx={{
+                                py: 1.8,
+                                borderRadius: 3,
+                                borderColor: colors.hairline,
+                                bgcolor: colors.white,
+                                color: colors.ink,
+                                fontWeight: 800,
+                                fontSize: 14,
+                                textTransform: "none",
+                                boxShadow: "0 2px 8px rgba(0,0,0,0.03)",
+                                "&:hover": { borderColor: "#2563EB", bgcolor: "#EFF6FF" },
+                            }}
+                        >
+                            Notifications & Dispatch Signals
+                        </Button>
+                    </Stack>
                 </Stack>
             )}
         </DashboardLayout>

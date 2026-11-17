@@ -3,7 +3,7 @@ const {
     scheduleRemindersForAppointment,
     cancelRemindersForAppointment,
 } = require("../services/reminderService");
-const { emitToUser, emitUnreadCount } = require("../services/socketService");
+const { emitToUser, emitUnreadCount, emitToHospital } = require("../services/socketService");
 const Appointment = require("../models/Appointment");
 const DoctorSchedule = require("../models/DoctorSchedule");
 const Doctor = require("../models/Doctor");
@@ -664,10 +664,7 @@ exports.getMyAppointments = async (
                 patientId:
                     req.user._id,
             })
-                .sort({
-                    appointmentDate: -1,
-                    createdAt: -1,
-                })
+                .sort({ createdAt: -1 })
                 .populate(
                     "hospitalId",
                     "hospitalName city state address hospitalPhone"
@@ -753,10 +750,7 @@ exports.getHospitalAppointments = async (
 
         const appointments =
             await Appointment.find(query)
-                .sort({
-                    appointmentDate: 1,
-                    appointmentTime: 1,
-                })
+                .sort({ createdAt: -1 })
                 .populate(
                     "patientId",
                     "fullName email phone"
@@ -900,6 +894,9 @@ exports.updateAppointmentStatus = async (
                 if (["Pending", "Confirmed"].includes(appointment.status)) {
                     appointment.status = "Completed";
                     await appointment.save();
+        if (appointment.hospitalId) {
+            emitToHospital(appointment.hospitalId._id || appointment.hospitalId, "appointment:status-changed", { appointmentId: appointment._id, status });
+        }
                 }
                 return res.status(400).json({
                     success: false,
@@ -1026,7 +1023,7 @@ exports.getAllAppointments = async (req, res) => {
         }
 
         const appointments = await Appointment.find(query)
-            .sort({ appointmentDate: -1, appointmentTime: 1 })
+            .sort({ createdAt: -1 })
             .populate("patientId", "fullName email phone")
             .populate("hospitalId", "hospitalName city")
             .populate("doctorId", "doctorName specialization")

@@ -38,6 +38,7 @@ import {
     DomainOutlined,
     EmergencyOutlined,
     GroupOutlined,
+    HistoryOutlined,
     LocalHospitalOutlined,
     LogoutOutlined,
     MedicalServicesOutlined,
@@ -175,12 +176,14 @@ const menuConfig = {
             items: [
                 { label: "Driver Portal", path: "/driver", icon: <DashboardOutlined /> },
                 { label: "Active Dispatch", path: "/driver/current-trip", icon: <TimeToLeaveOutlined /> },
+                { label: "Work History", path: "/driver/history", icon: <HistoryOutlined /> },
             ],
         },
         {
             group: "ACCOUNT",
             items: [
                 { label: "My Profile", path: "/driver/profile", icon: <PersonOutlined /> },
+                { label: "Notifications", path: "/driver/notifications", icon: <NotificationsOutlined /> },
             ],
         },
     ],
@@ -203,7 +206,7 @@ const roleMeta = {
         badgeColor: "#FCD34D",
         avatarBg: "#D97706",
         homeRoute: "/driver",
-        notifRoute: "/driver",
+        notifRoute: "/driver/notifications",
     },
     hospital: {
         title: "Hospital Hub",
@@ -248,6 +251,8 @@ export default function DashboardLayout({ role, children, title, subtitle }) {
     const [profileAnchor, setProfileAnchor] = useState(null);
     const [incomingEmergencyCount, setIncomingEmergencyCount] = useState(0);
     const [emergencyAlert, setEmergencyAlert] = useState(null);
+    const [pendingAppointmentsCount, setPendingAppointmentsCount] = useState(0);
+    const [patientPendingCount, setPatientPendingCount] = useState(0);
 
     const activeRole = role || user?.role || "patient";
     const currentMeta = roleMeta[activeRole] || roleMeta.patient;
@@ -271,42 +276,83 @@ export default function DashboardLayout({ role, children, title, subtitle }) {
     };
 
     useEffect(() => {
-        if (activeRole !== "hospital" || !user?._id) {
+        let active = true;
+
+        if (activeRole === "hospital" && user?._id) {
+            const refreshHospitalBadges = async () => {
+                try {
+                    const [opsRes, apptRes] = await Promise.all([
+                        api.get("/hospital/emergency-operations"),
+                        api.get("/appointment/hospital", { params: { status: "Pending" } }),
+                    ]);
+                    if (!active) return;
+                    if (opsRes.data?.success) {
+                        setIncomingEmergencyCount((opsRes.data.incomingEmergencies || []).length);
+                        if (opsRes.data.hospital?._id) socket.emit("join_hospital", opsRes.data.hospital._id);
+                    }
+                    if (apptRes.data?.success) {
+                        setPendingAppointmentsCount((apptRes.data.appointments || []).length);
+                    }
+                } catch (_) {
+                    // Safe fallback
+                }
+            };
+
+            const socket = io(SOCKET_URL, { transports: ["websocket", "polling"] });
+            socket.on("connect", () => {
+                socket.emit("join", user._id);
+                socket.emit("join_role", "hospital");
+                refreshHospitalBadges();
+            });
+            socket.on("emergency:created", (data) => {
+                if (!active) return;
+                setIncomingEmergencyCount((count) => count + 1);
+                setEmergencyAlert(data);
+            });
+            socket.on("emergency:hospital-accepted", refreshHospitalBadges);
+            socket.on("emergency:hospital-rejected", refreshHospitalBadges);
+            socket.on("appointment:new", refreshHospitalBadges);
+            socket.on("appointment:status-changed", refreshHospitalBadges);
+            socket.on("appointment:rescheduled", refreshHospitalBadges);
+            refreshHospitalBadges();
+
+            return () => {
+                active = false;
+                socket.disconnect();
+            };
+        } else if (activeRole === "patient" && user?._id) {
+            const refreshPatientBadges = async () => {
+                try {
+                    const res = await api.get("/appointment/my");
+                    if (!active || !res.data?.success) return;
+                    const list = res.data.appointments || [];
+                    const pendingCount = list.filter((a) => a.status === "Pending").length;
+                    setPatientPendingCount(pendingCount);
+                } catch (_) {
+                    // Safe fallback
+                }
+            };
+
+            const socket = io(SOCKET_URL, { transports: ["websocket", "polling"] });
+            socket.on("connect", () => {
+                socket.emit("join", user._id);
+                refreshPatientBadges();
+            });
+            socket.on("appointment:new", refreshPatientBadges);
+            socket.on("appointment:status-changed", refreshPatientBadges);
+            socket.on("appointment:rescheduled", refreshPatientBadges);
+            refreshPatientBadges();
+
+            return () => {
+                active = false;
+                socket.disconnect();
+            };
+        } else {
             setIncomingEmergencyCount(0);
+            setPendingAppointmentsCount(0);
+            setPatientPendingCount(0);
             return undefined;
         }
-
-        let active = true;
-        const refreshIncomingCount = async () => {
-            try {
-                const response = await api.get("/hospital/emergency-operations");
-                if (!active || !response.data?.success) return;
-                setIncomingEmergencyCount((response.data.incomingEmergencies || []).length);
-                if (response.data.hospital?._id) socket.emit("join_hospital", response.data.hospital._id);
-            } catch (_) {
-                // Emergency page remains available even if this background indicator cannot refresh.
-            }
-        };
-
-        const socket = io(SOCKET_URL, { transports: ["websocket", "polling"] });
-        socket.on("connect", () => {
-            socket.emit("join", user._id);
-            socket.emit("join_role", "hospital");
-            refreshIncomingCount();
-        });
-        socket.on("emergency:created", (data) => {
-            if (!active) return;
-            setIncomingEmergencyCount((count) => count + 1);
-            setEmergencyAlert(data);
-        });
-        socket.on("emergency:hospital-accepted", refreshIncomingCount);
-        socket.on("emergency:hospital-rejected", refreshIncomingCount);
-        refreshIncomingCount();
-
-        return () => {
-            active = false;
-            socket.disconnect();
-        };
     }, [activeRole, user?._id]);
 
     const sidebarContent = (
@@ -527,20 +573,68 @@ export default function DashboardLayout({ role, children, title, subtitle }) {
                                                 <Badge badgeContent={incomingEmergencyCount} color="error" max={9} invisible={incomingEmergencyCount === 0}>
                                                     {item.icon}
                                                 </Badge>
+                                            ) : activeRole === "hospital" && item.path === "/hospital/appointments" ? (
+                                                <Badge badgeContent={pendingAppointmentsCount} color="warning" max={99} invisible={pendingAppointmentsCount === 0}>
+                                                    {item.icon}
+                                                </Badge>
+                                            ) : activeRole === "patient" && item.path === "/patient/appointments" ? (
+                                                <Badge badgeContent={patientPendingCount} color="info" max={99} invisible={patientPendingCount === 0}>
+                                                    {item.icon}
+                                                </Badge>
                                             ) : item.icon}
                                         </ListItemIcon>
                                         <ListItemText
-                                            primary={
-                                                activeRole === "hospital" && item.path === "/hospital/emergency" && incomingEmergencyCount > 0
-                                                    ? `${item.label} (${incomingEmergencyCount})`
-                                                    : item.label
-                                            }
+                                            primary={item.label}
                                             primaryTypographyProps={{
                                                 fontSize: 14,
-                                                fontWeight: active ? 700 : incomingEmergencyCount > 0 && item.path === "/hospital/emergency" ? 800 : 500,
-                                                color: incomingEmergencyCount > 0 && item.path === "/hospital/emergency" ? "#FCA5A5" : undefined,
+                                                fontWeight: active ? 700 : 500,
                                             }}
                                         />
+                                        {activeRole === "hospital" && item.path === "/hospital/emergency" && incomingEmergencyCount > 0 && (
+                                            <Chip
+                                                label={incomingEmergencyCount}
+                                                size="small"
+                                                sx={{
+                                                    height: 20,
+                                                    fontSize: 10.5,
+                                                    fontWeight: 850,
+                                                    bgcolor: "#EF4444",
+                                                    color: "#FFFFFF",
+                                                    minWidth: 20,
+                                                    px: 0.2,
+                                                }}
+                                            />
+                                        )}
+                                        {activeRole === "hospital" && item.path === "/hospital/appointments" && pendingAppointmentsCount > 0 && (
+                                            <Chip
+                                                label={pendingAppointmentsCount}
+                                                size="small"
+                                                sx={{
+                                                    height: 20,
+                                                    fontSize: 10.5,
+                                                    fontWeight: 850,
+                                                    bgcolor: "#F59E0B",
+                                                    color: "#FFFFFF",
+                                                    minWidth: 20,
+                                                    px: 0.2,
+                                                }}
+                                            />
+                                        )}
+                                        {activeRole === "patient" && item.path === "/patient/appointments" && patientPendingCount > 0 && (
+                                            <Chip
+                                                label={patientPendingCount}
+                                                size="small"
+                                                sx={{
+                                                    height: 20,
+                                                    fontSize: 10.5,
+                                                    fontWeight: 850,
+                                                    bgcolor: "#0EA5E9",
+                                                    color: "#FFFFFF",
+                                                    minWidth: 20,
+                                                    px: 0.2,
+                                                }}
+                                            />
+                                        )}
                                     </ListItemButton>
                                 );
                             })}
