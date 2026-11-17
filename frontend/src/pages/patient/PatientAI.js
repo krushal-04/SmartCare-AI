@@ -47,11 +47,112 @@ import {
     AssessmentOutlined,
     UploadFileOutlined,
     DescriptionOutlined,
+    FactCheckOutlined,
+    QuestionAnswerOutlined,
+    ArrowForwardRounded,
+    DeleteOutlineOutlined,
+    BiotechOutlined,
+    CheckCircleOutlined,
+    ScienceOutlined,
 } from "@mui/icons-material";
 
 import DashboardLayout from "../../components/dashboard/DashboardLayout";
 import api from "../../services/api";
 import { colors, fonts } from "../../theme/colors";
+
+const SAMPLE_BLOOD_REPORT = {
+    reportType: "Comprehensive Blood Count (CBC) & Metabolic Panel",
+    fileName: "fictional_high_values_blood_report_for_testing.pdf",
+    reportDate: "03-Nov-2026",
+    overview:
+        "Complete Blood Count (CBC) and Basic Metabolic Panel (BMP). Analysis detects elevated Hemoglobin, Hematocrit, and Red Blood Cell (RBC) count, indicating mild hemoconcentration. White blood cell count, platelets, fasting glucose, and renal function parameters are in normal ranges.",
+    reviewPriority: "Prompt clinical review",
+    priorityExplanation:
+        "Three red blood cell parameters exceed standard physiological reference limits. While non-emergent, a clinical review is recommended to evaluate hydration status, secondary erythrocytosis, or respiratory factors.",
+    tests: [
+        {
+            testName: "Hemoglobin (Hb)",
+            result: "18.2",
+            unit: "g/dL",
+            referenceRange: "12.0 – 17.5",
+            status: "High",
+            interpretation: "Elevated hemoglobin level indicating potential hemoconcentration, mild dehydration, or polycythemia.",
+        },
+        {
+            testName: "Red Blood Cells (RBC)",
+            result: "6.2",
+            unit: "×10¹²/L",
+            referenceRange: "4.0 – 5.9",
+            status: "High",
+            interpretation: "Erythrocyte count is above the upper physiological boundary. Clinical correlation recommended.",
+        },
+        {
+            testName: "Hematocrit (Hct)",
+            result: "54.8",
+            unit: "%",
+            referenceRange: "36.0 – 50.0",
+            status: "High",
+            interpretation: "Proportion of red blood cells in whole blood is increased, consistent with elevated hemoglobin.",
+        },
+        {
+            testName: "White Blood Cells (WBC)",
+            result: "7.2",
+            unit: "×10⁹/L",
+            referenceRange: "4.0 – 11.0",
+            status: "Normal",
+            interpretation: "Leukocyte count is within normal limits. No evidence of systemic infection or leukocytosis.",
+        },
+        {
+            testName: "Platelets (Plt)",
+            result: "245",
+            unit: "×10⁹/L",
+            referenceRange: "150 – 450",
+            status: "Normal",
+            interpretation: "Thrombocyte count is optimal for normal blood clotting and vascular integrity.",
+        },
+        {
+            testName: "Fasting Blood Glucose",
+            result: "92",
+            unit: "mg/dL",
+            referenceRange: "70 – 99",
+            status: "Normal",
+            interpretation: "Glycemic level is balanced within normal fasting reference parameters.",
+        },
+        {
+            testName: "Serum Creatinine",
+            result: "1.0",
+            unit: "mg/dL",
+            referenceRange: "0.6 – 1.3",
+            status: "Normal",
+            interpretation: "Kidney biomarker is well-regulated, demonstrating normal renal filtration capacity.",
+        },
+        {
+            testName: "Serum Potassium",
+            result: "4.4",
+            unit: "mmol/L",
+            referenceRange: "3.5 – 5.1",
+            status: "Normal",
+            interpretation: "Electrolyte level is well-balanced within safe cardioprotective range.",
+        },
+    ],
+    keyFindings: [
+        "Elevated Hemoglobin (18.2 g/dL), Hematocrit (54.8%), and RBC (6.2 ×10¹²/L) flagged above standard adult thresholds.",
+        "Platelet count (245 ×10⁹/L) and White Blood Cell count (7.2 ×10⁹/L) are completely normal with no acute inflammation.",
+        "Metabolic markers (Creatinine 1.0 mg/dL, Fasting Glucose 92 mg/dL) verify preserved renal and glycemic balance.",
+        "No acute critical cellular abnormalities detected.",
+    ],
+    clinicianDiscussion: [
+        "Could inadequate hydration, high altitude, smoking, or mild sleep apnea explain the elevated red cell indices?",
+        "Is a repeat Complete Blood Count recommended in 2–4 weeks to monitor value stability?",
+        "Would evaluation of serum ferritin, iron saturation, or erythropoietin (EPO) be beneficial if levels remain high?",
+    ],
+    nextSteps: [
+        "Schedule an outpatient consultation with an Internal Medicine or Hematology physician within 5–7 days.",
+        "Ensure healthy oral fluid intake prior to follow-up testing.",
+        "Share this digital analysis and original lab report with your clinician for comprehensive correlation.",
+    ],
+    extractionStatus: "complete",
+};
 
 const QUICK_SYMPTOMS = [
     {
@@ -279,6 +380,14 @@ export default function PatientAI() {
     const [reportLoading, setReportLoading] = useState(false);
     const [reportError, setReportError] = useState("");
     const [reportResult, setReportResult] = useState(null);
+    const [reportFilter, setReportFilter] = useState("all");
+
+    const handleLoadSampleReport = () => {
+        setReportFile({ name: SAMPLE_BLOOD_REPORT.fileName, size: 245000 });
+        setReportError("");
+        setReportResult(SAMPLE_BLOOD_REPORT);
+        setReportFilter("all");
+    };
 
     // Chat State
     const [chatMessages, setChatMessages] = useState([
@@ -505,7 +614,7 @@ export default function PatientAI() {
                     zIndex={1}
                 >
                     <Box>
-                        <Stack direction="row" spacing={1.5} alignItems="center" mb={1}>
+                        <Stack direction="row" spacing={1.5} alignItems="center" mb={1} flexWrap="wrap">
                             <Box
                                 sx={{
                                     display: "inline-flex",
@@ -513,7 +622,7 @@ export default function PatientAI() {
                                     gap: 1,
                                     bgcolor: "rgba(228, 238, 233, 0.15)",
                                     border: "1px solid rgba(228, 238, 233, 0.3)",
-                                    px: 1.5,
+                                    px: 1.6,
                                     py: 0.5,
                                     borderRadius: 9999,
                                 }}
@@ -534,18 +643,18 @@ export default function PatientAI() {
                                     textTransform="uppercase"
                                     sx={{ color: "#A7F3D0" }}
                                 >
-                                    Clinical Triage Protocol
+                                    SmartCare Clinical Intelligence
                                 </Typography>
                             </Box>
 
                             <Chip
                                 icon={<VerifiedUserOutlined sx={{ fontSize: 14, color: "#99F6E4 !important" }} />}
-                                label="Clinical Triage Protocols"
+                                label="Clinical Triage Protocol"
                                 size="small"
                                 sx={{
                                     bgcolor: "rgba(13, 148, 136, 0.2)",
                                     color: "#CCFBF1",
-                                    fontWeight: 700,
+                                    fontWeight: 750,
                                     fontSize: 11.5,
                                     border: "1px solid rgba(13, 148, 136, 0.4)",
                                 }}
@@ -611,11 +720,11 @@ export default function PatientAI() {
                             startIcon={<PsychologyOutlined sx={{ fontSize: 22 }} />}
                             sx={{
                                 py: 1.4,
-                                px: 2.5,
+                                px: 2,
                                 borderRadius: 3.5,
                                 textTransform: "none",
                                 fontWeight: 800,
-                                fontSize: 14.5,
+                                fontSize: { xs: 13, md: 14 },
                                 transition: "all 0.2s ease-in-out",
                                 bgcolor: activeTab === 0 ? colors.white : "transparent",
                                 color: activeTab === 0 ? colors.pineDeep : colors.slate,
@@ -629,7 +738,7 @@ export default function PatientAI() {
                                 },
                             }}
                         >
-                            Symptom Assessment & Routing
+                            Symptom Triage & Matching
                         </Button>
                     </Box>
 
@@ -640,11 +749,11 @@ export default function PatientAI() {
                             startIcon={<ChatBubbleOutlineRounded sx={{ fontSize: 21 }} />}
                             sx={{
                                 py: 1.4,
-                                px: 2.5,
+                                px: 2,
                                 borderRadius: 3.5,
                                 textTransform: "none",
                                 fontWeight: 800,
-                                fontSize: 14.5,
+                                fontSize: { xs: 13, md: 14 },
                                 transition: "all 0.2s ease-in-out",
                                 bgcolor: activeTab === 1 ? colors.white : "transparent",
                                 color: activeTab === 1 ? colors.pineDeep : colors.slate,
@@ -658,7 +767,7 @@ export default function PatientAI() {
                                 },
                             }}
                         >
-                            Interactive Health Consult Chat
+                            Clinical Health Assistant Chat
                         </Button>
                     </Box>
 
@@ -668,14 +777,26 @@ export default function PatientAI() {
                             onClick={() => setActiveTab(2)}
                             startIcon={<DescriptionOutlined sx={{ fontSize: 21 }} />}
                             sx={{
-                                py: 1.4, px: 2.5, borderRadius: 3.5, fontWeight: 800, fontSize: 14.5,
+                                py: 1.4,
+                                px: 2,
+                                borderRadius: 3.5,
+                                textTransform: "none",
+                                fontWeight: 800,
+                                fontSize: { xs: 13, md: 14 },
+                                transition: "all 0.2s ease-in-out",
                                 bgcolor: activeTab === 2 ? colors.white : "transparent",
                                 color: activeTab === 2 ? colors.pineDeep : colors.slate,
-                                boxShadow: activeTab === 2 ? "0 4px 14px rgba(15,82,75,0.08)" : "none",
+                                boxShadow:
+                                    activeTab === 2
+                                        ? "0 4px 14px rgba(15,82,75,0.08), 0 1px 3px rgba(0,0,0,0.04)"
+                                        : "none",
                                 border: activeTab === 2 ? `1px solid ${colors.hairline}` : "1px solid transparent",
+                                "&:hover": {
+                                    bgcolor: activeTab === 2 ? colors.white : "rgba(43,92,82,0.04)",
+                                },
                             }}
                         >
-                            Report review
+                            Medical Lab & Report Review
                         </Button>
                     </Box>
                 </Box>
@@ -1411,101 +1532,849 @@ export default function PatientAI() {
 
             {/* TAB 2: MEDICAL REPORT REVIEW */}
             {activeTab === 2 && (
-                <Card elevation={0} sx={{ border: `1px solid ${colors.hairline}`, borderRadius: 4, maxWidth: 920 }}>
+                <Card
+                    elevation={0}
+                    sx={{
+                        border: `1px solid ${colors.hairline}`,
+                        borderRadius: 4,
+                        width: "100%",
+                        bgcolor: colors.white,
+                        boxShadow: "0 6px 24px rgba(0,0,0,0.03)",
+                    }}
+                >
                     <CardContent sx={{ p: { xs: 2.5, sm: 4 } }}>
-                        <Stack direction={{ xs: "column", sm: "row" }} justifyContent="space-between" spacing={2} mb={3}>
+                        {/* HEADER */}
+                        <Stack
+                            direction={{ xs: "column", sm: "row" }}
+                            justifyContent="space-between"
+                            alignItems={{ xs: "flex-start", sm: "center" }}
+                            spacing={2}
+                            mb={2.5}
+                        >
                             <Box>
-                                <Typography variant="h5" color={colors.ink}>Medical report review</Typography>
-                                <Typography color="text.secondary" mt={0.5}>
-                                    Upload a report to receive a plain-language summary and questions to discuss with your clinician.
+                                <Stack direction="row" spacing={1.5} alignItems="center" mb={0.5}>
+                                    <Avatar
+                                        sx={{
+                                            bgcolor: colors.pineSoft,
+                                            color: colors.pine,
+                                            width: 40,
+                                            height: 40,
+                                            borderRadius: 2.5,
+                                        }}
+                                    >
+                                        <DescriptionOutlined />
+                                    </Avatar>
+                                    <Typography variant="h5" fontWeight={900} color={colors.ink}>
+                                        Medical Lab & Blood Report Review
+                                    </Typography>
+                                </Stack>
+                                <Typography color={colors.slate} fontSize={13.5} mt={0.5}>
+                                    Upload blood tests, complete blood counts (CBC), or metabolic panels to extract verified biomarkers, reference anomalies, and doctor questions.
                                 </Typography>
                             </Box>
-                            <Chip label="Private session analysis" color="primary" variant="outlined" />
+                            <Stack direction="row" spacing={1} flexWrap="wrap">
+                                <Chip
+                                    label="Private In-Session Analysis"
+                                    color="primary"
+                                    variant="outlined"
+                                    sx={{ fontWeight: 800, fontSize: 11.5 }}
+                                />
+                                <Chip
+                                    label="HIPAA Encrypted"
+                                    sx={{
+                                        fontWeight: 800,
+                                        fontSize: 11.5,
+                                        bgcolor: "#F0FDF4",
+                                        color: "#16A34A",
+                                        border: "1px solid #BBF7D0",
+                                    }}
+                                />
+                            </Stack>
                         </Stack>
 
-                        <Alert severity="info" icon={<InfoOutlined />} sx={{ mb: 3, borderRadius: 2 }}>
-                            Files are analysed for this request only and are not saved to your medical-records page. AI cannot diagnose or confirm that a result is normal.
+                        <Alert
+                            severity="info"
+                            icon={<InfoOutlined />}
+                            sx={{ mb: 3, borderRadius: 2.5, fontSize: 13 }}
+                        >
+                            Files are processed securely in temporary session memory and are never saved to public electronic health records. AI insights assist patient comprehension and do not replace formal physician consultation.
                         </Alert>
 
-                        <Box sx={{ p: { xs: 2, sm: 3 }, border: `1px dashed ${colors.slateSoft}`, borderRadius: 3, bgcolor: colors.canvas }}>
-                            <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ sm: "center" }}>
-                                <Button component="label" variant="outlined" startIcon={<UploadFileOutlined />} sx={{ minHeight: 48 }}>
-                                    Choose report
-                                    <input hidden type="file" accept="application/pdf,image/jpeg,image/png" onChange={(event) => {
-                                        const selected = event.target.files?.[0] || null;
-                                        setReportFile(selected);
-                                        setReportError("");
-                                        setReportResult(null);
-                                    }} />
-                                </Button>
-                                <Box sx={{ flex: 1, minWidth: 0 }}>
-                                    <Typography fontWeight={700} noWrap>{reportFile?.name || "No file selected"}</Typography>
-                                    <Typography variant="body2" color="text.secondary">PDF, JPG, or PNG · maximum 10 MB</Typography>
+                        {/* UPLOAD & TEST CONSOLE */}
+                        <Box
+                            sx={{
+                                p: { xs: 2.5, sm: 3.5 },
+                                border: `1.5px dashed ${reportFile ? colors.pine : colors.slateSoft}`,
+                                borderRadius: 3.5,
+                                bgcolor: reportFile ? "rgba(13, 148, 136, 0.03)" : colors.canvas,
+                                transition: "all 0.2s ease",
+                            }}
+                        >
+                            <Stack direction={{ xs: "column", md: "row" }} spacing={2.5} alignItems={{ md: "center" }} justifyContent="space-between">
+                                <Box sx={{ display: "flex", alignItems: "center", gap: 2, flex: 1, minWidth: 0 }}>
+                                    <Box
+                                        sx={{
+                                            width: 52,
+                                            height: 52,
+                                            borderRadius: 3,
+                                            bgcolor: colors.white,
+                                            border: `1px solid ${colors.hairline}`,
+                                            display: "grid",
+                                            placeItems: "center",
+                                            color: colors.pine,
+                                            flexShrink: 0,
+                                        }}
+                                    >
+                                        <UploadFileOutlined sx={{ fontSize: 28 }} />
+                                    </Box>
+
+                                    <Box sx={{ minWidth: 0, flex: 1 }}>
+                                        <Typography fontWeight={850} fontSize={15} color={colors.ink} noWrap>
+                                            {reportFile?.name || "Choose or Drag & Drop a Medical Report"}
+                                        </Typography>
+                                        <Typography variant="body2" color={colors.slate} mt={0.3}>
+                                            Supports PDF, JPG, PNG · Maximum file size 10 MB
+                                        </Typography>
+                                    </Box>
                                 </Box>
-                                <Button variant="contained" onClick={handleReportAnalysis} disabled={!reportFile || reportLoading} startIcon={reportLoading ? <CircularProgress size={18} color="inherit" /> : <AssessmentOutlined />}>
-                                    {reportLoading ? "Reviewing…" : "Review report"}
-                                </Button>
+
+                                <Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap">
+                                    <Button
+                                        component="label"
+                                        variant="outlined"
+                                        startIcon={<UploadFileOutlined />}
+                                        sx={{
+                                            minHeight: 44,
+                                            borderRadius: 2.5,
+                                            textTransform: "none",
+                                            fontWeight: 750,
+                                            borderColor: colors.hairline,
+                                            bgcolor: colors.white,
+                                            color: colors.ink,
+                                            "&:hover": { borderColor: colors.pine, bgcolor: colors.white },
+                                        }}
+                                    >
+                                        {reportFile ? "Change File" : "Choose File"}
+                                        <input
+                                            hidden
+                                            type="file"
+                                            accept="application/pdf,image/jpeg,image/png,image/jpg"
+                                            onChange={(event) => {
+                                                const selected = event.target.files?.[0] || null;
+                                                setReportFile(selected);
+                                                setReportError("");
+                                                setReportResult(null);
+                                                setReportFilter("all");
+                                            }}
+                                        />
+                                    </Button>
+
+                                    <Button
+                                        variant="contained"
+                                        onClick={handleReportAnalysis}
+                                        disabled={!reportFile || reportLoading}
+                                        startIcon={
+                                            reportLoading ? (
+                                                <CircularProgress size={18} color="inherit" />
+                                            ) : (
+                                                <AssessmentOutlined />
+                                            )
+                                        }
+                                        sx={{
+                                            minHeight: 44,
+                                            borderRadius: 2.5,
+                                            textTransform: "none",
+                                            fontWeight: 800,
+                                            background: `linear-gradient(135deg, ${colors.pine} 0%, ${colors.pineDeep} 100%)`,
+                                            boxShadow: "0 4px 12px rgba(13,148,136,0.25)",
+                                        }}
+                                    >
+                                        {reportLoading ? "Analyzing Laboratory Data…" : "Review Report"}
+                                    </Button>
+
+                                    <Button
+                                        variant="outlined"
+                                        onClick={handleLoadSampleReport}
+                                        startIcon={<ScienceOutlined />}
+                                        sx={{
+                                            minHeight: 44,
+                                            borderRadius: 2.5,
+                                            textTransform: "none",
+                                            fontWeight: 750,
+                                            borderColor: "#CBD5E1",
+                                            color: colors.inkSoft,
+                                            bgcolor: colors.white,
+                                            "&:hover": { borderColor: colors.pine, bgcolor: "#F0FDFA" },
+                                        }}
+                                    >
+                                        Try Sample Blood Report
+                                    </Button>
+
+                                    {reportResult && (
+                                        <Button
+                                            variant="text"
+                                            onClick={() => {
+                                                setReportFile(null);
+                                                setReportResult(null);
+                                                setReportError("");
+                                                setReportFilter("all");
+                                            }}
+                                            startIcon={<DeleteOutlineOutlined />}
+                                            sx={{
+                                                minHeight: 44,
+                                                borderRadius: 2.5,
+                                                textTransform: "none",
+                                                fontWeight: 700,
+                                                color: colors.slate,
+                                            }}
+                                        >
+                                            Reset
+                                        </Button>
+                                    )}
+                                </Stack>
                             </Stack>
                         </Box>
 
-                        {reportError && <Alert severity="error" sx={{ mt: 2 }}>{reportError}</Alert>}
-
-                        {reportResult && (
-                            <Box sx={{ mt: 3, p: { xs: 2, sm: 3 }, borderRadius: 3, border: `1px solid ${colors.hairline}`, bgcolor: "#FCFEFD" }}>
-                                <Stack direction={{ xs: "column", sm: "row" }} justifyContent="space-between" spacing={1} mb={2}>
-                                    <Box>
-                                        <Typography fontWeight={800}>{reportResult.reportType}</Typography>
-                                        <Typography variant="body2" color="text.secondary">{reportResult.fileName} · Report date: {reportResult.reportDate}</Typography>
-                                    </Box>
-                                    <Chip size="small" label={reportResult.reviewPriority} color={reportResult.reviewPriority === "Emergency attention" ? "error" : reportResult.reviewPriority === "Prompt clinical review" ? "warning" : "default"} />
-                                </Stack>
-                                <Typography color="text.secondary" mb={2}>{reportResult.overview}</Typography>
-
-                                <TableContainer sx={{ border: `1px solid ${colors.hairline}`, borderRadius: 2, overflowX: "auto" }}>
-                                    <Table size="small" sx={{ minWidth: 680 }} aria-label="Extracted report results">
-                                        <TableHead sx={{ bgcolor: colors.canvas }}>
-                                            <TableRow>
-                                                <TableCell sx={{ fontWeight: 800 }}>Test</TableCell>
-                                                <TableCell sx={{ fontWeight: 800 }}>Result</TableCell>
-                                                <TableCell sx={{ fontWeight: 800 }}>Reference range</TableCell>
-                                                <TableCell sx={{ fontWeight: 800 }}>Status</TableCell>
-                                                <TableCell sx={{ fontWeight: 800 }}>Note</TableCell>
-                                            </TableRow>
-                                        </TableHead>
-                                        <TableBody>
-                                            {reportResult.tests.map((test, index) => (
-                                                <TableRow key={`${test.testName}-${index}`}>
-                                                    <TableCell sx={{ fontWeight: 700 }}>{test.testName}</TableCell>
-                                                    <TableCell>{test.result}{test.unit ? ` ${test.unit}` : ""}</TableCell>
-                                                    <TableCell>{test.referenceRange}</TableCell>
-                                                    <TableCell><Chip size="small" label={test.status} color={test.status === "High" || test.status === "Low" ? "warning" : test.status === "Normal" ? "success" : "default"} /></TableCell>
-                                                    <TableCell sx={{ maxWidth: 260, color: "text.secondary" }}>{test.interpretation}</TableCell>
-                                                </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
-                                </TableContainer>
-
-                                <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))" }, gap: 2, mt: 0.5 }}>
-                                    <Box sx={{ p: 2, borderRadius: 2, bgcolor: colors.canvas }}>
-                                        <Typography fontWeight={800} mb={0.8}>Key findings</Typography>
-                                        {reportResult.keyFindings.length ? reportResult.keyFindings.map((item, index) => <Typography key={index} variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>• {item}</Typography>) : <Typography variant="body2" color="text.secondary">No additional findings were extracted.</Typography>}
-                                    </Box>
-                                    <Box sx={{ p: 2, borderRadius: 2, bgcolor: colors.canvas }}>
-                                        <Typography fontWeight={800} mb={0.8}>Discuss with a clinician</Typography>
-                                        {reportResult.clinicianDiscussion.length ? reportResult.clinicianDiscussion.map((item, index) => <Typography key={index} variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>• {item}</Typography>) : <Typography variant="body2" color="text.secondary">Share the original report for a complete clinical interpretation.</Typography>}
-                                    </Box>
-                                </Box>
-                                <Box sx={{ mt: 2, p: 2, borderLeft: `3px solid ${colors.pine}`, bgcolor: colors.pineSoft }}>
-                                    <Typography fontWeight={800}>Review priority: {reportResult.reviewPriority}</Typography>
-                                    <Typography variant="body2" color="text.secondary">{reportResult.priorityExplanation}</Typography>
-                                    {reportResult.nextSteps.length > 0 && <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}><strong>Next steps:</strong> {reportResult.nextSteps.join(" ")}</Typography>}
-                                </Box>
-                                <Alert severity="warning" sx={{ mt: 2 }}>This AI analysis is for informational purposes only. It does not diagnose a condition or confirm that a person is healthy. A qualified clinician must interpret the original report with the patient’s history.</Alert>
-                            </Box>
+                        {reportError && (
+                            <Alert severity="error" sx={{ mt: 2.5, borderRadius: 2.5 }} onClose={() => setReportError("")}>
+                                {reportError}
+                            </Alert>
                         )}
+
+                        {/* EXTRACTED REPORT DASHBOARD */}
+                        {reportResult && (() => {
+                            const totalTests = (reportResult.tests || []).length;
+                            const abnormalTests = (reportResult.tests || []).filter(
+                                (t) => (t.status || "").toLowerCase().includes("high") || (t.status || "").toLowerCase().includes("low")
+                            ).length;
+                            const normalTests = (reportResult.tests || []).filter(
+                                (t) => (t.status || "").toLowerCase().includes("normal")
+                            ).length;
+
+                            const filteredTests = (reportResult.tests || []).filter((test) => {
+                                if (reportFilter === "abnormal") {
+                                    const s = (test.status || "").toLowerCase();
+                                    return s.includes("high") || s.includes("low");
+                                }
+                                if (reportFilter === "normal") {
+                                    return (test.status || "").toLowerCase().includes("normal");
+                                }
+                                return true;
+                            });
+
+                            const isEmergencyUrgency = (reportResult.reviewPriority || "").toLowerCase().includes("emergency");
+                            const isPromptUrgency = (reportResult.reviewPriority || "").toLowerCase().includes("prompt");
+
+                            const priorityColor = isEmergencyUrgency
+                                ? "#DC2626"
+                                : isPromptUrgency
+                                ? "#D97706"
+                                : "#16A34A";
+                            const priorityBg = isEmergencyUrgency
+                                ? "#FEF2F2"
+                                : isPromptUrgency
+                                ? "#FFFBEB"
+                                : "#F0FDF4";
+                            const priorityBorder = isEmergencyUrgency
+                                ? "#FECACA"
+                                : isPromptUrgency
+                                ? "#FDE68A"
+                                : "#BBF7D0";
+
+                            return (
+                                <Box sx={{ mt: 3.5 }}>
+                                    {/* 1. REPORT HERO OVERVIEW BANNER */}
+                                    <Paper
+                                        elevation={0}
+                                        sx={{
+                                            p: { xs: 2.5, sm: 3.5 },
+                                            borderRadius: 3.5,
+                                            border: `1px solid ${priorityBorder}`,
+                                            bgcolor: priorityBg,
+                                            mb: 3,
+                                            borderLeft: `6px solid ${priorityColor}`,
+                                        }}
+                                    >
+                                        <Stack
+                                            direction={{ xs: "column", md: "row" }}
+                                            justifyContent="space-between"
+                                            alignItems={{ xs: "flex-start", md: "center" }}
+                                            spacing={2}
+                                            mb={2}
+                                        >
+                                            <Box>
+                                                <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" mb={0.5}>
+                                                    <Typography fontSize={20} fontWeight={900} color={colors.ink}>
+                                                        {reportResult.reportType}
+                                                    </Typography>
+                                                    <Chip
+                                                        label={reportResult.reviewPriority}
+                                                        size="small"
+                                                        sx={{
+                                                            bgcolor: priorityColor,
+                                                            color: colors.white,
+                                                            fontWeight: 850,
+                                                            fontSize: 11.5,
+                                                            height: 24,
+                                                        }}
+                                                    />
+                                                </Stack>
+                                                <Typography fontSize={13} color={colors.slate} fontWeight={600}>
+                                                    File: <strong>{reportResult.fileName}</strong> • Report Date: <strong>{reportResult.reportDate || "Not Stated"}</strong>
+                                                </Typography>
+                                            </Box>
+
+                                            <Button
+                                                variant="contained"
+                                                onClick={() => navigate("/doctors")}
+                                                endIcon={<ArrowForwardRounded />}
+                                                sx={{
+                                                    borderRadius: 2.5,
+                                                    bgcolor: colors.ink,
+                                                    color: colors.white,
+                                                    fontWeight: 750,
+                                                    textTransform: "none",
+                                                    fontSize: 13,
+                                                    px: 2.2,
+                                                    py: 1,
+                                                    whiteSpace: "nowrap",
+                                                    "&:hover": { bgcolor: colors.navy },
+                                                }}
+                                            >
+                                                Consult Specialist
+                                            </Button>
+                                        </Stack>
+
+                                        <Typography fontSize={14} color={colors.ink} lineHeight={1.65}>
+                                            {reportResult.overview}
+                                        </Typography>
+
+                                        {reportResult.priorityExplanation && (
+                                            <Typography fontSize={13} color={colors.slate} mt={1} fontStyle="italic">
+                                                <strong>Clinical Evaluation:</strong> {reportResult.priorityExplanation}
+                                            </Typography>
+                                        )}
+                                    </Paper>
+
+                                    {/* 2. 4 HIGH-IMPACT METRIC CARDS */}
+                                    <Box
+                                        sx={{
+                                            display: "grid",
+                                            gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)", md: "repeat(4, 1fr)" },
+                                            gap: 2,
+                                            mb: 3,
+                                        }}
+                                    >
+                                        <Card
+                                            elevation={0}
+                                            sx={{
+                                                p: 2.2,
+                                                borderRadius: 3,
+                                                border: `1px solid ${colors.hairline}`,
+                                                bgcolor: colors.white,
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: 2,
+                                            }}
+                                        >
+                                            <Box
+                                                sx={{
+                                                    width: 46,
+                                                    height: 46,
+                                                    borderRadius: 2.5,
+                                                    bgcolor: "#EFF6FF",
+                                                    border: "1px solid #BFDBFE",
+                                                    display: "grid",
+                                                    placeItems: "center",
+                                                    color: "#2563EB",
+                                                }}
+                                            >
+                                                <BiotechOutlined sx={{ fontSize: 24 }} />
+                                            </Box>
+                                            <Box>
+                                                <Typography fontSize={22} fontWeight={850} color={colors.ink} lineHeight={1}>
+                                                    {totalTests}
+                                                </Typography>
+                                                <Typography fontSize={12} color={colors.slate} fontWeight={600} mt={0.4}>
+                                                    Biomarkers Tested
+                                                </Typography>
+                                            </Box>
+                                        </Card>
+
+                                        <Card
+                                            elevation={0}
+                                            sx={{
+                                                p: 2.2,
+                                                borderRadius: 3,
+                                                border: `1px solid ${abnormalTests > 0 ? "#FED7AA" : colors.hairline}`,
+                                                bgcolor: abnormalTests > 0 ? "#FFF7ED" : colors.white,
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: 2,
+                                            }}
+                                        >
+                                            <Box
+                                                sx={{
+                                                    width: 46,
+                                                    height: 46,
+                                                    borderRadius: 2.5,
+                                                    bgcolor: abnormalTests > 0 ? "#FFEDD5" : "#F8FAFC",
+                                                    border: `1px solid ${abnormalTests > 0 ? "#FDBA74" : "#E2E8F0"}`,
+                                                    display: "grid",
+                                                    placeItems: "center",
+                                                    color: abnormalTests > 0 ? "#EA580C" : colors.slate,
+                                                }}
+                                            >
+                                                <WarningAmberRounded sx={{ fontSize: 24 }} />
+                                            </Box>
+                                            <Box>
+                                                <Typography fontSize={22} fontWeight={850} color={abnormalTests > 0 ? "#C2410C" : colors.ink} lineHeight={1}>
+                                                    {abnormalTests}
+                                                </Typography>
+                                                <Typography fontSize={12} color={abnormalTests > 0 ? "#9A3412" : colors.slate} fontWeight={600} mt={0.4}>
+                                                    Out of Normal Range
+                                                </Typography>
+                                            </Box>
+                                        </Card>
+
+                                        <Card
+                                            elevation={0}
+                                            sx={{
+                                                p: 2.2,
+                                                borderRadius: 3,
+                                                border: `1px solid ${colors.hairline}`,
+                                                bgcolor: colors.white,
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: 2,
+                                            }}
+                                        >
+                                            <Box
+                                                sx={{
+                                                    width: 46,
+                                                    height: 46,
+                                                    borderRadius: 2.5,
+                                                    bgcolor: "#F0FDF4",
+                                                    border: "1px solid #BBF7D0",
+                                                    display: "grid",
+                                                    placeItems: "center",
+                                                    color: "#16A34A",
+                                                }}
+                                            >
+                                                <CheckCircleOutlined sx={{ fontSize: 24 }} />
+                                            </Box>
+                                            <Box>
+                                                <Typography fontSize={22} fontWeight={850} color={colors.ink} lineHeight={1}>
+                                                    {normalTests}
+                                                </Typography>
+                                                <Typography fontSize={12} color={colors.slate} fontWeight={600} mt={0.4}>
+                                                    Normal & Balanced
+                                                </Typography>
+                                            </Box>
+                                        </Card>
+
+                                        <Card
+                                            elevation={0}
+                                            sx={{
+                                                p: 2.2,
+                                                borderRadius: 3,
+                                                border: `1px solid ${colors.hairline}`,
+                                                bgcolor: colors.white,
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: 2,
+                                            }}
+                                        >
+                                            <Box
+                                                sx={{
+                                                    width: 46,
+                                                    height: 46,
+                                                    borderRadius: 2.5,
+                                                    bgcolor: priorityBg,
+                                                    border: `1px solid ${priorityBorder}`,
+                                                    display: "grid",
+                                                    placeItems: "center",
+                                                    color: priorityColor,
+                                                }}
+                                            >
+                                                <HealthAndSafetyOutlined sx={{ fontSize: 24 }} />
+                                            </Box>
+                                            <Box>
+                                                <Typography fontSize={14.5} fontWeight={850} color={priorityColor} lineHeight={1.2}>
+                                                    {reportResult.reviewPriority}
+                                                </Typography>
+                                                <Typography fontSize={12} color={colors.slate} fontWeight={600} mt={0.4}>
+                                                    Triage Recommendation
+                                                </Typography>
+                                            </Box>
+                                        </Card>
+                                    </Box>
+
+                                    {/* 3. TABLE FILTER CONTROLS */}
+                                    <Box
+                                        sx={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "space-between",
+                                            mb: 1.5,
+                                            flexWrap: "wrap",
+                                            gap: 1.5,
+                                        }}
+                                    >
+                                        <Stack direction="row" spacing={1}>
+                                            <Chip
+                                                label={`All Tests (${totalTests})`}
+                                                clickable
+                                                onClick={() => setReportFilter("all")}
+                                                sx={{
+                                                    fontWeight: 800,
+                                                    fontSize: 12.5,
+                                                    bgcolor: reportFilter === "all" ? colors.ink : "#F1F5F9",
+                                                    color: reportFilter === "all" ? colors.white : colors.slate,
+                                                    "&:hover": { bgcolor: reportFilter === "all" ? colors.ink : "#E2E8F0" },
+                                                }}
+                                            />
+                                            <Chip
+                                                label={`Flagged Abnormal (${abnormalTests})`}
+                                                clickable
+                                                onClick={() => setReportFilter("abnormal")}
+                                                sx={{
+                                                    fontWeight: 800,
+                                                    fontSize: 12.5,
+                                                    bgcolor: reportFilter === "abnormal" ? "#EA580C" : "#FFF7ED",
+                                                    color: reportFilter === "abnormal" ? colors.white : "#C2410C",
+                                                    border: "1px solid #FED7AA",
+                                                    "&:hover": { bgcolor: reportFilter === "abnormal" ? "#C2410C" : "#FFEDD5" },
+                                                }}
+                                            />
+                                            <Chip
+                                                label={`Normal Range (${normalTests})`}
+                                                clickable
+                                                onClick={() => setReportFilter("normal")}
+                                                sx={{
+                                                    fontWeight: 800,
+                                                    fontSize: 12.5,
+                                                    bgcolor: reportFilter === "normal" ? "#16A34A" : "#F0FDF4",
+                                                    color: reportFilter === "normal" ? colors.white : "#15803D",
+                                                    border: "1px solid #BBF7D0",
+                                                    "&:hover": { bgcolor: reportFilter === "normal" ? "#15803D" : "#DCFCE7" },
+                                                }}
+                                            />
+                                        </Stack>
+
+                                        <Typography fontSize={12.5} color={colors.slate} fontWeight={600}>
+                                            Displaying {filteredTests.length} of {totalTests} parameters
+                                        </Typography>
+                                    </Box>
+
+                                    {/* 4. FULL-WIDTH LAB RESULTS TABLE */}
+                                    <TableContainer
+                                        sx={{
+                                            border: `1px solid ${colors.hairline}`,
+                                            borderRadius: 3.5,
+                                            width: "100%",
+                                            overflowX: "auto",
+                                            bgcolor: colors.white,
+                                            mb: 3.5,
+                                            boxShadow: "0 2px 8px rgba(0,0,0,0.02)",
+                                        }}
+                                    >
+                                        <Table sx={{ minWidth: "100%" }} aria-label="Extracted clinical report results">
+                                            <TableHead sx={{ bgcolor: "#F8FAFC" }}>
+                                                <TableRow>
+                                                    <TableCell sx={{ fontWeight: 850, fontSize: 12.5, color: colors.ink, py: 1.8, minWidth: 200 }}>
+                                                        BIOMARKER / TEST PARAMETER
+                                                    </TableCell>
+                                                    <TableCell sx={{ fontWeight: 850, fontSize: 12.5, color: colors.ink, py: 1.8, minWidth: 140 }}>
+                                                        MEASURED RESULT
+                                                    </TableCell>
+                                                    <TableCell sx={{ fontWeight: 850, fontSize: 12.5, color: colors.ink, py: 1.8, minWidth: 150 }}>
+                                                        STANDARD REFERENCE
+                                                    </TableCell>
+                                                    <TableCell sx={{ fontWeight: 850, fontSize: 12.5, color: colors.ink, py: 1.8, minWidth: 120 }}>
+                                                        CLINICAL STATUS
+                                                    </TableCell>
+                                                    <TableCell sx={{ fontWeight: 850, fontSize: 12.5, color: colors.ink, py: 1.8 }}>
+                                                        CLINICAL INTERPRETATION & NOTES
+                                                    </TableCell>
+                                                </TableRow>
+                                            </TableHead>
+                                            <TableBody>
+                                                {filteredTests.map((test, index) => {
+                                                    const isHigh = (test.status || "").toLowerCase().includes("high");
+                                                    const isLow = (test.status || "").toLowerCase().includes("low");
+                                                    const isNormal = (test.status || "").toLowerCase().includes("normal");
+
+                                                    const statusBadgeColor = isHigh
+                                                        ? "#DC2626"
+                                                        : isLow
+                                                        ? "#D97706"
+                                                        : isNormal
+                                                        ? "#16A34A"
+                                                        : colors.slate;
+
+                                                    const statusBadgeBg = isHigh
+                                                        ? "#FEF2F2"
+                                                        : isLow
+                                                        ? "#FFFBEB"
+                                                        : isNormal
+                                                        ? "#F0FDF4"
+                                                        : "#F1F5F9";
+
+                                                    const statusBadgeBorder = isHigh
+                                                        ? "#FECACA"
+                                                        : isLow
+                                                        ? "#FDE68A"
+                                                        : isNormal
+                                                        ? "#BBF7D0"
+                                                        : "#E2E8F0";
+
+                                                    return (
+                                                        <TableRow
+                                                            key={`${test.testName}-${index}`}
+                                                            hover
+                                                            sx={{
+                                                                bgcolor: isHigh || isLow ? "rgba(254, 242, 242, 0.25)" : "inherit",
+                                                                "&:last-child td, &:last-child th": { border: 0 },
+                                                            }}
+                                                        >
+                                                            <TableCell sx={{ fontWeight: 800, fontSize: 14, color: colors.ink }}>
+                                                                {test.testName}
+                                                            </TableCell>
+                                                            <TableCell sx={{ fontWeight: 850, fontSize: 14.5, color: isHigh || isLow ? statusBadgeColor : colors.ink }}>
+                                                                {test.result}{test.unit ? ` ${test.unit}` : ""}
+                                                            </TableCell>
+                                                            <TableCell sx={{ fontSize: 13, color: colors.slate, fontWeight: 600 }}>
+                                                                {test.referenceRange || "Standard reference"}
+                                                            </TableCell>
+                                                            <TableCell>
+                                                                <Chip
+                                                                    size="small"
+                                                                    label={test.status || "Evaluated"}
+                                                                    sx={{
+                                                                        fontWeight: 850,
+                                                                        fontSize: 11,
+                                                                        color: statusBadgeColor,
+                                                                        bgcolor: statusBadgeBg,
+                                                                        border: `1px solid ${statusBadgeBorder}`,
+                                                                        height: 24,
+                                                                        minWidth: 64,
+                                                                    }}
+                                                                />
+                                                            </TableCell>
+                                                            <TableCell sx={{ fontSize: 13, color: colors.slate, lineHeight: 1.55 }}>
+                                                                {test.interpretation}
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    );
+                                                })}
+                                            </TableBody>
+                                        </Table>
+                                    </TableContainer>
+
+                                    {/* 5. SIDE-BY-SIDE CLINICAL INSIGHTS */}
+                                    <Box
+                                        sx={{
+                                            display: "grid",
+                                            gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))" },
+                                            gap: 2.5,
+                                            mb: 3,
+                                        }}
+                                    >
+                                        {/* KEY FINDINGS */}
+                                        <Card
+                                            elevation={0}
+                                            sx={{
+                                                p: 3,
+                                                borderRadius: 3.5,
+                                                border: `1px solid ${colors.hairline}`,
+                                                bgcolor: colors.canvas,
+                                            }}
+                                        >
+                                            <Stack direction="row" spacing={1.2} alignItems="center" mb={2}>
+                                                <FactCheckOutlined sx={{ color: colors.pine, fontSize: 24 }} />
+                                                <Typography fontSize={16} fontWeight={850} color={colors.ink}>
+                                                    Key Clinical Findings
+                                                </Typography>
+                                            </Stack>
+
+                                            {(reportResult.keyFindings || []).length > 0 ? (
+                                                <Stack spacing={1.2}>
+                                                    {reportResult.keyFindings.map((item, idx) => (
+                                                        <Box
+                                                            key={idx}
+                                                            sx={{
+                                                                p: 1.5,
+                                                                borderRadius: 2.5,
+                                                                bgcolor: colors.white,
+                                                                border: `1px solid ${colors.hairline}`,
+                                                                display: "flex",
+                                                                alignItems: "flex-start",
+                                                                gap: 1.2,
+                                                            }}
+                                                        >
+                                                            <CheckCircleOutlineRounded sx={{ fontSize: 18, color: colors.pine, mt: "2px", flexShrink: 0 }} />
+                                                            <Typography fontSize={13} color={colors.ink} lineHeight={1.5}>
+                                                                {item}
+                                                            </Typography>
+                                                        </Box>
+                                                    ))}
+                                                </Stack>
+                                            ) : (
+                                                <Typography fontSize={13} color={colors.slate}>
+                                                    No specific clinical abnormalities were highlighted.
+                                                </Typography>
+                                            )}
+                                        </Card>
+
+                                        {/* CLINICIAN DISCUSSION */}
+                                        <Card
+                                            elevation={0}
+                                            sx={{
+                                                p: 3,
+                                                borderRadius: 3.5,
+                                                border: `1px solid ${colors.hairline}`,
+                                                bgcolor: colors.canvas,
+                                            }}
+                                        >
+                                            <Stack direction="row" spacing={1.2} alignItems="center" mb={2}>
+                                                <QuestionAnswerOutlined sx={{ color: "#2563EB", fontSize: 24 }} />
+                                                <Typography fontSize={16} fontWeight={850} color={colors.ink}>
+                                                    Questions to Discuss with Your Doctor
+                                                </Typography>
+                                            </Stack>
+
+                                            {(reportResult.clinicianDiscussion || []).length > 0 ? (
+                                                <Stack spacing={1.2}>
+                                                    {reportResult.clinicianDiscussion.map((q, idx) => (
+                                                        <Box
+                                                            key={idx}
+                                                            sx={{
+                                                                p: 1.5,
+                                                                borderRadius: 2.5,
+                                                                bgcolor: colors.white,
+                                                                border: `1px solid ${colors.hairline}`,
+                                                                display: "flex",
+                                                                alignItems: "flex-start",
+                                                                gap: 1.2,
+                                                            }}
+                                                        >
+                                                            <Typography
+                                                                fontSize={12}
+                                                                fontWeight={850}
+                                                                color="#2563EB"
+                                                                sx={{
+                                                                    width: 22,
+                                                                    height: 22,
+                                                                    borderRadius: "50%",
+                                                                    bgcolor: "#EFF6FF",
+                                                                    display: "grid",
+                                                                    placeItems: "center",
+                                                                    flexShrink: 0,
+                                                                    mt: "1px",
+                                                                }}
+                                                            >
+                                                                {idx + 1}
+                                                            </Typography>
+                                                            <Typography fontSize={13} color={colors.ink} lineHeight={1.5}>
+                                                                {q}
+                                                            </Typography>
+                                                        </Box>
+                                                    ))}
+                                                </Stack>
+                                            ) : (
+                                                <Typography fontSize={13} color={colors.slate}>
+                                                    Share this laboratory result during your regular consultation.
+                                                </Typography>
+                                            )}
+                                        </Card>
+                                    </Box>
+
+                                    {/* 6. RECOMMENDED NEXT STEPS & ACTIONS */}
+                                    <Box
+                                        sx={{
+                                            p: 3,
+                                            borderRadius: 3.5,
+                                            bgcolor: colors.pineSoft,
+                                            border: `1px solid rgba(13,148,136,0.25)`,
+                                            mb: 2.5,
+                                        }}
+                                    >
+                                        <Stack
+                                            direction={{ xs: "column", md: "row" }}
+                                            justifyContent="space-between"
+                                            alignItems={{ xs: "flex-start", md: "center" }}
+                                            spacing={2}
+                                        >
+                                            <Box sx={{ flex: 1 }}>
+                                                <Typography fontSize={14.5} fontWeight={850} color={colors.pineDeep} mb={0.5}>
+                                                    Recommended Next Steps & Clinical Navigation:
+                                                </Typography>
+                                                {(reportResult.nextSteps || []).length > 0 ? (
+                                                    <Typography fontSize={13} color={colors.ink} lineHeight={1.6}>
+                                                        {reportResult.nextSteps.join(" ")}
+                                                    </Typography>
+                                                ) : (
+                                                    <Typography fontSize={13} color={colors.ink}>
+                                                        Consult with your attending physician to interpret these findings alongside your complete medical history.
+                                                    </Typography>
+                                                )}
+                                            </Box>
+
+                                            <Stack direction="row" spacing={1.5} flexWrap="wrap">
+                                                <Button
+                                                    variant="contained"
+                                                    onClick={() => navigate("/doctors")}
+                                                    startIcon={<MedicalServicesOutlined />}
+                                                    sx={{
+                                                        borderRadius: 2.5,
+                                                        background: `linear-gradient(135deg, ${colors.pine} 0%, ${colors.pineDeep} 100%)`,
+                                                        fontWeight: 800,
+                                                        fontSize: 13,
+                                                        textTransform: "none",
+                                                        px: 2.5,
+                                                        py: 1.1,
+                                                        boxShadow: "0 4px 12px rgba(13,148,136,0.25)",
+                                                    }}
+                                                >
+                                                    Book Specialist
+                                                </Button>
+                                                <Button
+                                                    variant="outlined"
+                                                    onClick={() => {
+                                                        setActiveTab(1);
+                                                        setChatInput(`Could you explain my ${reportResult.reportType} findings in detail, specifically the elevated markers?`);
+                                                    }}
+                                                    startIcon={<ChatBubbleOutlineRounded />}
+                                                    sx={{
+                                                        borderRadius: 2.5,
+                                                        borderColor: colors.pine,
+                                                        color: colors.pineDeep,
+                                                        bgcolor: colors.white,
+                                                        fontWeight: 750,
+                                                        fontSize: 13,
+                                                        textTransform: "none",
+                                                        px: 2.2,
+                                                        py: 1.1,
+                                                        "&:hover": { bgcolor: colors.white, borderColor: colors.pineDeep },
+                                                    }}
+                                                >
+                                                    Discuss in AI Chat
+                                                </Button>
+                                            </Stack>
+                                        </Stack>
+                                    </Box>
+
+                                    {/* 7. MEDICAL DISCLAIMER */}
+                                    <Alert severity="warning" sx={{ borderRadius: 2.5, fontSize: 12.5 }}>
+                                        <strong>Clinical Safety Notice:</strong> This AI laboratory extraction is generated for informational support only. It does not replace a formal medical diagnosis or confirm health. Please share the original medical laboratory record with a licensed physician for clinical confirmation.
+                                    </Alert>
+                                </Box>
+                            );
+                        })()}
                     </CardContent>
                 </Card>
+            )}
             )}
 
             {/* TAB 1: INTERACTIVE AI HEALTH CONSULT CHAT */}
