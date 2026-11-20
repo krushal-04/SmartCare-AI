@@ -302,15 +302,71 @@ export default function BookAppointment() {
                 return;
             }
 
-            // 3. Paid Consultation: Load Razorpay Checkout SDK
+            const { order, keyId, appointmentId, paymentId, amount } = orderRes.data;
+
+            // 3. Resilient Simulated Fallback (when Razorpay Cloud is offline / in sandbox / test mode)
+            if (order?.isSimulated) {
+                setMessage("Processing consultation booking in test mode...");
+                try {
+                    const simPaymentId = `pay_sim_${Date.now()}`;
+                    const verifyRes = await api.post("/payment/verify-payment", {
+                        appointmentId,
+                        paymentId,
+                        razorpay_order_id: order.id,
+                        razorpay_payment_id: simPaymentId,
+                        razorpay_signature: "simulated_signature",
+                    });
+
+                    setBookingSuccess({
+                        appointment: verifyRes.data.appointment,
+                        payment: verifyRes.data.payment,
+                        amount,
+                        razorpay_payment_id: simPaymentId,
+                    });
+                    setMessage("Payment recorded in test mode! Appointment submitted for hospital approval.");
+                } catch (simErr) {
+                    setError(simErr.response?.data?.message || "Failed to complete test appointment booking.");
+                } finally {
+                    setSaving(false);
+                }
+                return;
+            }
+
+            // 4. Paid Consultation: Load Razorpay Checkout SDK
             const isLoaded = await loadRazorpayScript();
             if (!isLoaded) {
+                // If Razorpay CDN is blocked or offline, but using Razorpay Test credentials:
+                if (keyId?.startsWith("rzp_test_")) {
+                    setMessage("Razorpay checkout CDN offline. Completing in test mode...");
+                    try {
+                        const simPaymentId = `pay_sim_${Date.now()}`;
+                        const verifyRes = await api.post("/payment/verify-payment", {
+                            appointmentId,
+                            paymentId,
+                            razorpay_order_id: order.id,
+                            razorpay_payment_id: simPaymentId,
+                            razorpay_signature: "simulated_signature",
+                        });
+
+                        setBookingSuccess({
+                            appointment: verifyRes.data.appointment,
+                            payment: verifyRes.data.payment,
+                            amount,
+                            razorpay_payment_id: simPaymentId,
+                        });
+                        setMessage("Appointment confirmed in test mode! Awaiting hospital review.");
+                    } catch (fallbackErr) {
+                        setError("Razorpay SDK failed to load. Please check your internet connection.");
+                    } finally {
+                        setSaving(false);
+                    }
+                    return;
+                }
+
                 setError("Razorpay SDK failed to load. Please check your internet connection.");
                 setSaving(false);
                 return;
             }
-
-            const { order, keyId, appointmentId, paymentId, amount } = orderRes.data;
 
             // 4. Configure Razorpay Options
             const options = {

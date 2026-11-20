@@ -331,9 +331,19 @@ exports.createOrder = async (req, res) => {
         });
     } catch (error) {
         console.error("createOrder error:", error);
+        let userMessage = error.message || "Failed to initiate payment order.";
+        if (
+            userMessage.includes("reading 'status'") ||
+            userMessage.includes("Cannot read properties of undefined") ||
+            userMessage.includes("ETIMEDOUT") ||
+            userMessage.includes("ECONNRESET")
+        ) {
+            userMessage =
+                "Unable to connect to payment gateway. Please check your internet connection or try again shortly.";
+        }
         res.status(500).json({
             success: false,
-            message: error.message || "Failed to initiate payment order.",
+            message: userMessage,
         });
     }
 };
