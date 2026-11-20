@@ -146,7 +146,7 @@ const createRazorpayOrder = async ({ amountInRupees, receipt, notes = {} }) => {
             data: payload,
             keyId: key_id,
             keySecret: key_secret,
-            timeoutMs: 8000,
+            timeoutMs: 12000,
         });
         return order;
     } catch (err) {
@@ -155,38 +155,6 @@ const createRazorpayOrder = async ({ amountInRupees, receipt, notes = {} }) => {
         // If Razorpay explicitly returned an HTTP 4xx/5xx business error, throw that error
         if (err.statusCode && err.data?.error?.description) {
             throw new Error(err.data.error.description);
-        }
-
-        // Check if error was caused by offline / sandbox / DNS failure / network timeout
-        const isNetworkOrTimeout =
-            !err.statusCode ||
-            err.code === "ENOTFOUND" ||
-            err.code === "ECONNREFUSED" ||
-            err.code === "ETIMEDOUT" ||
-            err.message?.includes("timed out") ||
-            err.message?.includes("getaddrinfo");
-
-        if (
-            isNetworkOrTimeout &&
-            (process.env.NODE_ENV !== "production" || key_id.startsWith("rzp_test_"))
-        ) {
-            console.log(
-                "[PaymentService] Razorpay cloud unreachable. Generating seamless simulated order for testing/demo."
-            );
-            return {
-                id: `order_sim_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`,
-                entity: "order",
-                amount: amountInPaise,
-                amount_paid: 0,
-                amount_due: amountInPaise,
-                currency: "INR",
-                receipt: payload.receipt,
-                status: "created",
-                attempts: 0,
-                notes,
-                created_at: Math.floor(Date.now() / 1000),
-                isSimulated: true,
-            };
         }
 
         // Return a clean error message, never "Cannot read properties of undefined (reading 'status')"
