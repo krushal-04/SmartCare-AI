@@ -47,6 +47,13 @@ const emergencyRequestSchema = new mongoose.Schema(
             ref: "Hospital",
         },
 
+        rejectedHospitalIds: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Hospital",
+            },
+        ],
+
         ambulanceId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Ambulance",

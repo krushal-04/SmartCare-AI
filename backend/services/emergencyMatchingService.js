@@ -93,17 +93,23 @@ const canHospitalHandleEmergency = (hospital, emergencyCategory) => {
 };
 
 /**
- * Recommends the best capable hospital for an emergency request
+ * Recommends the best capable hospital for an emergency request,
+ * optionally excluding hospitals that have already rejected/redirected the request.
  */
-const recommendHospital = async ({ emergencyCategory, latitude, longitude }) => {
+const recommendHospital = async ({ emergencyCategory, latitude, longitude, excludedHospitalIds = [] }) => {
     const rule = CATEGORY_RULES[emergencyCategory] || CATEGORY_RULES["Other Emergency"];
     const requiredField = rule.hospitalCapabilityField;
 
     // Only hospitals that have explicitly opened emergency intake are eligible.
-    const hospitals = await Hospital.find({
+    const query = {
         emergencyAvailable: true,
         "emergencyCapabilities.emergencyOpen": true,
-    }).lean();
+    };
+    if (excludedHospitalIds && excludedHospitalIds.length > 0) {
+        query._id = { $nin: excludedHospitalIds };
+    }
+
+    const hospitals = await Hospital.find(query).lean();
 
     if (!hospitals || hospitals.length === 0) {
         return {
@@ -113,15 +119,13 @@ const recommendHospital = async ({ emergencyCategory, latitude, longitude }) => 
         };
     }
 
-    // A specialised emergency is never sent to a hospital without that exact capability.
-    // When there is no match, the request is escalated instead of risking an unsafe route.
+    // A specialised emergency prefers hospitals with that exact capability.
+    // If exact capable hospitals exist among remaining options, use them.
+    // If not, fall back to any open emergency hospital so the patient is never stranded.
     const exactCapableHospitals = requiredField
         ? hospitals.filter((hospital) => hospital.emergencyCapabilities?.[requiredField] === true)
         : hospitals;
-    if (requiredField && exactCapableHospitals.length === 0) {
-        return { recommendedHospital: null, alternativeHospitals: [], rule };
-    }
-    const eligibleHospitals = exactCapableHospitals;
+    const eligibleHospitals = exactCapableHospitals.length > 0 ? exactCapableHospitals : hospitals;
 
     // Score each eligible hospital:
     // 1. Capability match (+1000 points)

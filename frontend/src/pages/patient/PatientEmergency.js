@@ -219,6 +219,15 @@ export default function PatientEmergency() {
             getRequests();
         });
 
+        socket.on("emergency:hospital-redirected", (data) => {
+            if (data?.newHospitalName || data?.newHospital?.hospitalName) {
+                setMessage(
+                    `Emergency request redirected: ${data.previousHospitalName || "Previous facility"} was unavailable (${data.reason || "capacity redirect"}). Automatically assigned to ${data.newHospitalName || data.newHospital.hospitalName}.`
+                );
+            }
+            getRequests();
+        });
+
         return () => {
             socket.disconnect();
         };
@@ -526,6 +535,20 @@ export default function PatientEmergency() {
                                                 <Typography fontSize={13} color={colors.slate}>
                                                     {activeEmergency.hospitalId?.address || "Address pending"}
                                                 </Typography>
+                                                {activeEmergency.statusHistory?.some((h) => h.status === "REROUTED_TO_HOSPITAL") && (
+                                                    <Box sx={{ mt: 1 }}>
+                                                        <Chip
+                                                            label="⚡ Auto-Rerouted to this Facility"
+                                                            size="small"
+                                                            sx={{
+                                                                bgcolor: "#FEF3C7",
+                                                                color: "#B45309",
+                                                                fontWeight: 800,
+                                                                fontSize: 11,
+                                                            }}
+                                                        />
+                                                    </Box>
+                                                )}
                                             </Box>
 
                                             {activeEmergency.ambulanceId && (

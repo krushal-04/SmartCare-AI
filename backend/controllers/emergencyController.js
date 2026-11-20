@@ -504,7 +504,7 @@ exports.hospitalAcceptEmergency = async (req, res) => {
     }
 };
 
-// Hospital: Reject emergency request (triggers admin escalation)
+// Hospital: Reject emergency request (triggers automatic redirection to next capable hospital)
 exports.hospitalRejectEmergency = async (req, res) => {
     try {
         const { reason } = req.body;
@@ -524,57 +524,210 @@ exports.hospitalRejectEmergency = async (req, res) => {
         }
         if (!assertHospitalOwnsEmergency(hospital, emergency, res)) return;
 
-        emergency.hospitalAcceptanceStatus = "REJECTED";
+        const previousHospitalId = hospital?._id || emergency.hospitalId;
+        const previousHospitalName = hospital?.hospitalName || "Hospital";
+
+        // Track all rejected hospitals
+        if (!emergency.rejectedHospitalIds) emergency.rejectedHospitalIds = [];
+        if (!emergency.rejectedHospitalIds.some((id) => String(id) === String(previousHospitalId))) {
+            emergency.rejectedHospitalIds.push(previousHospitalId);
+        }
+
         emergency.hospitalRejectReason = reason.trim();
-        emergency.status = "HOSPITAL_REJECTED";
         emergency.statusHistory.push({
             status: "HOSPITAL_REJECTED",
             changedBy: req.user._id,
             role: "hospital",
             changedAt: new Date(),
-            note: `Hospital rejected request: ${reason.trim()}. Escalated to admin.`,
+            note: `${previousHospitalName} rejected/redirected request: "${reason.trim()}". Searching for next capable facility...`,
         });
 
-        await emergency.save();
+        // Automatically match the next capable hospital excluding previously rejected ones
+        const matchResult = await recommendHospital({
+            emergencyCategory: emergency.emergencyCategory,
+            latitude: emergency.latitude,
+            longitude: emergency.longitude,
+            excludedHospitalIds: emergency.rejectedHospitalIds,
+        });
 
-        // Notify Admins immediately
-        const admins = await User.find({ role: "admin" }).select("_id").lean();
-        for (const admin of admins) {
-            await Notification.create({
-                userId: admin._id,
-                title: "ALERT: Hospital Rejected Emergency Transfer",
-                message: `${hospital?.hospitalName || "Hospital"} rejected emergency #${emergency._id.toString().slice(-6)}: "${reason.trim()}". Administrative override required.`,
-                type: "Emergency",
-                relatedId: emergency._id,
-            }).catch(() => {});
-        }
+        const newHospital = matchResult?.recommendedHospital;
 
-        // Broadcast Socket.IO
-        broadcastEmergencyEvent(
-            "emergency:hospital-rejected",
-            {
-                emergencyId: emergency._id,
-                hospitalId: hospital?._id || emergency.hospitalId,
-                hospitalName: hospital?.hospitalName,
-                reason: reason.trim(),
-                status: "HOSPITAL_REJECTED",
-                timestamp: new Date(),
-            },
-            {
-                emergencyId: emergency._id,
-                hospitalId: hospital?._id || emergency.hospitalId,
-                patientId: emergency.patientId?._id,
+        if (newHospital) {
+            // Re-assign to the new hospital
+            emergency.hospitalId = newHospital._id;
+            emergency.recommendedHospitalId = newHospital._id;
+            emergency.assignedHospitalId = newHospital._id;
+            emergency.hospitalAcceptanceStatus = "PENDING";
+            emergency.status = "Requested";
+            emergency.statusHistory.push({
+                status: "REROUTED_TO_HOSPITAL",
+                changedBy: req.user._id,
+                role: "system",
+                changedAt: new Date(),
+                note: `Automatically rerouted to ${newHospital.hospitalName} based on emergency capability and proximity. Reason: ${previousHospitalName} was unavailable (${reason.trim()}).`,
+            });
+
+            await emergency.save();
+
+            // 1. Notify the New Hospital staff
+            const newHospitalStaff = await User.find({
+                $or: [{ hospitalId: newHospital._id }, { role: "admin" }],
+            }).select("_id role").lean();
+
+            for (const staff of newHospitalStaff) {
+                if (staff.role !== "admin") {
+                    await Notification.create({
+                        userId: staff._id,
+                        title: `URGENT: Incoming Emergency Transfer (Rerouted)`,
+                        message: `Emergency #${emergency._id.toString().slice(-6)} (${emergency.emergencyCategory}) automatically rerouted to your hospital. Prior facility (${previousHospitalName}) was unavailable.`,
+                        type: "Emergency",
+                        relatedId: emergency._id,
+                    }).catch(() => {});
+                }
             }
-        );
 
-        res.status(200).json({
-            success: true,
-            message: "Emergency transfer rejected. System has escalated to platform administrators for reassignment.",
-            emergency,
-        });
+            // Emit incoming event to the new hospital
+            emitToHospital(newHospital._id, "emergency:incoming", {
+                emergencyId: emergency._id,
+                emergencyCategory: emergency.emergencyCategory,
+                description: emergency.description,
+                patient: {
+                    fullName: emergency.patientId?.fullName,
+                    phone: emergency.contactNumber,
+                },
+                location: {
+                    latitude: emergency.latitude,
+                    longitude: emergency.longitude,
+                    address: emergency.address,
+                },
+                reroutedFrom: previousHospitalName,
+                rerouteReason: reason.trim(),
+                timestamp: new Date(),
+            });
+
+            // 2. Notify the Patient
+            if (emergency.patientId?._id) {
+                await Notification.create({
+                    userId: emergency.patientId._id,
+                    title: "Emergency Request Redirected",
+                    message: `${previousHospitalName} was unable to accept your request (${reason.trim()}). Your emergency has been automatically redirected to ${newHospital.hospitalName}.`,
+                    type: "Emergency",
+                    relatedId: emergency._id,
+                }).catch(() => {});
+
+                emitToUser(emergency.patientId._id, "emergency:hospital-redirected", {
+                    emergencyId: emergency._id,
+                    previousHospitalName,
+                    newHospital: {
+                        _id: newHospital._id,
+                        hospitalName: newHospital.hospitalName,
+                        address: newHospital.address,
+                        city: newHospital.city,
+                        phone: newHospital.hospitalPhone || newHospital.phone,
+                    },
+                    reason: reason.trim(),
+                    status: "Requested",
+                    timestamp: new Date(),
+                });
+            }
+
+            // 3. Broadcast to all (patient screen, tracking, and dashboard badges)
+            broadcastEmergencyEvent(
+                "emergency:hospital-redirected",
+                {
+                    emergencyId: emergency._id,
+                    previousHospitalId,
+                    previousHospitalName,
+                    newHospitalId: newHospital._id,
+                    newHospitalName: newHospital.hospitalName,
+                    reason: reason.trim(),
+                    status: "Requested",
+                    timestamp: new Date(),
+                },
+                {
+                    emergencyId: emergency._id,
+                    hospitalId: newHospital._id,
+                    patientId: emergency.patientId?._id,
+                }
+            );
+
+            // 4. Also tell previous hospital to refresh their dashboard
+            emitToHospital(previousHospitalId, "emergency:rerouted-away", {
+                emergencyId: emergency._id,
+            });
+
+            return res.status(200).json({
+                success: true,
+                message: `Emergency rejected and automatically rerouted to ${newHospital.hospitalName}. Patient and new facility notified.`,
+                rerouted: true,
+                newHospital: {
+                    _id: newHospital._id,
+                    hospitalName: newHospital.hospitalName,
+                },
+                emergency,
+            });
+        } else {
+            // No other hospital capable/open in network -> Escalate
+            emergency.hospitalAcceptanceStatus = "REJECTED";
+            emergency.status = "NO_CAPABLE_HOSPITAL";
+            emergency.statusHistory.push({
+                status: "NO_CAPABLE_HOSPITAL",
+                changedBy: req.user._id,
+                role: "system",
+                changedAt: new Date(),
+                note: `All network hospitals are currently unavailable. Escalated for emergency administrative intervention.`,
+            });
+            await emergency.save();
+
+            // Notify Admins immediately
+            const admins = await User.find({ role: "admin" }).select("_id").lean();
+            for (const admin of admins) {
+                await Notification.create({
+                    userId: admin._id,
+                    title: "CRITICAL ALERT: Emergency Transfer Rejected - No Alternative Hospital",
+                    message: `${previousHospitalName} rejected emergency #${emergency._id.toString().slice(-6)}: "${reason.trim()}". No other capable facility is open. Administrative emergency override required immediately.`,
+                    type: "Emergency",
+                    relatedId: emergency._id,
+                }).catch(() => {});
+            }
+
+            if (emergency.patientId?._id) {
+                await Notification.create({
+                    userId: emergency.patientId._id,
+                    title: "Emergency Escalated to Dispatch Authority",
+                    message: `Local hospital capacity reached. System has escalated your emergency request to central EMS dispatch authorities.`,
+                    type: "Emergency",
+                    relatedId: emergency._id,
+                }).catch(() => {});
+            }
+
+            broadcastEmergencyEvent(
+                "emergency:hospital-rejected",
+                {
+                    emergencyId: emergency._id,
+                    hospitalId: previousHospitalId,
+                    hospitalName: previousHospitalName,
+                    reason: reason.trim(),
+                    status: "NO_CAPABLE_HOSPITAL",
+                    timestamp: new Date(),
+                },
+                {
+                    emergencyId: emergency._id,
+                    hospitalId: previousHospitalId,
+                    patientId: emergency.patientId?._id,
+                }
+            );
+
+            return res.status(200).json({
+                success: true,
+                message: "Emergency transfer rejected. All alternative network hospitals are at capacity. Escalated to central EMS administrators.",
+                rerouted: false,
+                emergency,
+            });
+        }
     } catch (error) {
         console.error("hospitalRejectEmergency error:", error);
-        res.status(500).json({ success: false, message: "Failed to reject emergency request." });
+        res.status(500).json({ success: false, message: "Failed to reject and reroute emergency request." });
     }
 };
 

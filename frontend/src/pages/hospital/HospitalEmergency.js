@@ -124,6 +124,22 @@ export default function HospitalEmergency() {
             fetchOperations();
         });
 
+        socket.on("emergency:incoming", (data) => {
+            setAlert({
+                type: "warning",
+                message: `URGENT: Incoming emergency transfer (${data.emergencyCategory || "Transfer Request"})${data.reroutedFrom ? ` rerouted from ${data.reroutedFrom}` : ""}. Review and dispatch below.`,
+            });
+            fetchOperations();
+        });
+
+        socket.on("emergency:rerouted-away", () => {
+            fetchOperations();
+        });
+
+        socket.on("emergency:hospital-redirected", () => {
+            fetchOperations();
+        });
+
         socket.on("ambulance:journey-status-updated", () => {
             fetchOperations();
         });
@@ -259,7 +275,9 @@ export default function HospitalEmergency() {
             if (res.data?.success) {
                 setAlert({
                     type: "info",
-                    message: "Emergency transfer rejected and escalated to platform administration for redirect.",
+                    message: res.data.message || (res.data.rerouted
+                        ? `Emergency rejected and automatically rerouted to ${res.data.newHospital?.hospitalName || "another facility"}.`
+                        : "Emergency transfer rejected and escalated to platform administration."),
                 });
                 setRejectDialogOpen(false);
                 setTargetEmergency(null);
@@ -556,6 +574,18 @@ export default function HospitalEmergency() {
                                                             sx={{
                                                                 bgcolor: "#FEF3C7",
                                                                 color: "#D97706",
+                                                                fontWeight: 850,
+                                                                fontSize: 11,
+                                                            }}
+                                                        />
+                                                    )}
+                                                    {(em.statusHistory?.some((h) => h.status === "REROUTED_TO_HOSPITAL") || (em.rejectedHospitalIds && em.rejectedHospitalIds.length > 0)) && (
+                                                        <Chip
+                                                            label="⚡ REROUTED FROM ANOTHER FACILITY"
+                                                            size="small"
+                                                            sx={{
+                                                                bgcolor: "#FFEDD5",
+                                                                color: "#C2410C",
                                                                 fontWeight: 850,
                                                                 fontSize: 11,
                                                             }}
