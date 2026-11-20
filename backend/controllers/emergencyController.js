@@ -664,6 +664,17 @@ exports.hospitalDispatchAmbulance = async (req, res) => {
             });
         }
 
+        if (emergency.hospitalAcceptanceStatus !== "ACCEPTED") {
+            emergency.hospitalAcceptanceStatus = "ACCEPTED";
+            emergency.statusHistory.push({
+                status: "HOSPITAL_ACCEPTED",
+                changedBy: req.user._id,
+                role: "hospital",
+                changedAt: new Date(),
+                note: `Emergency transfer accepted by ${hospital?.hospitalName || "Hospital"}. Preparing ambulance dispatch.`,
+            });
+        }
+
         emergency.ambulanceId = claimedAmbulance._id;
         emergency.assignedAmbulanceId = claimedAmbulance._id;
         emergency.assignedDriverId = driverUser?._id || undefined;
@@ -789,8 +800,13 @@ exports.getHospitalEmergencyOperations = async (req, res) => {
         const [incoming, active, fleet] = await Promise.all([
             EmergencyRequest.find({
                 hospitalId: hospital._id,
-                hospitalAcceptanceStatus: "PENDING",
                 status: { $nin: ["Cancelled", "Completed", "HOSPITAL_REJECTED"] },
+                $or: [
+                    { hospitalAcceptanceStatus: { $ne: "ACCEPTED" } },
+                    { ambulanceId: null },
+                    { ambulanceId: { $exists: false } },
+                    { status: "HOSPITAL_ACCEPTED" },
+                ],
             })
                 .populate("patientId", "fullName email phone")
                 .sort({ createdAt: -1 })
@@ -798,8 +814,8 @@ exports.getHospitalEmergencyOperations = async (req, res) => {
 
             EmergencyRequest.find({
                 hospitalId: hospital._id,
-                hospitalAcceptanceStatus: "ACCEPTED",
-                status: { $in: ["Assigned", "On The Way", "Arrived", "HOSPITAL_ACCEPTED"] },
+                ambulanceId: { $ne: null },
+                status: { $in: ["Assigned", "On The Way", "Arrived"] },
             })
                 .populate("patientId", "fullName email phone")
                 .populate("ambulanceId", "ambulanceNumber vehicleType driverName driverPhone status currentLocation")

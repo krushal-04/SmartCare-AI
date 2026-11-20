@@ -163,26 +163,34 @@ export default function HospitalEmergency() {
         }
     };
 
-    // Open Accept & Ambulance selection modal
+    // Open Accept & Ambulance selection modal (read-only fleet preview without premature state mutation)
     const handleOpenAccept = async (emergency) => {
         setTargetEmergency(emergency);
         setDispatching(false);
         setOverrideReason("");
 
         try {
-            // Call accept endpoint to accept emergency and get recommended fleet
-            const res = await api.post(`/hospital/emergencies/${emergency._id}/accept`);
+            // Retrieve matching fleet without mutating emergency state prematurely
+            const res = await api.get(`/hospital/ambulances/available?emergencyId=${emergency._id}`);
             if (res.data?.success) {
-                setRecommendedAmbulance(res.data.recommendedAmbulance || null);
-                setAlternativeAmbulances(res.data.alternativeAmbulances || []);
-                setSelectedAmbulanceId(res.data.recommendedAmbulance?._id || "");
+                const rec = res.data.recommendedAmbulance || null;
+                const alts = res.data.alternativeAmbulances || [];
+                setRecommendedAmbulance(rec);
+                setAlternativeAmbulances(alts);
+
+                // Auto-select on-duty recommended vehicle if available, or first available on-duty alternative
+                if (rec?._id && (rec.driverId?.dutyStatus === "ON_DUTY" || rec.isDriverOnDuty)) {
+                    setSelectedAmbulanceId(rec._id);
+                } else {
+                    const firstOnDutyAlt = alts.find((a) => a.driverId?.dutyStatus === "ON_DUTY" || a.isDriverOnDuty);
+                    setSelectedAmbulanceId(firstOnDutyAlt?._id || (alts[0]?._id ?? (rec?._id ?? "")));
+                }
                 setDispatchDialogOpen(true);
-                fetchOperations();
             }
         } catch (err) {
             setAlert({
                 type: "error",
-                message: err.response?.data?.message || "Failed to accept emergency.",
+                message: err.response?.data?.message || "Failed to load available fleet.",
             });
         }
     };
@@ -541,6 +549,18 @@ export default function HospitalEmergency() {
                                                             fontSize: 11,
                                                         }}
                                                     />
+                                                    {em.status === "HOSPITAL_ACCEPTED" && (
+                                                        <Chip
+                                                            label="AWAITING AMBULANCE DISPATCH"
+                                                            size="small"
+                                                            sx={{
+                                                                bgcolor: "#FEF3C7",
+                                                                color: "#D97706",
+                                                                fontWeight: 850,
+                                                                fontSize: 11,
+                                                            }}
+                                                        />
+                                                    )}
                                                 </Box>
 
                                                 <Typography fontSize={17} fontWeight={850} color={colors.ink}>
@@ -578,7 +598,7 @@ export default function HospitalEmergency() {
                                                         "&:hover": { bgcolor: "#15803D" },
                                                     }}
                                                 >
-                                                    Accept Emergency
+                                                    {em.status === "HOSPITAL_ACCEPTED" ? "Dispatch Ambulance" : "Accept Emergency"}
                                                 </Button>
 
                                                 <Button
@@ -717,6 +737,14 @@ export default function HospitalEmergency() {
                         System matching prioritizes available ambulances from your fleet matching clinical requirements, GPS freshness, and driver on-duty state.
                     </Typography>
 
+                    {/* Notice if all facility ambulances currently have off-duty drivers */}
+                    {[recommendedAmbulance, ...alternativeAmbulances].filter(Boolean).length > 0 &&
+                        ![recommendedAmbulance, ...alternativeAmbulances].filter(Boolean).some((a) => a.driverId?.dutyStatus === "ON_DUTY" || a.isDriverOnDuty) && (
+                            <Alert severity="error" sx={{ mb: 2.5, borderRadius: 2.5 }}>
+                                Notice: No drivers for your hospital are currently ON DUTY. Dispatch cannot proceed until a driver starts duty on the driver dashboard. You may Reject / Redirect to immediately transfer this emergency to another facility.
+                            </Alert>
+                        )}
+
                     {recommendedAmbulance ? (
                         <Box sx={{ mb: 3 }}>
                             <Typography fontSize={12.5} fontWeight={800} color={colors.pine} letterSpacing={0.5} mb={1}>
@@ -758,6 +786,16 @@ export default function HospitalEmergency() {
                                                     size="small"
                                                     sx={{ bgcolor: "#DCFCE7", color: "#16A34A", fontWeight: 800, fontSize: 10.5 }}
                                                 />
+                                                <Chip
+                                                    label={recommendedAmbulance.driverId?.dutyStatus === "ON_DUTY" || recommendedAmbulance.isDriverOnDuty ? "● Driver On Duty" : "○ Driver Off Duty"}
+                                                    size="small"
+                                                    sx={{
+                                                        bgcolor: recommendedAmbulance.driverId?.dutyStatus === "ON_DUTY" || recommendedAmbulance.isDriverOnDuty ? "#DCFCE7" : "#FEE2E2",
+                                                        color: recommendedAmbulance.driverId?.dutyStatus === "ON_DUTY" || recommendedAmbulance.isDriverOnDuty ? "#16A34A" : "#DC2626",
+                                                        fontWeight: 800,
+                                                        fontSize: 10.5,
+                                                    }}
+                                                />
                                             </Box>
                                         </Box>
                                     </Box>
@@ -785,6 +823,7 @@ export default function HospitalEmergency() {
                             <Stack spacing={1.5}>
                                 {alternativeAmbulances.map((amb) => {
                                     const isChosen = selectedAmbulanceId === amb._id;
+                                    const isOnDuty = amb.driverId?.dutyStatus === "ON_DUTY" || amb.isDriverOnDuty;
                                     return (
                                         <Card
                                             key={amb._id}
@@ -809,6 +848,18 @@ export default function HospitalEmergency() {
                                                         <Typography fontSize={12.5} color={colors.slate}>
                                                             Driver: {amb.driverName} • Capabilities: {(amb.capability || ["BASIC"]).join(", ")}
                                                         </Typography>
+                                                        <Box sx={{ display: "flex", gap: 0.8, mt: 0.8, flexWrap: "wrap" }}>
+                                                            <Chip
+                                                                label={isOnDuty ? "● Driver On Duty" : "○ Driver Off Duty"}
+                                                                size="small"
+                                                                sx={{
+                                                                    bgcolor: isOnDuty ? "#DCFCE7" : "#FEE2E2",
+                                                                    color: isOnDuty ? "#16A34A" : "#DC2626",
+                                                                    fontWeight: 800,
+                                                                    fontSize: 10.5,
+                                                                }}
+                                                            />
+                                                        </Box>
                                                     </Box>
                                                 </Box>
                                                 <Chip
@@ -823,6 +874,20 @@ export default function HospitalEmergency() {
                             </Stack>
                         </Box>
                     )}
+
+                    {/* Notice if selected ambulance has driver off duty */}
+                    {(() => {
+                        const allAmbs = [recommendedAmbulance, ...alternativeAmbulances].filter(Boolean);
+                        const chosen = allAmbs.find((a) => a._id === selectedAmbulanceId);
+                        if (chosen && chosen.driverId?.dutyStatus !== "ON_DUTY" && !chosen.isDriverOnDuty) {
+                            return (
+                                <Alert severity="warning" sx={{ mt: 2.5, borderRadius: 2.5 }}>
+                                    Driver <strong>{chosen.driverName || "assigned to this ambulance"}</strong> is currently <strong>OFF DUTY</strong>. You cannot dispatch until the driver goes ON DUTY in the driver dashboard, or you may Reject / Redirect this emergency to another facility.
+                                </Alert>
+                            );
+                        }
+                        return null;
+                    })()}
 
                     {/* Override reason field if non-recommended chosen */}
                     {recommendedAmbulance && selectedAmbulanceId && selectedAmbulanceId !== recommendedAmbulance._id && (
@@ -849,7 +914,15 @@ export default function HospitalEmergency() {
                     </Button>
                     <Button
                         variant="contained"
-                        disabled={dispatching || !selectedAmbulanceId}
+                        disabled={
+                            dispatching ||
+                            !selectedAmbulanceId ||
+                            (() => {
+                                const allAmbs = [recommendedAmbulance, ...alternativeAmbulances].filter(Boolean);
+                                const chosen = allAmbs.find((a) => a._id === selectedAmbulanceId);
+                                return Boolean(chosen && chosen.driverId?.dutyStatus !== "ON_DUTY" && !chosen.isDriverOnDuty);
+                            })()
+                        }
                         onClick={handleConfirmDispatch}
                         sx={{
                             bgcolor: colors.pine,

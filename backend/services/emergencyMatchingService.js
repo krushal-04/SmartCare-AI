@@ -180,13 +180,13 @@ const recommendHospital = async ({ emergencyCategory, latitude, longitude }) => 
 const matchAmbulanceForHospital = async (hospitalId, emergencyCategory, patientLat, patientLon) => {
     const rule = CATEGORY_RULES[emergencyCategory] || CATEGORY_RULES["Other Emergency"];
 
-    // Find dispatch-ready ambulances owned by this hospital.
+    // Find ambulances owned by this hospital that are not restricted and not assigned to another active emergency
     const ambulances = await Ambulance.find({
         hospitalId,
         isRestricted: { $ne: true },
         $or: [
-            { availabilityStatus: "AVAILABLE" },
-            { status: "Available", availability: true },
+            { assignedEmergencyId: null },
+            { assignedEmergencyId: { $exists: false } },
         ],
     })
         .populate("driverId", "fullName phone dutyStatus currentLocation lastDutyStartAt")
@@ -201,6 +201,15 @@ const matchAmbulanceForHospital = async (hospitalId, emergencyCategory, patientL
     }
 
     const dispatchReady = ambulances.filter((amb) => amb.driverId?.dutyStatus === "ON_DUTY");
+    const offDutyAmbulances = ambulances
+        .filter((amb) => amb.driverId?.dutyStatus !== "ON_DUTY")
+        .map((amb) => ({
+            ...amb,
+            score: -100,
+            isDriverOnDuty: false,
+            isRecommended: false,
+        }));
+
     const scored = dispatchReady.map((amb) => {
         let score = 0;
         const capabilities = Array.isArray(amb.capability) ? amb.capability : [amb.capability || "BASIC"];
@@ -216,10 +225,7 @@ const matchAmbulanceForHospital = async (hospitalId, emergencyCategory, patientL
         }
 
         // Driver on-duty bonus
-        const isDriverOnDuty = amb.driverId?.dutyStatus === "ON_DUTY";
-        if (isDriverOnDuty) {
-            score += 50;
-        }
+        score += 50;
 
         // GPS freshness
         const lastUpdated = amb.currentLocation?.updatedAt ? new Date(amb.currentLocation.updatedAt) : null;
@@ -244,7 +250,7 @@ const matchAmbulanceForHospital = async (hospitalId, emergencyCategory, patientL
             score,
             distanceKm,
             isGpsFresh,
-            isDriverOnDuty,
+            isDriverOnDuty: true,
             isRecommended: false,
         };
     });
@@ -254,11 +260,16 @@ const matchAmbulanceForHospital = async (hospitalId, emergencyCategory, patientL
 
     if (scored.length > 0) {
         scored[0].isRecommended = true;
+        return {
+            recommendedAmbulance: scored[0],
+            alternativeAmbulances: [...scored.slice(1), ...offDutyAmbulances],
+            rule,
+        };
     }
 
     return {
-        recommendedAmbulance: scored[0] || null,
-        alternativeAmbulances: scored.slice(1),
+        recommendedAmbulance: null,
+        alternativeAmbulances: offDutyAmbulances,
         rule,
     };
 };
