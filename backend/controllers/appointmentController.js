@@ -5,6 +5,8 @@ const {
 } = require("../services/reminderService");
 const { emitToUser, emitUnreadCount, emitToHospital } = require("../services/socketService");
 const Appointment = require("../models/Appointment");
+const Payment = require("../models/Payment");
+const paymentService = require("../services/paymentService");
 const DoctorSchedule = require("../models/DoctorSchedule");
 const Doctor = require("../models/Doctor");
 const Hospital = require("../models/Hospital");
@@ -13,6 +15,7 @@ const Notification = require("../models/Notification");
 const User = require("../models/User");
 const AuditLog = require("../models/AuditLog");
 const emailService = require("../services/emailService");
+const { processPastAndExpiredAppointments } = require("../services/appointmentExpirationService");
 
 const dayNames = [
     "Sunday",
@@ -61,56 +64,10 @@ const getTodayString = () => {
     return `${y}-${m}-${d}`;
 };
 
-// Appointments scheduled in the past (prior dates or passed time slots today)
-// transition automatically to Completed status time-and-date-wise.
+// Automatically complete past Confirmed appointments, and auto-cancel & 100% refund past Pending unapproved appointments
 const completePastAppointments = async (patientId) => {
     try {
-        const today = getTodayString();
-        const { start, end } = getDateRange(today);
-
-        // 1. All appointments prior to today
-        const pastDatesQuery = {
-            appointmentDate: { $lt: start },
-            status: { $in: ["Pending", "Confirmed"] },
-        };
-        if (patientId) pastDatesQuery.patientId = patientId;
-        await Appointment.updateMany(pastDatesQuery, { $set: { status: "Completed", bookingStatus: "Completed" } });
-
-        // 2. Today's appointments whose scheduled time slot has elapsed
-        const todayQuery = {
-            appointmentDate: { $gte: start, $lte: end },
-            status: { $in: ["Pending", "Confirmed"] },
-        };
-        if (patientId) todayQuery.patientId = patientId;
-        const todayAppointments = await Appointment.find(todayQuery).select("_id appointmentTime").lean();
-
-        if (todayAppointments && todayAppointments.length > 0) {
-            const now = new Date();
-            const currentTotalMinutes = now.getHours() * 60 + now.getMinutes();
-            const passedIds = [];
-
-            for (const appt of todayAppointments) {
-                if (appt.appointmentTime) {
-                    const raw = String(appt.appointmentTime);
-                    const parts = raw.split(":");
-                    let h = parseInt(parts[0], 10);
-                    let min = parseInt(parts[1], 10);
-                    const isPM = /pm/i.test(raw);
-                    const isAM = /am/i.test(raw);
-                    if (isPM && h < 12) h += 12;
-                    if (isAM && h === 12) h = 0;
-                    if (!isNaN(h) && !isNaN(min)) {
-                        if ((h * 60 + min) <= currentTotalMinutes) {
-                            passedIds.push(appt._id);
-                        }
-                    }
-                }
-            }
-
-            if (passedIds.length > 0) {
-                await Appointment.updateMany({ _id: { $in: passedIds } }, { $set: { status: "Completed", bookingStatus: "Completed" } });
-            }
-        }
+        await processPastAndExpiredAppointments(patientId);
     } catch (err) {
         console.error("Auto completePastAppointments failed non-critically:", err.message);
     }
@@ -935,7 +892,7 @@ exports.updateAppointmentStatus = async (
             scheduleRemindersForAppointment(appointment).catch((e) =>
                 console.warn("[ReminderService] Approval reminder error:", e.message)
             );
-        } else if (status === "Rejected") {
+                } else if (status === "Rejected") {
             appointment.rejectedAt = new Date();
             appointment.rejectedBy = req.user._id;
             if (notes) appointment.rejectionReason = notes.trim();
@@ -945,6 +902,40 @@ exports.updateAppointmentStatus = async (
             appointment.cancelledBy = req.user.role;
             if (notes) appointment.cancellationReason = notes.trim();
             cancelRemindersForAppointment(appointment._id, "Appointment cancelled").catch(() => {});
+        }
+
+        // Automatic 100% full refund if hospital rejects or cancels a paid appointment
+        if ((status === "Rejected" || status === "Cancelled") && appointment.paymentStatus === "Paid") {
+            const fee = Number(appointment.consultationFee) || 0;
+            if (fee > 0) {
+                try {
+                    let pRecord = null;
+                    if (appointment.paymentId) pRecord = await Payment.findById(appointment.paymentId);
+                    if (!pRecord) pRecord = await Payment.findOne({ appointmentId: appointment._id, paymentStatus: "Paid" });
+                    if (pRecord) {
+                        const rfRes = await paymentService.initiateRazorpayRefund({
+                            paymentId: pRecord.gatewayPaymentId,
+                            amountInRupees: fee,
+                            receipt: `rfnd_${String(appointment._id).slice(-8)}_${Date.now()}`,
+                            notes: { appointmentId: appointment._id.toString(), reason: notes || `Marked as ${status}` },
+                        }).catch(() => null);
+
+                        pRecord.refundStatus = "Completed";
+                        pRecord.refundAmount = fee;
+                        pRecord.refundedAt = new Date();
+                        pRecord.paymentStatus = "Refunded";
+                        if (rfRes?.id) pRecord.gatewayRefundId = rfRes.id;
+                        await pRecord.save();
+
+                        appointment.refundStatus = "Completed";
+                        appointment.refundAmount = fee;
+                        appointment.paymentStatus = "Refunded";
+                        if (rfRes?.id) appointment.gatewayRefundId = rfRes.id;
+                    }
+                } catch (rfErr) {
+                    console.warn("Status update auto-refund warning:", rfErr.message);
+                }
+            }
         }
 
         if (notes !== undefined) {
