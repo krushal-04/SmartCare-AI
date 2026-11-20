@@ -1,4 +1,4 @@
-import { Alert, Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, Typography } from "@mui/material";
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, Typography } from "@mui/material";
 import { WarningAmberRounded } from "@mui/icons-material";
 
 /** A consistent, accessible confirmation step for destructive patient actions. */
@@ -7,12 +7,15 @@ export default function ConfirmDialog({
     title = "Please confirm",
     description,
     confirmLabel = "Confirm",
+    confirmText,
+    cancelText = "Keep",
     loading = false,
     severity = "error",
     onClose,
     onConfirm,
 }) {
     const isDanger = severity === "error";
+    const finalConfirmLabel = confirmText || confirmLabel;
 
     return (
         <Dialog open={open} onClose={loading ? undefined : onClose} fullWidth maxWidth="xs">
@@ -24,16 +27,11 @@ export default function ConfirmDialog({
             </DialogTitle>
             <DialogContent>
                 <Typography color="text.secondary">{description}</Typography>
-                {isDanger && (
-                    <Alert severity="warning" sx={{ mt: 2 }}>
-                        This action cannot be undone.
-                    </Alert>
-                )}
             </DialogContent>
             <DialogActions sx={{ px: { xs: 2, sm: 3 }, pb: { xs: 2, sm: 2.5 }, gap: 1 }}>
-                <Button onClick={onClose} disabled={loading} variant="outlined">Keep</Button>
+                <Button onClick={onClose} disabled={loading} variant="outlined">{cancelText}</Button>
                 <Button onClick={onConfirm} disabled={loading} color={severity} variant="contained">
-                    {loading ? "Please wait…" : confirmLabel}
+                    {loading ? "Please wait…" : finalConfirmLabel}
                 </Button>
             </DialogActions>
         </Dialog>
