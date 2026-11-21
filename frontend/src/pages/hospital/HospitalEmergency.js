@@ -579,18 +579,6 @@ export default function HospitalEmergency() {
                                                             }}
                                                         />
                                                     )}
-                                                    {(em.statusHistory?.some((h) => h.status === "REROUTED_TO_HOSPITAL") || (em.rejectedHospitalIds && em.rejectedHospitalIds.length > 0)) && (
-                                                        <Chip
-                                                            label="⚡ REROUTED FROM ANOTHER FACILITY"
-                                                            size="small"
-                                                            sx={{
-                                                                bgcolor: "#FFEDD5",
-                                                                color: "#C2410C",
-                                                                fontWeight: 850,
-                                                                fontSize: 11,
-                                                            }}
-                                                        />
-                                                    )}
                                                 </Box>
 
                                                 <Typography fontSize={17} fontWeight={850} color={colors.ink}>

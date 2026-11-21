@@ -718,6 +718,11 @@ exports.hospitalRejectEmergency = async (req, res) => {
                 }
             );
 
+            // Also tell previous hospital to refresh their dashboard and clear incoming list
+            emitToHospital(previousHospitalId, "emergency:rerouted-away", {
+                emergencyId: emergency._id,
+            });
+
             return res.status(200).json({
                 success: true,
                 message: "Emergency transfer rejected. All alternative network hospitals are at capacity. Escalated to central EMS administrators.",
@@ -953,12 +958,14 @@ exports.getHospitalEmergencyOperations = async (req, res) => {
         const [incoming, active, fleet] = await Promise.all([
             EmergencyRequest.find({
                 hospitalId: hospital._id,
-                status: { $nin: ["Cancelled", "Completed", "HOSPITAL_REJECTED"] },
+                hospitalAcceptanceStatus: { $ne: "REJECTED" },
+                status: { $nin: ["Cancelled", "Completed", "HOSPITAL_REJECTED", "NO_CAPABLE_HOSPITAL", "CLOSED", "FAILED"] },
                 $or: [
-                    { hospitalAcceptanceStatus: { $ne: "ACCEPTED" } },
+                    { hospitalAcceptanceStatus: "PENDING" },
                     { ambulanceId: null },
                     { ambulanceId: { $exists: false } },
                     { status: "HOSPITAL_ACCEPTED" },
+                    { status: "Requested" },
                 ],
             })
                 .populate("patientId", "fullName email phone")
